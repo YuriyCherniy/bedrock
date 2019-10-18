@@ -1,1 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="415" height="328" viewBox="0 0 415 328"><defs><rect id="c" width="369.699" height="312" x="0" y="0" rx="4"/><filter id="b" width="107%" height="108.3%" x="-3.5%" y="-3.5%" filterUnits="objectBoundingBox"><feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/><feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="4"/><feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0.125490196 0 0 0 0 0.0705882353 0 0 0 0 0.22745098 0 0 0 0.24 0"/></filter><rect id="a" width="336.575" height="277.808" x="17.096" y="17.096" rx="4"/><mask id="d" width="336.575" height="277.808" x="0" y="0" fill="#fff" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox"><use xlink:href="#a"/></mask></defs><g fill="none" fill-rule="evenodd"><g transform="translate(37.397 6)"><use fill="#000" filter="url(#b)" xlink:href="#c"/><use fill="#FFF" xlink:href="#c"/><use stroke="#D0D0D1" stroke-dasharray="4" stroke-width="4" mask="url(#d)" xlink:href="#a"/><g stroke="#0060DF" stroke-width="4" transform="translate(147.452 118.603)"><circle cx="37.397" cy="37.397" r="37.397"/><path d="M37.932 18.164V56.38M18.824 37.272H57.04"/></g></g><g transform="translate(0 119.26)"><path fill="#91C7FF" d="M36.328 0v21.918a8 8 0 0 0 8 8l21.918-.001v47.562a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8h28.328z"/><rect width="12.822" height="4.274" x="14.959" y="25.644" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="42.74" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="59.836" fill="#0060DF" rx="2"/><path fill="#91C7FF" d="M40.653 0v21.644a4 4 0 0 0 4 4h21.594L40.653 0z"/></g><path fill="#FFF" d="M0 127.26v69.48a8 8 0 0 0 8 8h50.247a8 8 0 0 0 8-8v-51.836L40.603 119.26H8a8 8 0 0 0-8 8z" opacity=".715"/><g transform="translate(36.329 119.26)"><path fill="#91C7FF" d="M36.328 0v21.918a8 8 0 0 0 8 8l21.918-.001v47.562a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8h28.328z"/><rect width="12.822" height="4.274" x="14.959" y="25.644" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="42.74" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="59.836" fill="#0060DF" rx="2"/><path fill="#91C7FF" d="M40.653 0v21.644a4 4 0 0 0 4 4h21.594L40.653 0z"/></g><path fill="#FFF" d="M36.329 127.26v69.48a8 8 0 0 0 8 8h50.246a8 8 0 0 0 8-8v-51.836L76.932 119.26H44.329a8 8 0 0 0-8 8z" opacity=".468"/><g transform="translate(72.658 119.26)"><path fill="#91C7FF" d="M36.328 0v21.918a8 8 0 0 0 8 8l21.918-.001v47.562a8 8 0 0 1-8 8H8a8 8 0 0 1-8-8V8a8 8 0 0 1 8-8h28.328z"/><rect width="12.822" height="4.274" x="14.959" y="25.644" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="42.74" fill="#0060DF" rx="2"/><rect width="36.329" height="4.274" x="14.959" y="59.836" fill="#0060DF" rx="2"/><path fill="#91C7FF" d="M40.653 0v21.644a4 4 0 0 0 4 4h21.594L40.653 0z"/></g></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="365" height="309" viewBox="0 0 365 309">
+  <defs>
+    <path id="img-send-d" d="M330.861786,301 L36.0554493,301 C33.820814,301 32,298.987045 32,296.516599 C32,248.083671 32,211.758974 32,187.54251 C32,163.529375 32,127.509672 32,79.4834008 C32,77.0129555 33.820814,75 36.0554493,75 L330.944551,75 C333.179186,75 335,77.0129555 335,79.4834008 L335,296.608097 C334.917236,298.987045 333.096422,301 330.861786,301 Z"/>
+    <filter id="img-send-c" width="108.6%" height="111.5%" x="-4.3%" y="-4.9%" filterUnits="objectBoundingBox">
+      <feOffset dy="2" in="SourceAlpha" result="shadowOffsetOuter1"/>
+      <feGaussianBlur in="shadowOffsetOuter1" result="shadowBlurOuter1" stdDeviation="4"/>
+      <feColorMatrix in="shadowBlurOuter1" values="0 0 0 0 0.125490196   0 0 0 0 0.0705882353   0 0 0 0 0.22745098  0 0 0 0.24 0"/>
+    </filter>
+    <rect id="img-send-a" width="281" height="75" x="0" y="0" rx="4"/>
+    <mask id="img-send-e" width="281" height="75" x="0" y="0" fill="#fff" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox">
+      <use xlink:href="#img-send-a"/>
+    </mask>
+    <rect id="img-send-b" width="281" height="75" x="0" y="0" rx="4"/>
+    <mask id="img-send-f" width="281" height="75" x="0" y="0" fill="#fff" maskContentUnits="userSpaceOnUse" maskUnits="objectBoundingBox">
+      <use xlink:href="#img-send-b"/>
+    </mask>
+  </defs>
+  <g fill="none" fill-rule="evenodd" transform="translate(-2 -2)">
+    <g transform="translate(2 2)">
+      <rect width="465" height="311" x="2" y="2" fill="#FFF" stroke="#F0F0F4" stroke-width="4" rx="4"/>
+      <rect width="469" height="33" y="30" fill="#F0F0F4"/>
+      <rect width="307" height="15" x="81" y="39" fill="#FFF" rx="2"/>
+      <path fill="#DFDFE6" d="M4,0 L465,0 C467.209139,-4.05812251e-16 469,1.790861 469,4 L469,30 L469,30 L0,30 L0,4 C-2.705415e-16,1.790861 1.790861,4.05812251e-16 4,0 Z"/>
+      <rect width="92" height="27" x="40" y="5" fill="#F0F0F4"/>
+      <rect width="92" height="5" x="40" y="5" fill="#D1D1D7"/>
+    </g>
+    <g fill-rule="nonzero">
+      <use fill="#000" filter="url(#img-send-c)" xlink:href="#img-send-d"/>
+      <use fill="#FFF" xlink:href="#img-send-d"/>
+    </g>
+    <g transform="translate(43 86)">
+      <g transform="translate(15 13)">
+        <path fill="#91C7FF" fill-rule="nonzero" d="M25.5167963,0.172799975 L3.05279956,0.172799975 C2.36159966,0.172799975 1.78559974,0.403199941 1.26719982,0.921599866 C0.748799891,1.43999979 0.518399924,2.01599971 0.518399924,2.70719961 L0.518399924,46.3103933 C0.518399924,47.0015932 0.748799891,47.5775931 1.26719982,48.095993 C1.78559974,48.6143929 2.36159966,48.8447929 3.05279956,48.8447929 L35.7119948,48.8447929 C36.4031947,48.8447929 36.9791946,48.6143929 37.4975945,48.095993 C38.0159945,47.5775931 38.2463944,47.0015932 38.2463944,46.3103933 L38.2463944,13.766398 L25.5167963,0.172799975 Z"/>
+        <path stroke="#0060DF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.88" d="M10.0799985,0.287999958 L0.287999958,0.287999958 M19.9871971,10.6559984 L0.287999958,10.6559984 M19.9871971,22.1759968 L0.287999958,22.1759968" transform="translate(9.216 14.976)"/>
+        <path fill="#589AD6" fill-rule="nonzero" d="M22.7519967,0.172799975 L22.7519967,9.44639862 C22.7519967,10.1375985 22.9823967,10.7135984 23.5007966,11.2319984 C24.0191965,11.7503983 24.5951964,11.9807983 25.2863963,11.9807983 L36.5183947,11.9807983 L25.5167963,0.172799975 L22.7519967,0.172799975 L22.7519967,0.172799975 Z"/>
+        <path fill="#CAE6FF" fill-rule="nonzero" d="M25.4591963,11.2319984 C25.4591963,11.9231983 25.6895963,12.4991982 26.2079962,13.0175981 C26.7263961,13.535998 27.302396,13.766398 27.9935959,13.766398 L38.2463944,13.766398 L25.4591963,0.115199983 L25.4591963,11.2319984 Z"/>
+      </g>
+      <text fill="#23103C" font-family="Metropolis-Bold, Metropolis" font-size="21" font-weight="bold">
+        <tspan x="70" y="45">2.1MB</tspan>
+      </text>
+      <use stroke="#D0D0D1" stroke-dasharray="4" stroke-width="4" mask="url(#img-send-e)" xlink:href="#img-send-a"/>
+    </g>
+    <g transform="translate(43 169)">
+      <g transform="translate(15 13)">
+        <path fill="#91C7FF" fill-rule="nonzero" d="M25.5167963,0.172799975 L3.05279956,0.172799975 C2.36159966,0.172799975 1.78559974,0.403199941 1.26719982,0.921599866 C0.748799891,1.43999979 0.518399924,2.01599971 0.518399924,2.70719961 L0.518399924,46.3103933 C0.518399924,47.0015932 0.748799891,47.5775931 1.26719982,48.095993 C1.78559974,48.6143929 2.36159966,48.8447929 3.05279956,48.8447929 L35.7119948,48.8447929 C36.4031947,48.8447929 36.9791946,48.6143929 37.4975945,48.095993 C38.0159945,47.5775931 38.2463944,47.0015932 38.2463944,46.3103933 L38.2463944,13.766398 L25.5167963,0.172799975 Z"/>
+        <path stroke="#0060DF" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.88" d="M10.0799985,0.287999958 L0.287999958,0.287999958 M19.9871971,10.6559984 L0.287999958,10.6559984 M19.9871971,22.1759968 L0.287999958,22.1759968" transform="translate(9.216 14.976)"/>
+        <path fill="#589AD6" fill-rule="nonzero" d="M22.7519967,0.172799975 L22.7519967,9.44639862 C22.7519967,10.1375985 22.9823967,10.7135984 23.5007966,11.2319984 C24.0191965,11.7503983 24.5951964,11.9807983 25.2863963,11.9807983 L36.5183947,11.9807983 L25.5167963,0.172799975 L22.7519967,0.172799975 L22.7519967,0.172799975 Z"/>
+        <path fill="#CAE6FF" fill-rule="nonzero" d="M25.4591963,11.2319984 C25.4591963,11.9231983 25.6895963,12.4991982 26.2079962,13.0175981 C26.7263961,13.535998 27.302396,13.766398 27.9935959,13.766398 L38.2463944,13.766398 L25.4591963,0.115199983 L25.4591963,11.2319984 Z"/>
+      </g>
+      <text fill="#23103C" font-family="Metropolis-Bold, Metropolis" font-size="21" font-weight="bold">
+        <tspan x="70" y="45">14.9MB</tspan>
+      </text>
+      <text fill="#5E5E5E" font-family="Metropolis-Bold, Metropolis" font-size="16" font-weight="bold">
+        <tspan x="155.544" y="112">17.0MB / 2.5GB</tspan>
+      </text>
+      <use stroke="#D0D0D1" stroke-dasharray="4" stroke-width="4" mask="url(#img-send-f)" xlink:href="#img-send-b"/>
+    </g>
+    <g stroke="#0060DF" stroke-width="2.628" transform="translate(60 257)">
+      <circle cx="16.156" cy="16.156" r="16.156"/>
+      <path d="M16.3864086,7.84701256 L16.3864086,24.3560307"/>
+      <path d="M16.3864086,7.84701256 L16.3864086,24.3560307" transform="rotate(-90 16.386 16.102)"/>
+    </g>
+  </g>
+</svg>
