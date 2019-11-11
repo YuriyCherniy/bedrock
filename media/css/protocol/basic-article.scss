@@ -41,6 +41,11 @@ $image-path: '/media/protocol/img';
     }
 }
 
+.non-standout-quote {
+    font-weight: normal;
+    @include text-body-lg;
+}
+
 .side-reference-title {
     @include font-base;
     @include text-body-lg;
