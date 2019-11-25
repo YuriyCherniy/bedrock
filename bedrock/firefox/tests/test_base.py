@@ -228,11 +228,21 @@ class TestWhatsNew(TestCase):
         req = self.rf.get('/en-US/firefox/whatsnew/?oldversion=rv:10.0')
         self.view(req, version='54.0')
         template = render_mock.call_args[0][1]
-        assert template == ['firefox/whatsnew/index.html']
+        assert template == ['firefox/whatsnew/index-sync.html']
 
     @override_settings(DEV=True)
+    @patch.object(fx_views, 'ftl_file_is_active', lambda *x: True)
     def test_fx_default_whatsnew(self, render_mock):
-        """Should use standard template for 62.0"""
+        """Should use sync template for 62.0"""
+        req = self.rf.get('/en-US/firefox/whatsnew/')
+        self.view(req, version='62.0')
+        template = render_mock.call_args[0][1]
+        assert template == ['firefox/whatsnew/index-sync.html']
+
+    @override_settings(DEV=True)
+    @patch.object(fx_views, 'ftl_file_is_active', lambda *x: False)
+    def test_fx_default_whatsnew_fallback(self, render_mock):
+        """Should use standard template for 62.0 as fallback"""
         req = self.rf.get('/en-US/firefox/whatsnew/')
         self.view(req, version='62.0')
         template = render_mock.call_args[0][1]
@@ -357,7 +367,7 @@ class TestWhatsNew(TestCase):
         req.locale = 'es-ES'
         self.view(req, version='71.0')
         template = render_mock.call_args[0][1]
-        assert template == ['firefox/whatsnew/index.html']
+        assert template == ['firefox/whatsnew/index-sync.html']
 
     # end 71.0 whatsnew tests
 

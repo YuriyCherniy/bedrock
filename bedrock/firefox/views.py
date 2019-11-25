@@ -24,6 +24,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.views.generic.base import TemplateView
 from lib import l10n_utils
 from lib.l10n_utils.dotlang import lang_file_is_active
+from lib.l10n_utils.fluent import ftl_file_is_active
 from product_details.version_compare import Version
 
 from bedrock.base.urlresolvers import reverse
@@ -490,7 +491,7 @@ class WhatsNewRedirectorView(GeoRedirectView):
         return super().get_redirect_url(*args, **kwargs)
 
 
-class WhatsnewView(l10n_utils.LangFilesMixin, TemplateView):
+class WhatsnewView(TemplateView):
     def get_context_data(self, **kwargs):
         ctx = super(WhatsnewView, self).get_context_data(**kwargs)
         locale = l10n_utils.get_locale(self.request)
@@ -577,10 +578,23 @@ class WhatsnewView(l10n_utils.LangFilesMixin, TemplateView):
             else:
                 template = 'firefox/whatsnew/whatsnew-fx67.html'
         else:
-            template = 'firefox/whatsnew/index.html'
+            if ftl_file_is_active('firefox/whatsnew/whatsnew-sync'):
+                template = 'firefox/whatsnew/index-sync.html'
+            else:
+                template = 'firefox/whatsnew/index.html'
 
         # return a list to conform with original intention
         return [template]
+
+    def render_to_response(self, context, **response_kwargs):
+        templates = self.get_template_names()
+        ftl_dict = {
+            'firefox/whatsnew/index-sync.html': 'firefox/whatsnew/whatsnew-sync'
+        }
+        ftl_files = ftl_files = ftl_dict.get(templates[0])
+
+        return l10n_utils.render(self.request, templates,
+                                 context, ftl_files=ftl_files, **response_kwargs)
 
 
 class WhatsNewIndiaView(WhatsnewView):
