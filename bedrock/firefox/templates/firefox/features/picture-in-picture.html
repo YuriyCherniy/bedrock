@@ -1,0 +1,84 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
+{% from "macros-protocol.html" import split, picto with context %}
+
+{% extends "firefox/base/base-protocol.html" %}
+
+{% block page_title %}{{ ftl('features-pip-firefox-picture-in-picture-get-more') }}{% endblock %}
+{% block page_desc %}{{ ftl('features-pip-got-things-to-do-and-things-to-watch') }}{% endblock %}
+
+{% block page_image %}
+  {{ static('img/firefox/features/pip/pip-hero.jpg') }}
+{% endblock %}
+
+{% block page_og_title %}
+  {{ self.page_title() }}
+{% endblock %}
+
+{% block page_og_desc %}
+  {{ self.page_desc() }}
+{% endblock %}
+
+{% block page_css %}
+  {{ css_bundle('firefox-features-pip') }}
+{% endblock %}
+
+{% block sub_navigation %}
+  {% include "firefox/features/includes/subnav.html" %}
+{% endblock %}
+
+{% block content %}
+  {% call split(
+    block_class='mzp-l-split-center-on-sm-md mzp-t-split-nospace',
+    theme_class='mzp-t-dark',
+    media_class='mzp-l-split-media-constrain-height mzp-l-split-media-overflow mzp-l-split-h-center',
+    image_url='img/firefox/features/pip/pip-hero.jpg',
+    media_after=True,
+  ) %}
+    <h1 class="c-hero-pretitle">{{ ftl('features-pip-new-feature-firefox-multi-picture', fallback='features-pip-cool-feature-picture-in-picture') }}</h1>
+    <h2 class="mzp-u-title-lg">{{ ftl('features-pip-get-more-done-with-pop-out-videos') }}</h2>
+    <p>{{ ftl('features-pip-got-things-to-do-do-both-with') }}</p>
+    {{ download_firefox(dom_id='features-pip-download-primary', download_location='primary cta') }}
+  {% endcall %}
+
+  {% call split(
+    block_class='mzp-l-split-reversed',
+    media_class='mzp-l-split-h-center',
+    media_include='firefox/features/includes/pip-video.html',
+  ) %}
+    <h3>{{ ftl('features-pip-heres-how-it-works') }}</h3>
+    <ol class="mzp-u-list-styled">
+      <li>{{ ftl('features-pip-play-any-video-in-your-updated', fallback='features-pip-play-any-video-in-your') }}</li>
+      <li class="has-pip-icon">{{ ftl('features-pip-click-the-picture-in-picture-button') }}</li>
+      <li>{{ ftl('features-pip-cruise-around-to-other') }}</li>
+    {% if ftl_has_messages('features-pip-repeat-steps-1-3-to-have') %}
+      <li>{{ ftl('features-pip-repeat-steps-1-3-to-have') }}</li>
+    {% endif %}
+    </ol>
+  {% endcall %}
+
+  <section class="content-extra">
+    <div class="mzp-l-content mzp-t-content-lg">
+      <h3 class="content-extra-title">{{ ftl('features-pip-3-more-ways-to-use-picture', fallback='features-pip-3-ways-to-use-picture') }}</h3>
+
+      <div class="mzp-l-columns mzp-t-columns-three mzp-t-picto-center">
+        {{ picto(title=ftl('features-pip-watch-a-lecture-or-meeting'), heading_level=4, image_url='img/firefox/features/pip/pip-lecture.svg', image_width=None,) }}
+        {{ picto(title=ftl('features-pip-keep-a-tutorial-video-open'), heading_level=4, image_url='img/firefox/features/pip/pip-cook.svg', image_width=None,) }}
+        {{ picto(title=ftl('features-pip-entertain-cats-dogs-and-kids'), heading_level=4, image_url='img/firefox/features/pip/pip-entertain.svg', image_width=None,) }}
+      </div>
+
+      <aside class="secondary-cta">
+      {{ download_firefox(dom_id='features-pip-bottom-download-secondary', download_location='secondary cta') }}
+      </aside>
+    </div>
+  </section>
+
+{% endblock %}
+
+{% block js %}
+  {{ js_bundle('firefox-features-pip') }}
+{% endblock %}

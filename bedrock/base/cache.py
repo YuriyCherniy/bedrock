@@ -1,4 +1,8 @@
-from django.core.cache.backends.locmem import LocMemCache, DEFAULT_TIMEOUT
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+from django.core.cache.backends.locmem import DEFAULT_TIMEOUT, LocMemCache
 
 
 class SimpleDictCache(LocMemCache):
@@ -7,6 +11,7 @@ class SimpleDictCache(LocMemCache):
     Only for use with simple immutable data structures that can be
     inserted into a dict.
     """
+
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
         key = self.make_key(key, version=version)
         self.validate_key(key)

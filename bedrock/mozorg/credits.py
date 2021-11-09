@@ -1,24 +1,23 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import csv
 import unicodedata
 from collections import OrderedDict
 from operator import itemgetter
 
-
 from bedrock.externalfiles import ExternalFile
 
 
 class CreditsFile(ExternalFile):
     def validate_content(self, content):
-        rows = list(csv.reader(content.strip().split('\n')))
+        rows = list(csv.reader(content.strip().split("\n")))
         if len(rows) < 2200:  # it's 2273 as of now
-            raise ValueError('Much smaller file than expected. {0} rows.'.format(len(rows)))
+            raise ValueError("Much smaller file than expected. {0} rows.".format(len(rows)))
 
         if len(rows[0]) != 2 or len(rows[-1]) != 2:
-            raise ValueError('CSV Content corrupted.')
+            raise ValueError("CSV Content corrupted.")
 
         return content
 
@@ -57,7 +56,7 @@ class CreditsFile(ExternalFile):
             else:
                 continue
 
-            sortkey = unicodedata.normalize('NFKD', sortkey).encode('ascii', 'ignore').decode()
+            sortkey = unicodedata.normalize("NFKD", sortkey).encode("ascii", "ignore").decode()
             names.append([name, sortkey.upper()])
 
         return sorted(names, key=itemgetter(1))

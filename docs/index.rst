@@ -1,13 +1,13 @@
 .. This Source Code Form is subject to the terms of the Mozilla Public
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+.. file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 =======================================
 Welcome to Bedrock's documentation!
 =======================================
 
 **bedrock** is the project behind www.mozilla.org. It is as
-shiny, awesome, and open-sourcy as always. Perhaps even a little more.
+shiny, awesome, and open-source as always. Perhaps even a little more.
 
 bedrock is a web application based on `Django
 <http://www.djangoproject.com/>`_, a `Python <https://www.python.org>`_ web application framework.
@@ -32,10 +32,12 @@ Contents
    redirects
    javascript-libs
    newsletters
+   contentful
    content-cards
-   tabzilla
+   banners
    uitour
    send-to-device
+   download-buttons
    firefox-accounts
    funnelcake
    abtest

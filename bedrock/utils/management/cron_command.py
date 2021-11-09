@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 """
 A Django management command class that handles locking so it doesn't
 trigger multiple times when used inside of an external script, such as a
@@ -35,10 +35,10 @@ def cache_lock(lock_key):
 
 
 class CronCommand(BaseCommand):
-    lock_key = 'cron-command'
+    lock_key = "cron-command"
 
     def get_lock_key(self):
-        return 'command-lock:' + self.lock_key
+        return "command-lock:" + self.lock_key
 
     def get_lock(self):
         return cache_lock(self.get_lock_key())

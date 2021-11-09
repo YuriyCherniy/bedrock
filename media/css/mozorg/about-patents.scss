@@ -1,11 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
 
 .mzp-c-article h2 {
     margin: $layout-md 0 $layout-sm;
@@ -22,11 +22,11 @@ ol li ol {
 
 #faq {
     h2 {
-        @include text-display-lg;
+        @include text-title-lg;
     }
 
     h3 {
-        @include text-display-xs;
+        @include text-title-xs;
         @include font-base;
     }
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import re
 from operator import itemgetter
 
@@ -9,50 +9,47 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.forms import widgets
 from django.utils.safestring import mark_safe
-from lib.l10n_utils.dotlang import _, _lazy
+
 from product_details import product_details
 
-from bedrock.mozorg.forms import (FORMATS, EmailInput, PrivacyWidget,
-                                  strip_parenthetical)
+from bedrock.mozorg.forms import FORMATS, EmailInput, PrivacyWidget, strip_parenthetical
 from bedrock.newsletter import utils
+from lib.l10n_utils.fluent import ftl, ftl_lazy
 
-_newsletters_re = re.compile(r'^[\w,-]+$')
-
-LANG_FILES = ['mozorg/newsletters']
+_newsletters_re = re.compile(r"^[\w,-]+$")
 
 
 def validate_newsletters(newsletters):
     if not newsletters:
-        raise ValidationError('No Newsletter Provided')
+        raise ValidationError("No Newsletter Provided")
 
-    newsletters = newsletters.replace(' ', '')
+    newsletters = newsletters.replace(" ", "")
     if not _newsletters_re.match(newsletters):
-        raise ValidationError('Invalid Newsletter')
+        raise ValidationError("Invalid Newsletter")
 
     return newsletters
 
 
 def get_lang_choices(newsletters=None):
     """
-     Return a localized list of choices for language.
+    Return a localized list of choices for language.
 
-     List looks like: [[lang_code, lang_name], [lang_code, lang_name], ...]
+    List looks like: [[lang_code, lang_name], [lang_code, lang_name], ...]
 
-     :param newsletters: Either a comma separated string or a list of newsletter ids.
+    :param newsletters: Either a comma separated string or a list of newsletter ids.
     """
     lang_choices = []
     languages = utils.get_languages_for_newsletters(newsletters)
 
     for lang in languages:
         if lang in product_details.languages:
-            lang_name = product_details.languages[lang]['native']
+            lang_name = product_details.languages[lang]["native"]
         else:
             try:
-                locale = [loc for loc in product_details.languages
-                          if loc.startswith(lang)][0]
+                locale = [loc for loc in product_details.languages if loc.startswith(lang)][0]
             except IndexError:
                 continue
-            lang_name = product_details.languages[locale]['native']
+            lang_name = product_details.languages[locale]["native"]
         lang_choices.append([lang, strip_parenthetical(lang_name)])
     return sorted(lang_choices, key=itemgetter(1))
 
@@ -61,50 +58,54 @@ class SimpleRadioSelect(widgets.RadioSelect):
     """
     Render radio buttons as just labels with no <ul> chrome.
     """
-    template_name = 'newsletter/forms/simple_radio_select.html'
+
+    template_name = "newsletter/forms/simple_radio_select.html"
 
 
 class BooleanTabularRadioSelect(widgets.RadioSelect):
     """
     A Select Widget intended to be used with NullBooleanField.
     """
-    template_name = 'newsletter/forms/tabular_radio_select.html'
+
+    template_name = "newsletter/forms/tabular_radio_select.html"
     wrap_label = False
 
     def __init__(self, attrs=None):
         choices = (
-            ('true', _('Yes')),
-            ('false', _('No')),
+            ("true", ftl("newsletter-form-yes")),
+            ("false", ftl("newsletter-form-no")),
         )
         super(BooleanTabularRadioSelect, self).__init__(attrs, choices)
 
     def format_value(self, value):
         try:
             return {
-                True: 'true', False: 'false',
-                'true': 'true', 'false': 'false',
+                True: "true",
+                False: "false",
+                "true": "true",
+                "false": "false",
             }[value]
         except KeyError:
-            return 'unknown'
+            return "unknown"
 
     def value_from_datadict(self, data, files, name):
         value = data.get(name)
         return {
             True: True,
             False: False,
-            'true': True,
-            'false': False,
+            "true": True,
+            "false": False,
         }.get(value)
 
     def get_context(self, name, value, attrs):
-        context = super(BooleanTabularRadioSelect, self).get_context(
-            name, value, attrs)
-        context['wrap_label'] = False
+        context = super(BooleanTabularRadioSelect, self).get_context(name, value, attrs)
+        context["wrap_label"] = False
         return context
 
 
 class TableCheckboxInput(widgets.CheckboxInput):
     """Add table cell markup around the rendered checkbox"""
+
     def render(self, *args, **kwargs):
         out = super(TableCheckboxInput, self).render(*args, **kwargs)
         return mark_safe("<td>" + out + "</td>")
@@ -116,13 +117,14 @@ class CountrySelectForm(forms.Form):
     us with their country so that we can include them in mailings relevant to
     their area of the world.
     """
+
     country = forms.ChoiceField(choices=[])  # will set choices based on locale
 
     def __init__(self, locale, *args, **kwargs):
         regions = product_details.get_regions(locale)
         regions = sorted(iter(regions.items()), key=itemgetter(1))
         super(CountrySelectForm, self).__init__(*args, **kwargs)
-        self.fields['country'].choices = regions
+        self.fields["country"].choices = regions
 
 
 class ManageSubscriptionsForm(forms.Form):
@@ -137,38 +139,37 @@ class ManageSubscriptionsForm(forms.Form):
     @param kwargs: Other standard form kwargs
     """
 
-    format = forms.ChoiceField(widget=SimpleRadioSelect,
-                               choices=FORMATS,
-                               initial='H')
+    format = forms.ChoiceField(widget=SimpleRadioSelect, choices=FORMATS, initial="H")
     remove_all = forms.BooleanField(required=False)
 
-    country = forms.ChoiceField(choices=[],  # will set choices based on locale
-                                required=False)
-    lang = forms.ChoiceField(choices=[],     # will set choices based on newsletter languages
-                             required=False)
+    country = forms.ChoiceField(choices=[], required=False)  # will set choices based on locale
+    lang = forms.ChoiceField(choices=[], required=False)  # will set choices based on newsletter languages
 
     def __init__(self, locale, *args, **kwargs):
-        regions = product_details.get_regions(locale)
-        regions = sorted(iter(regions.items()), key=itemgetter(1))
+        regions_dict = product_details.get_regions(locale)
+        regions = sorted(iter(regions_dict.items()), key=itemgetter(1))
         lang_choices = get_lang_choices()
         languages = [x[0] for x in lang_choices]
 
         lang = country = locale.lower()
-        if '-' in lang:
-            lang, country = lang.split('-', 1)
-        lang = lang if lang in languages else 'en'
+        if "-" in lang:
+            lang, country = lang.split("-", 1)
+        lang = lang if lang in languages else "en"
 
-        self.newsletters = kwargs.pop('newsletters', [])
+        self.newsletters = kwargs.pop("newsletters", [])
 
         # Get initial - work with a copy so we're not modifying the
         # data that was passed to us
-        initial = kwargs.get('initial', {}).copy()
-        if not initial.get('country', None):
-            initial['country'] = country
-        if not initial.get('lang', None):
-            initial['lang'] = lang
+        initial = kwargs.get("initial", {}).copy()
+        if "country" in initial and initial["country"] not in regions_dict:
+            # clear the initial country if it's not in the list
+            del initial["country"]
+        if not initial.get("country", None):
+            initial["country"] = country
+        if not initial.get("lang", None):
+            initial["lang"] = lang
         else:
-            lang = initial['lang']
+            lang = initial["lang"]
 
         # Sometimes people are in ET with a language that is spelled a
         # little differently from our list. E.g. we have 'es' on our
@@ -187,22 +188,22 @@ class ManageSubscriptionsForm(forms.Form):
             else:
                 # No luck - guess from the locale
                 lang = locale.lower()
-                if '-' in lang:
-                    lang, _unused = lang.split('-', 1)
-            initial['lang'] = lang
+                if "-" in lang:
+                    lang, _unused = lang.split("-", 1)
+            initial["lang"] = lang
 
-        kwargs['initial'] = initial
+        kwargs["initial"] = initial
         super(ManageSubscriptionsForm, self).__init__(*args, **kwargs)
-        self.fields['country'].choices = regions
-        self.fields['lang'].choices = lang_choices
+        self.fields["country"].choices = regions
+        self.fields["lang"].choices = lang_choices
 
-        self.already_subscribed = initial.get('newsletters', [])
+        self.already_subscribed = initial.get("newsletters", [])
 
     def clean(self):
         valid_newsletters = utils.get_newsletters()
         for newsletter in self.newsletters:
             if newsletter not in valid_newsletters:
-                msg = _("%s is not a valid newsletter") % newsletter
+                msg = ftl("newsletters-is-not-a-valid-newsletter", newsletter=newsletter, ftl_files=["mozorg/newsletters"])
                 raise ValidationError(msg)
         return super(ManageSubscriptionsForm, self).clean()
 
@@ -212,6 +213,7 @@ class NewsletterForm(forms.Form):
     Form to let a user subscribe to or unsubscribe from a newsletter
     on the manage existing newsletters page.  Used in a FormSet.
     """
+
     title = forms.CharField(required=False)
     description = forms.CharField(required=False)
     subscribed_radio = forms.BooleanField(
@@ -219,7 +221,7 @@ class NewsletterForm(forms.Form):
         required=False,  # they have to answer, but answer can be False
     )
     subscribed_check = forms.BooleanField(
-        widget=TableCheckboxInput,
+        widget=widgets.CheckboxInput,
         required=False,  # they have to answer, but answer can be False
     )
     newsletter = forms.CharField(widget=forms.HiddenInput)
@@ -231,19 +233,16 @@ class NewsletterFooterForm(forms.Form):
     footer of a page (see newsletters/middleware.py) but sometimes
     on a dedicated page.
     """
-    email = forms.EmailField(widget=EmailInput(attrs={'required': 'required'}))
+
+    email = forms.EmailField(widget=EmailInput(attrs={"required": "required"}))
     # first/last_name not yet included in email_newsletter_form helper
     # currently used on /contribute/friends/ (custom markup)
     first_name = forms.CharField(widget=forms.TextInput, required=False)
     last_name = forms.CharField(widget=forms.TextInput, required=False)
-    fmt = forms.ChoiceField(widget=SimpleRadioSelect,
-                            choices=FORMATS,
-                            initial='H')
+    fmt = forms.ChoiceField(widget=SimpleRadioSelect, choices=FORMATS, initial="H")
     privacy = forms.BooleanField(widget=PrivacyWidget)
     source_url = forms.CharField(required=False)
-    newsletters = forms.CharField(widget=forms.HiddenInput,
-                                  required=True,
-                                  max_length=100)
+    newsletters = forms.CharField(widget=forms.HiddenInput, required=True, max_length=100)
 
     # has to take a newsletters argument so it can figure
     # out which languages to list in the form.
@@ -256,14 +255,14 @@ class NewsletterFooterForm(forms.Form):
         except ValidationError:
             # replace with most common good newsletter
             # form validation will work with submitted data
-            newsletters = 'mozilla-and-you'
+            newsletters = "mozilla-and-you"
 
         lang = locale.lower()
-        if '-' in lang:
-            lang, country = lang.split('-', 1)
+        if "-" in lang:
+            lang, country = lang.split("-", 1)
         else:
-            country = ''
-            regions.insert(0, ('', _lazy('Select country')))
+            country = ""
+            regions.insert(0, ("", ftl_lazy("newsletter-form-select-country-or-region", fallback="newsletter-form-select-country")))
         lang_choices = get_lang_choices(newsletters)
         languages = [x[0] for x in lang_choices]
         if lang not in languages:
@@ -271,32 +270,26 @@ class NewsletterFooterForm(forms.Form):
             # are translated into. Initialize the language field to no
             # choice, to force the user to pick one of the languages that
             # we do support.
-            lang = ''
-            lang_choices.insert(0, ('', _lazy('Available Languages')))
+            lang = ""
+            lang_choices.insert(0, ("", ftl_lazy("newsletter-form-available-languages")))
 
         super(NewsletterFooterForm, self).__init__(data, *args, **kwargs)
 
         required_args = {
-            'required': 'required',
-            'aria-required': 'true',
+            "required": "required",
+            "aria-required": "true",
         }
         country_widget = widgets.Select(attrs=required_args)
-        self.fields['country'] = forms.ChoiceField(widget=country_widget,
-                                                   choices=regions,
-                                                   initial=country,
-                                                   required=False)
+        self.fields["country"] = forms.ChoiceField(widget=country_widget, choices=regions, initial=country, required=False)
         lang_widget = widgets.Select(attrs=required_args)
-        self.fields['lang'] = forms.TypedChoiceField(widget=lang_widget,
-                                                     choices=lang_choices,
-                                                     initial=lang,
-                                                     required=False)
-        self.fields['newsletters'].initial = newsletters
+        self.fields["lang"] = forms.TypedChoiceField(widget=lang_widget, choices=lang_choices, initial=lang, required=False)
+        self.fields["newsletters"].initial = newsletters
 
     def clean_newsletters(self):
-        return validate_newsletters(self.cleaned_data['newsletters'])
+        return validate_newsletters(self.cleaned_data["newsletters"])
 
     def clean_source_url(self):
-        su = self.cleaned_data['source_url'].strip()
+        su = self.cleaned_data["source_url"].strip()
         if su:
             # limit to 255 characters by truncation
             return su[:255]
@@ -308,4 +301,5 @@ class EmailForm(forms.Form):
     """
     Form to enter email, e.g. to be sent a recovery message
     """
-    email = forms.EmailField(widget=EmailInput(attrs={'required': 'required'}))
+
+    email = forms.EmailField(widget=EmailInput(attrs={"required": "required"}))

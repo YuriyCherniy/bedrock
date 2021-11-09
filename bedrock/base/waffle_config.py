@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 from time import time
 
 from everett.manager import (
@@ -5,9 +9,34 @@ from everett.manager import (
     ConfigEnvFileEnv,
     ConfigManager,
     ConfigOSEnv,
+    get_parser,
 )
 
 from bedrock.base.models import get_config_dict
+
+
+class DictOf:
+    """Parser class that returns values as a dict with string keys and values of the chosen type.
+
+    >>> parser = DictOf(int)
+    >>> parser('en:10,de:20')
+    {'en': 10, 'de': 20}
+    """
+
+    def __init__(self, val_parser):
+        self.val_parser = val_parser
+
+    def __call__(self, val):
+        val = val.strip()
+        val_parser = get_parser(self.val_parser)
+        out = {}
+        if not val:
+            return out
+
+        for part in val.split(","):
+            k, v = part.split(":")
+            out[k.strip()] = val_parser(v.strip())
+        return out
 
 
 class ConfigDBEnv(ConfigDictEnv):
@@ -40,8 +69,10 @@ class ConfigDBEnv(ConfigDictEnv):
         return configs
 
 
-config = ConfigManager([
-    ConfigOSEnv(),
-    ConfigEnvFileEnv('.env'),
-    ConfigDBEnv(),
-])
+config = ConfigManager(
+    [
+        ConfigOSEnv(),
+        ConfigEnvFileEnv(".env"),
+        ConfigDBEnv(),
+    ]
+)

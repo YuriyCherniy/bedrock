@@ -1,18 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import json
 import re
-from cgi import escape
 from collections import defaultdict
+from html import escape
 from operator import itemgetter
 
-import basket
-import basket.errors
-import commonware.log
-import lib.l10n_utils as l10n_utils
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.forms.formsets import formset_factory
@@ -20,177 +15,180 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 from django.views.decorators.cache import never_cache
-from jinja2 import Markup
-from lib.l10n_utils.dotlang import _, _lazy
 
+import basket
+import basket.errors
+import commonware.log
+import requests
+from jinja2 import Markup
+
+import lib.l10n_utils as l10n_utils
 from bedrock.base import waffle
-from bedrock.base.urlresolvers import reverse
+
 # Cannot use short "from . import utils" because we need to mock
 # utils.get_newsletters in our tests
-from bedrock.base.views import get_geo_from_request
+from bedrock.base.geo import get_country_from_request
+from bedrock.base.urlresolvers import reverse
 from bedrock.newsletter import utils
+from lib.l10n_utils.fluent import ftl, ftl_lazy
 
-from .forms import (CountrySelectForm, EmailForm, ManageSubscriptionsForm,
-                    NewsletterFooterForm, NewsletterForm)
+from .forms import (
+    CountrySelectForm,
+    EmailForm,
+    ManageSubscriptionsForm,
+    NewsletterFooterForm,
+    NewsletterForm,
+)
 
-log = commonware.log.getLogger('b.newsletter')
+log = commonware.log.getLogger("b.newsletter")
 
-LANG_FILES = ['mozorg/newsletters']
-general_error = _lazy(u'We are sorry, but there was a problem '
-                      u'with our system. Please try again later!')
-thank_you = _lazy(u'Thanks for updating your email preferences.')
-bad_token = _lazy(u'The supplied link has expired or is not valid. You will '
-                  u'receive a new one in the next newsletter, or below you '
-                  u'can request an email with the link.')
-recovery_text = _lazy(
-    u'Success! An email has been sent to you with your preference center '
-    u'link. Thanks!')
+FTL_FILES = ["mozorg/newsletters"]
 
-# NOTE: Must format a link into this: (https://www.mozilla.org/newsletter/)
-unknown_address_text = _lazy(
-    u'This email address is not in our system. Please double check your '
-    u'address or <a href="%s">subscribe to our newsletters.</a>')
-
-invalid_email_address = _lazy(u'This is not a valid email address. '
-                              u'Please check the spelling.')
+general_error = ftl_lazy("newsletters-we-are-sorry-but-there", ftl_files=FTL_FILES)
+thank_you = ftl_lazy("newsletters-your-email-preferences", fallback="newsletters-thanks-for-updating-your", ftl_files=FTL_FILES)
+bad_token = ftl_lazy("newsletters-the-supplied-link-has-expired-long", ftl_files=FTL_FILES)
+recovery_text = ftl_lazy("newsletters-success-an-email-has-been-sent", ftl_files=FTL_FILES)
+invalid_email_address = ftl_lazy("newsletters-this-is-not-a-valid-email", ftl_files=FTL_FILES)
 
 NEWSLETTER_STRINGS = {
-    u'about-mozilla': {
-        'description': _lazy(u'Join Mozillians all around the world and learn about impactful opportunities to support Mozilla\u2019s mission.'),
-        'title': _lazy(u'Mozilla Community')},
-    u'about-standards': {
-        'title': _lazy(u'About Standards')},
-    u'addon-dev': {
-        'title': _lazy(u'Addon Development')},
-    u'affiliates': {
-        'description': _lazy(u'A monthly newsletter to keep you up to date with the '
-                             u'Firefox Affiliates program.'),
-        'title': _lazy(u'Firefox Affiliates')},
-    u'ambassadors': {
-        'description': _lazy(u'A monthly newsletter on how to get involved with Mozilla on your campus. '),
-        'title': _lazy(u'Firefox Student Ambassadors')},
-    u'app-dev': {
-        'description': _lazy(u'A developer\u2019s guide to highlights of Web platform '
-                             u'innovations, best practices, new documentation and more.'),
-        'title': _lazy(u'Developer Newsletter')},
-    u'aurora': {
-        'description': _lazy(u'Aurora'),
-        'title': _lazy(u'Aurora')},
-    u'beta': {
-        'description': _lazy(u'Read about the latest features for Firefox desktop and mobile '
-                             u'before the final release.'),
-        'title': _lazy(u'Beta News')},
-    u'download-firefox-android': {
-        'title': _lazy(u'Download Firefox for Android')},
-    u'download-firefox-androidsn': {
-        'title': _lazy(u'Get Firefox for Android')},
-    u'download-firefox-androidsnus': {
-        'title': _lazy(u'Get Firefox for Android')},
-    u'download-firefox-ios': {
-        'title': _lazy(u'Download Firefox for iOS')},
-    u'download-firefox-mobile': {
-        'title': _lazy(u'Download Firefox for Mobile')},
-    u'drumbeat': {
-        'title': _lazy(u'Drumbeat Newsgroup')},
-    u'firefox-accounts-journey': {
-        'description': _lazy(u'Get the most out of your Firefox Account.'),
-        'title': _lazy(u'Firefox Accounts Tips')},
-    u'firefox-desktop': {
-        'description': _lazy(u'Don\u2019t miss the latest announcements about our desktop browser.'),
-        'title': _lazy(u'Firefox for desktop')},
-    u'firefox-flicks': {
-        'description': _lazy(u'Periodic email updates about our annual international film competition.'),
-        'title': _lazy(u'Firefox Flicks')},
-    u'firefox-ios': {
-        'description': _lazy(u'Be the first to know when Firefox is available for iOS devices.'),
-        'title': _lazy(u'Firefox iOS')},
-    u'firefox-os': {
-        'description': _lazy(u'Don\u2019t miss important news and updates about your Firefox OS device.'),
-        'title': _lazy(u'Firefox OS smartphone owner?')},
-    u'firefox-os-news': {
-        'description': _lazy(u'A monthly newsletter and special announcements on how to get the most '
-                             u'from your Firefox OS device, including the latest features and coolest '
-                             u'Firefox Marketplace apps.'),
-        'title': _lazy(u'Firefox OS + You')},
-    u'firefox-tips': {
-        'description': _lazy(u'Get a weekly tip on how to super-charge your Firefox experience.'),
-        'title': _lazy(u'Firefox Weekly Tips')},
-    u'get-android-embed': {
-        'title': _lazy(u'Get Firefox for Android')},
-    u'get-android-notembed': {
-        'title': _lazy(u'Get Firefox for Android')},
-    u'get-involved': {
-        'title': _lazy(u'Get Involved')},
-    u'internet-health-report': {
-        'title': _lazy(u'Internet Health Report'),
-        'description': _lazy(u'Keep up with our annual compilation of research and stories on the issues of privacy '
-                             u'&amp; security, openness, digital inclusion, decentralization, and web literacy.')},
-    u'join-mozilla': {
-        'title': _lazy(u'Join Mozilla')},
-    u'knowledge-is-power': {
-        'description': _lazy(u'Get all the knowledge you need to stay safer and smarter online.'),
-        'title': _lazy(u'Knowledge is Power')},
-    u'labs': {
-        'title': _lazy(u'About Labs')},
-    u'maker-party': {
-        'description': u"Mozilla's largest celebration of making and learning on the web.",
-        'title': _lazy(u'Maker Party')},
-    u'marketplace': {
-        'description': _lazy(u'Discover the latest, coolest HTML5 apps on Firefox OS.'),
-        'title': _lazy(u'Firefox OS')},
-    u'marketplace-android': {
-        'title': _lazy(u'Android')},
-    u'marketplace-desktop': {
-        'title': _lazy(u'Desktop')},
-    u'mobile': {
-        'description': _lazy(u'Keep up with releases and news about Firefox for Android.'),
-        'title': _lazy(u'Firefox for Android')},
-    u'mozilla-and-you': {
-        'description': _lazy(u'Get how-tos, advice and news to make your Firefox experience work best for you.'),
-        'title': _lazy(u'Firefox News')},
-    u'mozilla-festival': {
-        'description': u"Special announcements about Mozilla's annual, hands-on festival "
-                       u"dedicated to forging the future of the open Web.",
-        'title': _lazy(u'Mozilla Festival')},
-    u'mozilla-foundation': {
-        'description': _lazy(u'Regular updates to keep you informed and active in our fight for a better internet.'),
-        'title': _lazy(u'Mozilla News')},
-    u'mozilla-general': {
-        'description': _lazy(u'Special announcements and messages from the team dedicated to keeping '
-                             u'the Web free and open.'),
-        'title': _lazy(u'Mozilla')},
-    u'mozilla-learning-network': {
-        'description': _lazy(u'Updates from our global community, helping people learn the most '
-                             u'important skills of our age: the ability to read, write and participate '
-                             u'in the digital world.'),
-        'title': _lazy(u'Mozilla Learning Network')},
-    u'mozilla-phone': {
-        'description': _lazy(u'Email updates for vouched Mozillians on mozillians.org.'),
-        'title': _lazy(u'Mozillians')},
-    u'mozilla-technology': {
-        'description': _lazy(u"We're building the technology of the future. Come explore with us."),
-        'title': _lazy(u'Mozilla Labs')},
-    u'os': {
-        'description': _lazy(u'Firefox OS news, tips, launch information and where to buy.'),
-        'title': _lazy(u'Firefox OS')},
-    u'shape-web': {
-        'description': _lazy(u'News and information related to the health of the web.'),
-        'title': _lazy(u'Shape of the Web')},
-    u'student-reps': {
-        'description': _lazy(u'Former University program from 2008-2011, now retired and relaunched as '
-                             u'the Firefox Student Ambassadors program.'),
-        'title': _lazy(u'Student Reps')},
-    u'take-action-for-the-internet': {
-        'description': _lazy(u'Add your voice to petitions, events and initiatives '
-                             u'that fight for the future of the web.'),
-        'title': _lazy(u'Take Action for the Internet')},
-    u'test-pilot': {
-        'description': _lazy(u'Help us make a better Firefox for you by test-driving '
-                             u'our latest products and features.'),
-        'title': _lazy(u'New Product Testing')},
-    u'webmaker': {
-        'description': _lazy(u'Special announcements helping you get the most out of Webmaker.'),
-        'title': _lazy(u'Webmaker')},
+    "about-mozilla": {
+        "description": ftl_lazy("newsletters-join-mozillians-all-around", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla-community", ftl_files=FTL_FILES),
+    },
+    "about-standards": {"title": ftl_lazy("newsletters-about-standards", ftl_files=FTL_FILES)},
+    "addon-dev": {"title": ftl_lazy("newsletters-addon-development", ftl_files=FTL_FILES)},
+    "affiliates": {
+        "description": ftl_lazy("newsletters-a-monthly-newsletter-affiliates", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-affiliates", ftl_files=FTL_FILES),
+    },
+    "ambassadors": {
+        "description": ftl_lazy("newsletters-a-monthly-newsletter-ambassadors", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-student-ambassadors", ftl_files=FTL_FILES),
+    },
+    "app-dev": {
+        "description": ftl_lazy("newsletters-a-developers-guide", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-developer-newsletter", ftl_files=FTL_FILES),
+    },
+    "aurora": {"description": ftl_lazy("newsletters-aurora", ftl_files=FTL_FILES), "title": ftl_lazy("newsletters-aurora", ftl_files=FTL_FILES)},
+    "beta": {
+        "description": ftl_lazy("newsletters-read-about-the-latest-features", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-beta-news", ftl_files=FTL_FILES),
+    },
+    "download-firefox-android": {"title": ftl_lazy("newsletters-download-firefox-for-android", ftl_files=FTL_FILES)},
+    "download-firefox-androidsn": {"title": ftl_lazy("newsletters-get-firefox-for-android", ftl_files=FTL_FILES)},
+    "download-firefox-androidsnus": {"title": ftl_lazy("newsletters-get-firefox-for-android", ftl_files=FTL_FILES)},
+    "download-firefox-ios": {"title": ftl_lazy("newsletters-download-firefox-for-ios", ftl_files=FTL_FILES)},
+    "download-firefox-mobile": {"title": ftl_lazy("newsletters-download-firefox-for-mobile", ftl_files=FTL_FILES)},
+    "drumbeat": {"title": ftl_lazy("newsletters-drumbeat-newsgroup", ftl_files=FTL_FILES)},
+    "firefox-accounts-journey": {
+        "description": ftl_lazy("newsletters-get-the-most-firefox-account", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-accounts-tips", ftl_files=FTL_FILES),
+    },
+    "firefox-desktop": {
+        "description": ftl_lazy("newsletters-dont-miss-the-latest", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-for-desktop", ftl_files=FTL_FILES),
+    },
+    "firefox-flicks": {
+        "description": ftl_lazy("newsletters-periodic-email-updates", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-flicks", ftl_files=FTL_FILES),
+    },
+    "firefox-ios": {
+        "description": ftl_lazy("newsletters-be-the-first-to-know", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-ios", ftl_files=FTL_FILES),
+    },
+    "firefox-os": {
+        "description": ftl_lazy("newsletters-dont-miss-important-news", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-os-smartphone-owner", ftl_files=FTL_FILES),
+    },
+    "firefox-os-news": {
+        "description": ftl_lazy("newsletters-a-monthly-newsletter-and-special", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-os-and-you", ftl_files=FTL_FILES),
+    },
+    "firefox-tips": {
+        "description": ftl_lazy("newsletters-get-a-weekly-tip", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-weekly-tips", ftl_files=FTL_FILES),
+    },
+    "get-android-embed": {"title": ftl_lazy("newsletters-get-firefox-for-android", ftl_files=FTL_FILES)},
+    "get-android-notembed": {"title": ftl_lazy("newsletters-get-firefox-for-android", ftl_files=FTL_FILES)},
+    "get-involved": {"title": ftl_lazy("newsletters-get-involved", ftl_files=FTL_FILES)},
+    "internet-health-report": {
+        "title": ftl_lazy("newsletters-insights", fallback="newsletters-internet-health-report", ftl_files=FTL_FILES),
+        "description": ftl_lazy(
+            "newsletters-mozilla-published-articles-and-deep", fallback="newsletters-keep-up-with-our-annual", ftl_files=FTL_FILES
+        ),
+    },
+    "join-mozilla": {"title": ftl_lazy("newsletters-join-mozilla", ftl_files=FTL_FILES)},
+    "knowledge-is-power": {
+        "description": ftl_lazy("newsletters-get-all-the-knowledge", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-knowledge-is-power", ftl_files=FTL_FILES),
+    },
+    "labs": {"title": ftl_lazy("newsletters-about-labs", ftl_files=FTL_FILES)},
+    "maker-party": {
+        "description": ftl_lazy("newsletters-mozillas-largest-celebration", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-maker-party", ftl_files=FTL_FILES),
+    },
+    "marketplace": {
+        "description": ftl_lazy("newsletters-discover-the-latest", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-os", ftl_files=FTL_FILES),
+    },
+    "marketplace-android": {"title": ftl_lazy("newsletters-android", ftl_files=FTL_FILES)},
+    "marketplace-desktop": {"title": ftl_lazy("newsletters-desktop", ftl_files=FTL_FILES)},
+    "mobile": {
+        "description": ftl_lazy("newsletters-keep-up-with-releases", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-for-android", ftl_files=FTL_FILES),
+    },
+    "mozilla-and-you": {
+        "description": ftl_lazy("newsletters-get-how-tos", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-news", ftl_files=FTL_FILES),
+    },
+    "mozilla-festival": {
+        "description": ftl_lazy("newsletters-special-announcements-about-mozilla-v2", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla-festival", ftl_files=FTL_FILES),
+    },
+    "mozilla-foundation": {
+        "description": ftl_lazy("newsletters-regular-updates-to-keep-v2", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla-news", ftl_files=FTL_FILES),
+    },
+    "mozilla-general": {
+        "description": ftl_lazy("newsletters-special-accouncements-and-messages", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla", ftl_files=FTL_FILES),
+    },
+    "mozilla-learning-network": {
+        "description": ftl_lazy("newsletters-updates-from-our-global", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla-learning-network", ftl_files=FTL_FILES),
+    },
+    "mozilla-phone": {
+        "description": ftl_lazy("newsletters-email-updates-from-vouched", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozillians", ftl_files=FTL_FILES),
+    },
+    "mozilla-technology": {
+        "description": ftl_lazy("newsletters-were-building-the-technology", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-mozilla-labs", ftl_files=FTL_FILES),
+    },
+    "os": {
+        "description": ftl_lazy("newsletters-firefox-os-news", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-firefox-os", ftl_files=FTL_FILES),
+    },
+    "shape-web": {
+        "description": ftl_lazy("newsletters-news-and-information", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-shapre-of-the-web", ftl_files=FTL_FILES),
+    },
+    "student-reps": {
+        "description": ftl_lazy("newsletters-former-university-program", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-student-reps", ftl_files=FTL_FILES),
+    },
+    "take-action-for-the-internet": {
+        "description": ftl_lazy("newsletters-add-your-voice", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-take-action", ftl_files=FTL_FILES),
+    },
+    "test-pilot": {
+        "description": ftl_lazy("newsletters-help-us-make-a-better", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-new-product-testing", ftl_files=FTL_FILES),
+    },
+    "webmaker": {
+        "description": ftl_lazy("newsletters-special-announcements-helping-you", ftl_files=FTL_FILES),
+        "title": ftl_lazy("newsletters-webmaker", ftl_files=FTL_FILES),
+    },
 }
 
 
@@ -199,31 +197,27 @@ UNSUB_REASONS_SUBMITTED = 2
 
 # A UUID looks like: f81d4fae-7dec-11d0-a765-00a0c91e6bf6
 # Here's a regex to match a UUID:
-UUID_REGEX = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
-                        re.IGNORECASE)
+UUID_REGEX = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE)
 
 
-@never_cache
 def set_country(request, token):
     """Allow a user to set their country"""
     initial = {}
-    countrycode = get_geo_from_request(request)
+    countrycode = get_country_from_request(request)
     if countrycode:
-        initial['country'] = countrycode.lower()
+        initial["country"] = countrycode.lower()
 
-    form = CountrySelectForm('en-US', data=request.POST or None, initial=initial)
+    form = CountrySelectForm("en-US", data=request.POST or None, initial=initial)
     if form.is_valid():
         try:
-            basket.request('post', 'user-meta', data=form.cleaned_data, token=token)
+            basket.request("post", "user-meta", data=form.cleaned_data, token=token)
         except basket.BasketException:
             log.exception("Error updating user's country in basket")
-            messages.add_message(
-                request, messages.ERROR, general_error
-            )
+            messages.add_message(request, messages.ERROR, general_error)
         else:
-            return redirect(reverse('newsletter.country_success'))
+            return redirect(reverse("newsletter.country_success"))
 
-    return l10n_utils.render(request, 'newsletter/country.html', {'form': form})
+    return l10n_utils.render(request, "newsletter/country.html", {"form": form})
 
 
 @never_cache
@@ -245,7 +239,7 @@ def confirm(request, token):
             # Any other exception
             generic_error = True
     else:
-        if result['status'] == 'ok':
+        if result["status"] == "ok":
             success = True
         else:
             # Shouldn't happen (errors should raise exception),
@@ -255,20 +249,15 @@ def confirm(request, token):
     # Assume rate limit error means user already confirmed and clicked confirm
     # link twice in quick succession
     if success or rate_limit_error:
-        qparams = ['confirm=1']
-        qs = request.META.get('QUERY_STRING', '')
+        qparams = ["confirm=1"]
+        qs = request.META.get("QUERY_STRING", "")
         if qs:
             qparams.append(qs)
-        return HttpResponseRedirect("%s?%s" % (reverse('newsletter.existing.token',
-                                                       kwargs={'token': token}),
-                                               '&'.join(qparams)))
+        return HttpResponseRedirect("%s?%s" % (reverse("newsletter.existing.token", kwargs={"token": token}), "&".join(qparams)))
     else:
         return l10n_utils.render(
-            request,
-            'newsletter/confirm.html',
-            {'success': success,
-             'generic_error': generic_error,
-             'token_error': token_error})
+            request, "newsletter/confirm.html", {"success": success, "generic_error": generic_error, "token_error": token_error}, ftl_files=FTL_FILES
+        )
 
 
 @never_cache
@@ -288,16 +277,16 @@ def existing(request, token=None):
     locale = l10n_utils.get_locale(request)
 
     if not token:
-        return redirect(reverse('newsletter.recovery'))
+        return redirect(reverse("newsletter.recovery"))
 
     if not UUID_REGEX.match(token):
         # Bad token
         messages.add_message(request, messages.ERROR, bad_token)
         # Redirect to the recovery page
-        return redirect(reverse('newsletter.recovery'))
+        return redirect(reverse("newsletter.recovery"))
 
-    if waffle.switch('newsletter-maintenance-mode'):
-        return l10n_utils.render(request, 'newsletter/existing.html')
+    if waffle.switch("newsletter-maintenance-mode"):
+        return l10n_utils.render(request, "newsletter/existing.html", ftl_files=FTL_FILES)
 
     unsub_parm = None
 
@@ -312,19 +301,19 @@ def existing(request, token=None):
     #  u'email': u'user@example.com'
     # }
 
-    has_fxa = 'fxa' in request.GET
+    has_fxa = "fxa" in request.GET
     user = None
     if token:
         try:
             # ask for fxa status if not passed in the URL
-            params = None if has_fxa else {'fxa': 1}
-            user = basket.request('get', 'user', token=token, params=params)
+            params = None if has_fxa else {"fxa": 1}
+            user = basket.request("get", "user", token=token, params=params)
         except basket.BasketNetworkException:
             # Something wrong with basket backend, no point in continuing,
             # we'd probably fail to subscribe them anyway.
             log.exception("Basket timeout")
             messages.add_message(request, messages.ERROR, general_error)
-            return l10n_utils.render(request, 'newsletter/existing.html')
+            return l10n_utils.render(request, "newsletter/existing.html", ftl_files=FTL_FILES)
         except basket.BasketException as e:
             log.exception("FAILED to get user from token (%s)", e.desc)
 
@@ -332,10 +321,10 @@ def existing(request, token=None):
         # Bad or no token
         messages.add_message(request, messages.ERROR, bad_token)
         # Redirect to the recovery page
-        return redirect(reverse('newsletter.recovery'))
+        return redirect(reverse("newsletter.recovery"))
 
     # if `has_fxa` not returned from basket, set it from the URL
-    user.setdefault('has_fxa', has_fxa)
+    user.setdefault("has_fxa", has_fxa)
     # Get the newsletter data - it's a dictionary of dictionaries
     newsletter_data = utils.get_newsletters()
 
@@ -345,56 +334,55 @@ def existing(request, token=None):
     for newsletter, data in newsletter_data.items():
         # Only show a newsletter if it has ['active'] == True and
         # ['show'] == True or the user is already subscribed
-        if not data.get('active', False):
+        if not data.get("active", False):
             continue
 
-        if (data.get('show', False) or newsletter in user['newsletters'] or
-                (user['has_fxa'] and newsletter in settings.FXA_NEWSLETTERS and
-                 any(locale.startswith(l) for l in settings.FXA_NEWSLETTERS_LOCALES))):
-            langs = data['languages']
+        if (
+            data.get("show", False)
+            or newsletter in user["newsletters"]
+            or (user["has_fxa"] and newsletter in settings.FXA_NEWSLETTERS and any(locale.startswith(l) for l in settings.FXA_NEWSLETTERS_LOCALES))
+        ):
+            langs = data["languages"]
             nstrings = NEWSLETTER_STRINGS.get(newsletter)
             if nstrings:
-                if newsletter == 'firefox-accounts-journey' and locale.startswith('en'):
+                if newsletter == "firefox-accounts-journey" and locale.startswith("en"):
                     # alternate english title
-                    title = u'Firefox Account Tips'
+                    title = "Firefox Account Tips"
                 else:
-                    title = nstrings['title']
-                description = nstrings.get('description', u'')
+                    title = nstrings["title"]
+                description = nstrings.get("description", "")
             else:
-                # Firefox Marketplace for Desktop/Android/Firefox OS should be
-                # shorten in the titles
-                title = _(data['title'].replace('Firefox Marketplace for ', ''))
-                description = _(data['description'])
+                title = data["title"]
+                description = data["description"]
 
             form_data = {
-                'title': Markup(title),
-                'subscribed_radio': newsletter in user['newsletters'],
-                'subscribed_check': newsletter in user['newsletters'],
-                'newsletter': newsletter,
-                'description': Markup(description),
-                'english_only': len(langs) == 1 and langs[0].startswith('en'),
-                'indented': data.get('indent', False),
+                "title": Markup(title),
+                "subscribed_radio": newsletter in user["newsletters"],
+                "subscribed_check": newsletter in user["newsletters"],
+                "newsletter": newsletter,
+                "description": Markup(description),
+                "english_only": len(langs) == 1 and langs[0].startswith("en"),
+                "indented": data.get("indent", False),
             }
-            if 'order' in data:
-                form_data['order'] = data['order']
+            if "order" in data:
+                form_data["order"] = data["order"]
             initial.append(form_data)
 
     # Sort by 'order' field if we were given it; otherwise, by title
     if initial:
-        keyfield = 'order' if 'order' in initial[0] else 'title'
+        keyfield = "order" if "order" in initial[0] else "title"
         initial.sort(key=itemgetter(keyfield))
 
-    NewsletterFormSet = formset_factory(NewsletterForm, extra=0,
-                                        max_num=len(initial))
+    NewsletterFormSet = formset_factory(NewsletterForm, extra=0, max_num=len(initial))
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form_kwargs = {}
 
         # Temporary form so we can see if they checked 'remove_all'.  If
         # they did, no point in validating the newsletters formset and it would
         # look dumb to complain about it.
         form = ManageSubscriptionsForm(locale, data=request.POST, initial=user)
-        remove_all = form.is_valid() and form.cleaned_data['remove_all']
+        remove_all = form.is_valid() and form.cleaned_data["remove_all"]
 
         formset_is_valid = False
 
@@ -412,14 +400,16 @@ def existing(request, token=None):
             if formset.is_valid():
                 formset_is_valid = True
                 # What newsletters do they say they want to be subscribed to?
-                newsletters = set([subform.cleaned_data['newsletter']
-                                   for subform in formset
-                                   if (subform.cleaned_data['subscribed_radio'] or
-                                       subform.cleaned_data['subscribed_check'])])
-                form_kwargs['newsletters'] = newsletters
+                newsletters = set(
+                    [
+                        subform.cleaned_data["newsletter"]
+                        for subform in formset
+                        if (subform.cleaned_data["subscribed_radio"] or subform.cleaned_data["subscribed_check"])
+                    ]
+                )
+                form_kwargs["newsletters"] = newsletters
 
-        form = ManageSubscriptionsForm(locale, data=request.POST, initial=user,
-                                       **form_kwargs)
+        form = ManageSubscriptionsForm(locale, data=request.POST, initial=user, **form_kwargs)
 
         if formset_is_valid and form.is_valid():
 
@@ -430,54 +420,45 @@ def existing(request, token=None):
             # subscribed to, for basket to implement.
             kwargs = {}
             if settings.BASKET_API_KEY:
-                kwargs['api_key'] = settings.BASKET_API_KEY
-            for k in ['lang', 'format', 'country']:
+                kwargs["api_key"] = settings.BASKET_API_KEY
+            for k in ["lang", "format", "country"]:
                 if user[k] != data[k]:
                     kwargs[k] = data[k]
             if not remove_all:
-                kwargs['newsletters'] = ",".join(newsletters)
+                kwargs["newsletters"] = ",".join(newsletters)
             if kwargs:
                 # always send lang so basket doesn't try to guess
-                kwargs['lang'] = data['lang']
+                kwargs["lang"] = data["lang"]
                 try:
                     basket.update_user(token, **kwargs)
                 except basket.BasketException:
                     log.exception("Error updating user in basket")
-                    messages.add_message(
-                        request, messages.ERROR, general_error
-                    )
-                    return l10n_utils.render(request,
-                                             'newsletter/existing.html')
+                    messages.add_message(request, messages.ERROR, general_error)
+                    return l10n_utils.render(request, "newsletter/existing.html", ftl_files=FTL_FILES)
 
             # If they chose to remove all, tell basket that they've opted out
             if remove_all:
                 try:
-                    basket.unsubscribe(token, user['email'], optout=True)
+                    basket.unsubscribe(token, user["email"], optout=True)
                 except (basket.BasketException, requests.Timeout):
                     log.exception("Error updating subscriptions in basket")
-                    messages.add_message(
-                        request, messages.ERROR, general_error
-                    )
-                    return l10n_utils.render(request,
-                                             'newsletter/existing.html')
+                    messages.add_message(request, messages.ERROR, general_error)
+                    return l10n_utils.render(request, "newsletter/existing.html", ftl_files=FTL_FILES)
                 # We need to pass their token to the next view
-                url = reverse('newsletter.updated') \
-                    + "?unsub=%s&token=%s" % (UNSUB_UNSUBSCRIBED_ALL, token)
+                url = reverse("newsletter.updated") + "?unsub=%s&token=%s" % (UNSUB_UNSUBSCRIBED_ALL, token)
                 return redirect(url)
 
             # We're going to redirect, so the only way to tell the next
             # view that we should display the welcome message in the
             # template is to modify the URL
-            url = reverse('newsletter.updated')
+            url = reverse("newsletter.updated")
             if unsub_parm:
                 url += "?unsub=%s" % unsub_parm
             return redirect(url)
 
         # FALL THROUGH so page displays errors
     else:
-        form = ManageSubscriptionsForm(
-            locale, initial=user
-        )
+        form = ManageSubscriptionsForm(locale, initial=user)
         formset = NewsletterFormSet(initial=initial)
 
     # For the template, we want a dictionary whose keys are language codes
@@ -485,35 +466,32 @@ def existing(request, token=None):
     # that language code.
     newsletter_languages = defaultdict(list)
     for newsletter, data in newsletter_data.items():
-        for lang in data['languages']:
+        for lang in data["languages"]:
             newsletter_languages[lang].append(newsletter)
     newsletter_languages = mark_safe(json.dumps(newsletter_languages))
 
     # We also want a list of the newsletters the user is already subscribed to
-    already_subscribed = mark_safe(json.dumps(user['newsletters']))
+    already_subscribed = mark_safe(json.dumps(user["newsletters"]))
 
     context = {
-        'did_confirm': request.GET.get('confirm', None) == '1',
-        'form': form,
-        'formset': formset,
-        'newsletter_languages': newsletter_languages,
-        'newsletters_subscribed': already_subscribed,
-        'email': user['email'],
+        "did_confirm": request.GET.get("confirm", None) == "1",
+        "form": form,
+        "formset": formset,
+        "newsletter_languages": newsletter_languages,
+        "newsletters_subscribed": already_subscribed,
+        "email": user["email"],
     }
 
-    return l10n_utils.render(request,
-                             'newsletter/existing.html',
-                             context)
+    return l10n_utils.render(request, "newsletter/existing.html", context, ftl_files=FTL_FILES)
 
 
 # Possible reasons for unsubscribing
 REASONS = [
-    _lazy(u"You send too many emails."),
-    _lazy(u"Your content wasn't relevant to me."),
-    _lazy(u"Your email design was too hard to read."),
-    _lazy(u"I didn't sign up for this."),
-    _lazy(u"I'm keeping in touch with Mozilla on Facebook and Twitter "
-          "instead."),
+    ftl_lazy("newsletters-you-send-too-many-emails", ftl_files=FTL_FILES),
+    ftl_lazy("newsletters-your-content-wasnt-relevant", ftl_files=FTL_FILES),
+    ftl_lazy("newsletters-your-email-design", ftl_files=FTL_FILES),
+    ftl_lazy("newsletters-i-didnt-sign-up", ftl_files=FTL_FILES),
+    ftl_lazy("newsletters-im-keeping-in-touch-v2", ftl_files=FTL_FILES),
 ]
 
 
@@ -533,7 +511,7 @@ def updated(request):
     all.
 
     """
-    unsub = _post_or_get(request, 'unsub', '0')
+    unsub = _post_or_get(request, "unsub", "0")
     try:
         unsub = int(unsub)
     except ValueError:
@@ -545,7 +523,7 @@ def updated(request):
     reasons_submitted = unsub == UNSUB_REASONS_SUBMITTED
 
     # Token might also have been passed (on remove_all only)
-    token = _post_or_get(request, 'token', None)
+    token = _post_or_get(request, "token", None)
     # token must be a UUID
     if token is not None and not UUID_REGEX.match(token):
         token = None
@@ -554,7 +532,7 @@ def updated(request):
     if not unsub:
         messages.add_message(request, messages.INFO, thank_you)
 
-    if request.method == 'POST' and reasons_submitted and token:
+    if request.method == "POST" and reasons_submitted and token:
         # Tell basket about their reasons
         reasons = []
 
@@ -562,24 +540,22 @@ def updated(request):
         # paste together the English versions of the reasons they submitted,
         # so we can read them.  (Well, except for the free-form reason.)
         for i, reason in enumerate(REASONS):
-            if _post_or_get(request, 'reason%d' % i):
+            if _post_or_get(request, "reason%d" % i):
                 reasons.append(str(reason))
-        if _post_or_get(request, 'reason-text-p'):
-            reasons.append(_post_or_get(request, 'reason-text', ''))
+        if _post_or_get(request, "reason-text-p"):
+            reasons.append(_post_or_get(request, "reason-text", ""))
 
         reason_text = "\n\n".join(reasons) + "\n\n"
 
         utils.custom_unsub_reason(token, reason_text)
 
     context = {
-        'unsubscribed_all': unsubscribed_all,
-        'reasons_submitted': reasons_submitted,
-        'token': token,
-        'reasons': enumerate(REASONS),
+        "unsubscribed_all": unsubscribed_all,
+        "reasons_submitted": reasons_submitted,
+        "token": token,
+        "reasons": enumerate(REASONS),
     }
-    return l10n_utils.render(request,
-                             'newsletter/updated.html',
-                             context)
+    return l10n_utils.render(request, "newsletter/updated.html", context, ftl_files=FTL_FILES)
 
 
 @never_cache
@@ -589,32 +565,30 @@ def recovery(request):
     to manage their subscriptions.
     """
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = EmailForm(request.POST)
         if form.is_valid():
-            email = form.cleaned_data['email']
+            email = form.cleaned_data["email"]
             try:
                 # Try it - basket will return an error if the email is unknown
                 basket.send_recovery_message(email)
             except basket.BasketException as e:
                 # Was it that their email was not known?  Or it could be invalid,
                 # but that doesn't really make a difference.
-                if e.code in (basket.errors.BASKET_UNKNOWN_EMAIL,
-                              basket.errors.BASKET_INVALID_EMAIL):
+                if e.code in (basket.errors.BASKET_UNKNOWN_EMAIL, basket.errors.BASKET_INVALID_EMAIL):
                     # Tell them, give them a link to go subscribe if they want
-                    url = reverse('newsletter.subscribe')
-                    form.errors['email'] = \
-                        form.error_class([unknown_address_text % url])
+                    url = reverse("newsletter.subscribe")
+                    form.errors["email"] = form.error_class([ftl("newsletters-this-email-address-is-not", url=url, ftl_files=FTL_FILES)])
                 else:
                     # Log the details
                     log.exception("Error sending recovery message")
                     # and tell the user that something went wrong
-                    form.errors['__all__'] = form.error_class([general_error])
+                    form.errors["__all__"] = form.error_class([general_error])
             else:
                 messages.add_message(request, messages.INFO, recovery_text)
                 # Redir as GET, signalling success
                 return redirect(request.path + "?success")
-    elif 'success' in request.GET:
+    elif "success" in request.GET:
         # We were redirected after a successful submission.
         # A message will be displayed; don't display the form again.
         form = None
@@ -622,77 +596,82 @@ def recovery(request):
         form = EmailForm()
 
     # This view is shared between two different templates. For context see bug 1442129.
-    if '/newsletter/opt-out-confirmation/' in request.get_full_path():
+    if "/newsletter/opt-out-confirmation/" in request.get_full_path():
         template = "newsletter/opt-out-confirmation.html"
+        ftl_files = ["newsletter/opt-out-confirmation"]
     else:
         template = "newsletter/recovery.html"
+        ftl_files = FTL_FILES
 
-    return l10n_utils.render(request, template, {'form': form})
+    return l10n_utils.render(request, template, {"form": form}, ftl_files=ftl_files)
 
 
 def newsletter_subscribe(request):
-    if request.method == 'POST':
-        newsletters = request.POST.get('newsletters', None)
-        form = NewsletterFooterForm(newsletters,
-                                    l10n_utils.get_locale(request),
-                                    request.POST)
+    if request.method == "POST":
+        newsletters = request.POST.get("newsletters", None)
+        form = NewsletterFooterForm(newsletters, l10n_utils.get_locale(request), request.POST)
         errors = []
         if form.is_valid():
             data = form.cleaned_data
 
-            kwargs = {'format': data['fmt']}
+            kwargs = {"format": data["fmt"]}
             # add optional data
-            kwargs.update(dict((k, data[k]) for k in ['country',
-                                                      'lang',
-                                                      'source_url',
-                                                      'first_name',
-                                                      'last_name', ]
-                               if data[k]))
+            kwargs.update(
+                dict(
+                    (k, data[k])
+                    for k in [
+                        "country",
+                        "lang",
+                        "source_url",
+                        "first_name",
+                        "last_name",
+                    ]
+                    if data[k]
+                )
+            )
 
             # NOTE this is not a typo; Referrer is misspelled in the HTTP spec
             # https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.36
-            if not kwargs.get('source_url') and request.META.get('HTTP_REFERER'):
-                kwargs['source_url'] = request.META['HTTP_REFERER']
+            if not kwargs.get("source_url") and request.META.get("HTTP_REFERER"):
+                kwargs["source_url"] = request.META["HTTP_REFERER"]
 
             try:
-                basket.subscribe(data['email'], data['newsletters'],
-                                 **kwargs)
+                basket.subscribe(data["email"], data["newsletters"], **kwargs)
             except basket.BasketException as e:
                 if e.code == basket.errors.BASKET_INVALID_EMAIL:
                     errors.append(str(invalid_email_address))
                 else:
-                    log.exception("Error subscribing %s to newsletter %s" %
-                                  (data['email'], data['newsletters']))
+                    log.exception("Error subscribing %s to newsletter %s" % (data["email"], data["newsletters"]))
                     errors.append(str(general_error))
 
         else:
-            if 'email' in form.errors:
-                errors.append(_('Please enter a valid email address'))
-            if 'privacy' in form.errors:
-                errors.append(_('You must agree to the privacy notice'))
-            for fieldname in ('fmt', 'lang', 'country'):
+            if "email" in form.errors:
+                errors.append(ftl("newsletter-form-please-enter-a-valid"))
+            if "privacy" in form.errors:
+                errors.append(ftl("newsletter-form-you-must-agree-to"))
+            for fieldname in ("fmt", "lang", "country"):
                 if fieldname in form.errors:
                     errors.extend(form.errors[fieldname])
 
         # form error messages may contain unsanitized user input
-        errors = list(map(escape, errors))
+        errors = [escape(e) for e in errors]
 
         if request.is_ajax():
             # return JSON
             if errors:
                 resp = {
-                    'success': False,
-                    'errors': errors,
+                    "success": False,
+                    "errors": errors,
                 }
             else:
-                resp = {'success': True}
+                resp = {"success": True}
 
             return JsonResponse(resp)
         else:
-            ctx = {'newsletter_form': form}
+            ctx = {"newsletter_form": form}
             if not errors:
-                ctx['success'] = True
+                ctx["success"] = True
 
-            return l10n_utils.render(request, 'newsletter/index.html', ctx)
+            return l10n_utils.render(request, "newsletter/index.html", ctx, ftl_files=FTL_FILES)
 
-    return l10n_utils.render(request, 'newsletter/index.html')
+    return l10n_utils.render(request, "newsletter/index.html", ftl_files=FTL_FILES)

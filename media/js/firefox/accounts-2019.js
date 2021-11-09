@@ -1,13 +1,15 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
-(function() {
+(function () {
     'use strict';
 
     // Prevent double-requesting Flow IDs, inits FxaForm even on non-firefox browsers.
     if (Mozilla.Client.isFirefoxDesktop) {
-        Mozilla.Client.getFxaDetails(function(details) {
+        Mozilla.Client.getFxaDetails(function (details) {
             if (details.setup) {
                 Mozilla.FxaProductButton.init();
             } else {
@@ -17,5 +19,4 @@
     } else {
         Mozilla.FxaForm.init();
     }
-
 })(window.Mozilla);

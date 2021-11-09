@@ -1,85 +1,40 @@
-import json
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from django.test import TestCase, RequestFactory
-from django.test import override_settings
+from unittest.mock import patch
 
-from bedrock.base.views import geolocate, GeoRedirectView
+from django.test import RequestFactory, TestCase
 
+from bedrock.base.views import GeoTemplateView
 
-class TestGeolocate(TestCase):
-    def get_country(self, country):
-        rf = RequestFactory()
-        req = rf.get('/', HTTP_CF_IPCOUNTRY=country)
-        resp = geolocate(req)
-        return json.loads(resp.content)
-
-    @override_settings(DEV=False)
-    def test_cdn_header(self):
-        self.assertDictEqual(self.get_country('US'), {'country_code': 'US'})
-        self.assertDictEqual(self.get_country('FR'), {'country_code': 'FR'})
-        self.assertDictEqual(self.get_country('XX'), {
-            "error": {
-                "errors": [{
-                    "domain": "geolocation",
-                    "reason": "notFound",
-                    "message": "Not found",
-                }],
-                "code": 404,
-                "message": "Not found",
-            }
-        })
-
-    @override_settings(DEV=True, DEV_GEO_COUNTRY_CODE='DE')
-    def test_dev_mode(self):
-        # should match the setting in DEV mode
-        self.assertDictEqual(self.get_country('US'), {'country_code': 'DE'})
-
-
-geo_view = GeoRedirectView.as_view(
-    geo_urls={
-        'CA': 'firefox.new',
-        'US': 'firefox',
+geo_template_view = GeoTemplateView.as_view(
+    geo_template_names={
+        "DE": "firefox-klar.html",
+        "GB": "firefox-focus.html",
     },
-    default_url='https://abide.dude'
+    template_name="firefox-mobile.html",
 )
 
 
-@override_settings(DEV=False)
-class TestGeoRedirectView(TestCase):
-    def get_response(self, country):
-        rf = RequestFactory()
-        req = rf.get('/', HTTP_CF_IPCOUNTRY=country)
-        return geo_view(req)
+class TestGeoTemplateView(TestCase):
+    def get_template(self, country):
+        with patch("bedrock.firefox.views.l10n_utils.render") as render_mock:
+            with patch("bedrock.base.views.get_country_from_request") as geo_mock:
+                geo_mock.return_value = country
+                rf = RequestFactory()
+                req = rf.get("/")
+                geo_template_view(req)
+                return render_mock.call_args[0][1][0]
 
-    def test_special_country(self):
-        resp = self.get_response('CA')
-        assert resp.status_code == 302
-        assert resp['location'] == '/firefox/new/'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
+    def test_country_template(self):
+        template = self.get_template("DE")
+        assert template == "firefox-klar.html"
 
-        resp = self.get_response('US')
-        assert resp.status_code == 302
-        assert resp['location'] == '/firefox/'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
+    def test_default_template(self):
+        template = self.get_template("US")
+        assert template == "firefox-mobile.html"
 
-    def test_other_country(self):
-        resp = self.get_response('DE')
-        assert resp.status_code == 302
-        assert resp['location'] == 'https://abide.dude'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
-
-        resp = self.get_response('JA')
-        assert resp.status_code == 302
-        assert resp['location'] == 'https://abide.dude'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
-
-    def test_invalid_country(self):
-        resp = self.get_response('dude')
-        assert resp.status_code == 302
-        assert resp['location'] == 'https://abide.dude'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
-
-        resp = self.get_response('42')
-        assert resp.status_code == 302
-        assert resp['location'] == 'https://abide.dude'
-        assert resp['cache-control'] == 'max-age=0, no-cache, no-store, must-revalidate'
+    def test_no_country(self):
+        template = self.get_template(None)
+        assert template == "firefox-mobile.html"

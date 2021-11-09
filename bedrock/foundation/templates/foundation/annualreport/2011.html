@@ -1,6 +1,8 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "base-article.html" %}
 
@@ -184,7 +186,7 @@
 
           <div class="overlay">
             <p>
-            {% trans mobile_url=url('firefox.mobile') %}
+            {% trans mobile_url=url('firefox.browsers.mobile.android') %}
               In June 2012 we released an update to <a href="{{ mobile_url }}" rel="external">Firefox for Android</a>
               that we believe is the best browser for Android available. We completely
               rebuilt and redesigned the product in native UI, resulting in a
@@ -550,7 +552,7 @@
           evangelizing Mozilla products and much more.
         {% endtrans %}
       {% if request.locale.startswith('en') %}
-        {% trans contribute_url=url('mozorg.contribute.index') %}
+        {% trans contribute_url=url('mozorg.contribute') %}
           Learn more about how you can <a href="{{ contribute_url }}" rel="external" hreflang="en-US">get involved with Mozilla</a>.
         {% endtrans %}
       {% endif %}

@@ -1,4 +1,8 @@
 #!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 set -ex
 # required env vars: CLUSTER_NAME, CONFIG_BRANCH, CONFIG_REPO, NAMESPACE,
 # DEPLOYMENT_YAML, DEPLOYMENT_LOG_BASE_URL, DEPLOYMENT_NAME, DEPLOYMENT_VERSION
@@ -15,7 +19,7 @@ if [[ -f "${CLUSTER_NAME}/${NAMESPACE}/clock-${DEPLOYMENT_YAML}" ]]; then
     sed -i -e "s|image: .*|image: ${DEPLOYMENT_DOCKER_IMAGE}|" ${CLUSTER_NAME}/${NAMESPACE}/clock-${DEPLOYMENT_YAML}
     git add ${CLUSTER_NAME}/${NAMESPACE}/clock-${DEPLOYMENT_YAML}
 fi
-git commit -m "set image to ${DEPLOYMENT_DOCKER_IMAGE} in ${CLUSTER_NAME}" || echo "nothing new to commit"
+git commit -m "${NAMESPACE}: set image to ${DEPLOYMENT_DOCKER_IMAGE} in ${CLUSTER_NAME}" || echo "nothing new to commit"
 git push
 DEPLOYMENT_VERSION=$(git rev-parse --short HEAD)
 

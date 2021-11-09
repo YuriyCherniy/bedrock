@@ -1,6 +1,8 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "/firefox/base/base-protocol.html" %}
 
@@ -12,9 +14,9 @@
 {% endblock %}
 
 {% block content %}
-<main class="mzp-l-content mzp-t-narrow">
+<main class="mzp-l-content mzp-t-content-md">
   <header class="">
-      <a href="{{ url('firefox.new') }}">{{ high_res_img('protocol/img/logos/firefox/browser/logo-word-hor-sm.png', {'alt': 'Firefox', 'width': '347', 'height': '64'}) }}</a>
+    <a href="{{ url('firefox.new') }}"><img src="{{ static('protocol/img/logos/firefox/browser/logo-word-hor.svg') }}" alt="Firefox" width="347" height="64"></a>
     <h1 class="c-header-main">{{ _('Thanks for choosing Firefox!') }}</h1>
     <p class="c-header-subhead">{{_('We’re sorry to report this, but your computer does not meet the minimum system requirements to run this version.')}}</p>
   </header>

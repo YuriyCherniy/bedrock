@@ -1,18 +1,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from selenium.webdriver.common.by import By
 
-from pages.firefox.base import FirefoxBasePage
+from pages.base import BasePage
 
 
-class FirefoxPocketPage(FirefoxBasePage):
+class FirefoxPocketPage(BasePage):
 
-    URL_TEMPLATE = '/{locale}/firefox/pocket/'
+    _URL_TEMPLATE = "/{locale}/firefox/pocket/"
 
-    _pocket_primary_button_locator = (By.CSS_SELECTOR, '#pocket-hero .js-fxa-product-button')
-    _pocket_secondary_button_locator = (By.CSS_SELECTOR, '#pocket-sidekick .js-fxa-product-button')
+    _pocket_primary_button_locator = (By.CSS_SELECTOR, "#pocket-hero .js-fxa-product-button")
+    _pocket_secondary_button_locator = (By.CSS_SELECTOR, "#pocket-sidekick .js-fxa-product-button")
 
     @property
     def is_pocket_primary_button_displayed(self):

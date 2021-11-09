@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import pytest
 
@@ -8,6 +8,7 @@ from pages.not_found import NotFoundPage
 
 
 @pytest.mark.nondestructive
-def test_is_download_button_displayed(base_url, selenium):
+def test_go_back_button_is_displayed_with_history(base_url, selenium):
+    selenium.get(base_url)
     page = NotFoundPage(selenium, base_url).open()
-    assert page.download_button.is_displayed
+    assert page.is_go_back_button_displayed

@@ -1,34 +1,19 @@
-<section class="mzp-l-content t-performance" id="for-devs">
-  <div class="mzp-c-card-feature mzp-has-aspect-3-2 mzp-l-card-feature-left-half">
-    <div class="mzp-c-card-feature-media-wrapper">
-      <div class="mzp-c-card-feature-media">
-        <img src="/media/img/firefox/developer/stylo-engine.svg" alt="">
-      </div>
-    </div>
-    <div class="mzp-c-card-feature-content">
-      <div class="mzp-c-card-feature-content-container">
-        <h2 class="mzp-c-card-feature-title">Firefox Browser Developer Edition</h2>
-        <div class="mzp-c-card-feature-desc">
-          <p class="c-subtitle">{{ _('The browser made for developers') }}</p>
-          <p>
-          {% trans %}
-            All the latest developer tools in beta, plus <strong>experimental features</strong> like the Multi-line Console Editor and WebSocket Inspector.
-          {% endtrans %}
-          </p>
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
-          <p>
-          {% trans %}
-            A <strong>separate profile and path</strong> so you can easily run it alongside Release or Beta Firefox.
-          {% endtrans %}
-          </p>
+{% from "macros-protocol.html" import split with context %}
 
-          <p>
-          {% trans %}
-          Preferences <strong>tailored for web developers</strong>: Browser and remote debugging are enabled by default, as are the dark theme and developer toolbar button.
-          {% endtrans %}
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+{% call split(
+  block_id='nextgen',
+  image_url='img/firefox/developer/stylo-engine.svg',
+  block_class='t-performance'
+) %}
+  <h2 class="c-title">{{ ftl('firefox-developer-firefox-browser') }}</h2>
+  <p class="c-subtitle">{{ ftl('firefox-developer-made-for-developers') }}</p>
+  <p>{{ ftl('firefox-developer-all-the-latest') }}</p>
+  <p>{{ ftl('firefox-developer-a-separate-profile') }}</p>
+  <p>{{ ftl('firefox-developer-preferences-tailored') }}</p>
+{% endcall %}

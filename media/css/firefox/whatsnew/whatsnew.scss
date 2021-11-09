@@ -1,118 +1,123 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../../protocol/css/includes/lib';
-@import '../../../protocol/css/components/notification-bar';
-
-
-.t-content-lg {
-    max-width: $content-lg;
-}
-
-//* -------------------------------------------------------------------------- */
-// Up-to-date page header
-
-.c-page-header {
-    background: transparent;
-}
-
-.mzp-c-notification-bar {
-    color: $color-off-black;
-    display: none;
-    margin: 0;
-
-    .show-up-to-date-message & {
-        display: block;
-    }
-}
-
-.c-page-header-inner {
-    align-items: center;
-    display: grid;
-    grid-template-columns: 1fr;
-}
-
-.mzp-c-notification-bar {
-    margin: $spacing-md 0 0;
-
-    @media #{$mq-md} {
-        margin: 0;
-    }
-}
-
-.c-page-header-logo-moz {
-    min-width: 78px;
-}
-
-@media #{$mq-md} {
-    .c-page-header-inner {
-        align-items: center;
-        display: grid;
-        grid-template-columns: 1fr max-content 1fr;
-    }
-}
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/notification-bar';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/logo';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/logo-product-firefox';
+@import 'includes/header';
 
 
 //* -------------------------------------------------------------------------- */
-// Main content section
-
-.main-content {
-    color: $color-white;
+// Main content
+.wnp-content-main {
+    padding: 0;
     text-align: center;
 
-    .main-title {
-        @include text-display-md;
-
-        br {
-            display: none;
-        }
-    }
-
-    .main-tagline {
-        @include text-display-sm;
-    }
-
-    header {
-        @include at2x('/media/protocol/img/logos/firefox/browser/logo-word-hor-white-sm.png', 174px, 32px);
-        background-position: top center;
-        background-repeat: no-repeat;
-        padding-top: 48px;
-        margin-bottom: 48px;
-    }
-
-    &.show-send-to-device {
-        @include bidi(((text-align, left, right),));
-
-        header {
-            @include bidi(((background-position, left top, right top),));
-        }
-    }
-
-    @media #{$mq-sm} {
-        .main-title br {
-            display: inline;
-        }
-    }
-
-    @media #{$mq-md} {
-        padding: 10vh 0;
-
-        header {
-            background-size: 260px 48px;
-            padding-top: $layout-lg;
-        }
+    @media #{$mq-tall} {
+        padding-top: $layout-md;
+        margin-bottom: $layout-lg;
     }
 }
 
-.content-wrapper {
-    background: $color-off-black url('/media/img/firefox/whatsnew/whatsnew_background.svg') no-repeat;
-    @include background-size(100%);
+.mzp-c-logo {
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.send-to-device-form .inline-field {
-    margin-bottom: $spacing-md;
+.wnp-main-title {
+    @include text-title-md;
+    color: get-theme('title-text-color');
+}
+
+.wnp-main-tagline {
+    @include text-body-lg;
+}
+
+.send-to-device {
+    margin: 0 auto;
+}
+
+#qr-wrapper {
+    margin: $spacing-lg auto;
+}
+
+
+//* -------------------------------------------------------------------------- */
+// Utilities (link to release notes)
+.c-utilities {
+    @include text-body-sm;
+    max-width: $content-md;
+    padding-bottom: $layout-xl;
+    text-align: center;
+}
+
+
+//* -------------------------------------------------------------------------- */
+// For dark mode
+@media (prefers-color-scheme: dark) {
+    .content-wrapper {
+        background: $color-dark-gray-60;
+        color: $color-white;
+    }
+
+    .wnp-main-title,
+    .c-picto-block .c-picto-block-title {
+        color: get-theme('title-text-color-inverse');
+    }
+
+    .send-to-device {
+        color: $color-white;
+
+        h2.thank-you {
+            color: get-theme('title-text-color-inverse');
+        }
+    }
+
+    .c-utilities {
+        @include light-links;
+    }
+
+    .c-footer {
+        background: $color-dark-gray-60;
+        color: $color-white;
+
+        a:link,
+        a:visited {
+            color: $color-light-gray-20;
+            text-decoration: underline;
+
+            &:hover,
+            &:focus,
+            &:active {
+                color: $color-white;
+            }
+        }
+
+        .c-footer-sections {
+            border-color: $color-dark-gray-30;
+        }
+    }
+
+    .c-footer-list-social li {
+        a.twitter {
+            background-image: url('/media/protocol/img/icons/social/twitter/white.svg');
+        }
+
+        a.instagram {
+            background-image: url('/media/protocol/img/icons/social/instagram/white.svg');
+        }
+
+        a.youtube {
+            background-image: url('/media/protocol/img/icons/social/youtube/white.svg');
+        }
+    }
+
+    .c-footer-primary-logo a {
+        background-image: url('/media/protocol/img/logos/mozilla/logo-word-hor-white.svg');
+    }
 }

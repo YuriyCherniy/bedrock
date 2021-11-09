@@ -1,6 +1,8 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "mozorg/about-base.html" %}
 
@@ -29,11 +31,11 @@
   <li>{% trans policy=url('mozorg.about.governance.policies.commit.access-policy') %}
     Read the <a href="{{ policy }}">Commit Access Policy</a>, and decide which level of access you need to apply for.
   {% endtrans %}</li>
-  <li>{% trans bug='https://bugzilla.mozilla.org/enter_bug.cgi?product=mozilla.org&component=Repository%20Account%20Requests' %}
+  <li>{% trans bug='https://mzl.la/2WIVD0v' %}
   <a href="{{ bug }}">File a bug</a> in the "Repository Account Requests" component.
   {% endtrans %}
     <ul>
-      <li>{{ _('Make the bug title of the form "Commit Access (Level X) for Fred Bloggs"') }}</li>
+      <li>{{ _('Make the bug title of the form "Commit Access (Level X) for Fred Bloggs fred@bloggs.com"') }}</li>
       <li>{{ _('Say what email address you want to use as your login name') }}</li>
       <li>{{ _('If you need access to particular trees on the exceptions list, list them') }}</li>
     </ul>
@@ -64,7 +66,7 @@
 <h2 id="vouchers">{{ _('Vouchers') }}</h2>
 <p>
 {% trans policy=url('mozorg.about.governance.policies.commit.access-policy') %}
-You will need one or more vouchers. The <a href="{{ policy }}">Commit Access Policy</a> sets out who is allowed to vouch, and it depends on what level of access you are requesting. Each voucher must already have commit access and be confident enough in you to be associated with your check-ins. Your vouchers are responsible for your bustages in the unfortunate event that you break things and leave. They are responsible for making sure you know and follow the rules in general, act promptly to fix regressions, are aware of and respect tree closures, etc. The vouchers' responsibility extends for three months after you are granted source code commit access. If you've lived in the tree without significant issues for three months, we assume you're ready to stand on your own. If somehow there are persistent problems during the first three months, the vouchers have the authority to request revocation of your access during this period. Vouching is a big responsibility, so people will make this commitment only after due consideration. A voucher who helps people who aren't prepared get access to the source tree will find that his or her own credibility suffers as well.
+You will need one or more vouchers. The <a href="{{ policy }}">Commit Access Policy</a> sets out who is allowed to vouch, and it depends on what level of access you are requesting. Each voucher must already have commit access and be confident enough in you to be associated with your check-ins. Your vouchers are responsible for your bustages in the unfortunate event that you break things and leave. They are responsible for making sure you know and follow the rules in general, act promptly to fix regressions, are aware of and respect tree closures, etc. The vouchers' responsibility extends for three months after you are granted source code commit access. If you've lived in the tree without significant issues for three months, we assume you're ready to stand on your own. If somehow there are persistent problems during the first three months, the vouchers have the authority to request revocation of your access during this period. Vouching is a big responsibility, so people will make this commitment only after due consideration. A voucher who helps people who aren't prepared get access to the source tree will find that their own credibility suffers as well.
 {% endtrans %}</p>
 
 <h2 id="revoking-commit-access">{{ _('Revoking Commit Access') }}</h2>
@@ -74,13 +76,10 @@ You will need one or more vouchers. The <a href="{{ policy }}">Commit Access Pol
 <p>{{ _('If your account in a particular SCM is inactive for more than 6 months, it may be deactivated. However, the knowledge that you have achieved a particular level of access is retained. Therefore, getting your account reactivated is a simple matter of filing a bug asking IT to turn it back on. Such bugs should be dealt with extremely quickly.') }}</p>
 
 <h2 id="problems">{{ _('Useful Information') }}</h2>
-<ul class="mzp-u-list-styled">
-  <li>{% trans rheeet='https://ftp.mozilla.org/pub/mozilla.org/mozilla/libraries/bonus-tracks/rheet.wav' %}
-    Need to hear a <a href="{{ rheeet }}">rheeet</a>?
-  {% endtrans %}</li>
-  <li>{% trans mercurial='https://developer.mozilla.org/docs/Mercurial/Using_Mercurial#How_do_I_check_stuff_in.3F' %}
-    We have a document on <a href="{{ mercurial }}">checking in using Hg</a>.
-  {% endtrans %}</li>
-</ul>
+<p>
+{% trans docs='https://firefox-source-docs.mozilla.org/', setup='https://firefox-source-docs.mozilla.org/setup/index.html', chat='https://chat.mozilla.org/#/room/#introduction:mozilla.org' %}
+  You can see the <a href="{{ docs }}">Firefox Source Documentation</a> and learn <a href="{{ setup }}">how to get set up to work in it here</a>. You can also <a href="{{ chat }}">join us on our Matrix instance</a> if you're just getting started.
+{% endtrans %}
+</p>
 
 {% endblock %}

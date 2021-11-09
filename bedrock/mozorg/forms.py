@@ -2,32 +2,28 @@
 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import re
 from datetime import datetime
 from random import randrange
 
-from django.urls import reverse
 from django.forms import widgets
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from lib.l10n_utils.dotlang import _
-from lib.l10n_utils.dotlang import _lazy
+from lib.l10n_utils.fluent import ftl, ftl_lazy
 
-
-FORMATS = (('H', _lazy('HTML')), ('T', _lazy('Text')))
-LANGS_TO_STRIP = ['en-US', 'es']
-PARENTHETIC_RE = re.compile(r' \([^)]+\)$')
-LANG_FILES = ['firefox/partners/index', 'mozorg/contribute',
-              'mozorg/contribute/index', 'mozorg/newsletters']
+FORMATS = (("H", ftl_lazy("newsletter-form-html")), ("T", ftl_lazy("newsletter-form-text")))
+LANGS_TO_STRIP = ["en-US", "es"]
+PARENTHETIC_RE = re.compile(r" \([^)]+\)$")
 
 
 def strip_parenthetical(lang_name):
     """
     Remove the parenthetical from the end of the language name string.
     """
-    return PARENTHETIC_RE.sub('', lang_name, 1)
+    return PARENTHETIC_RE.sub("", lang_name, 1)
 
 
 class PrivacyWidget(widgets.CheckboxInput):
@@ -35,17 +31,13 @@ class PrivacyWidget(widgets.CheckboxInput):
     it should be standardized"""
 
     def render(self, name, value, attrs=None, renderer=None):
-        attrs['required'] = 'required'
+        attrs["required"] = "required"
         input_txt = super(PrivacyWidget, self).render(name, value, attrs)
 
-        policy_txt = _(u'I’m okay with Mozilla handling my info as explained '
-                       u'in <a href="%s">this Privacy Notice</a>')
+        policy_txt = ftl("newsletter-form-im-okay-with-mozilla", url=reverse("privacy.notices.websites"))
+
         return mark_safe(
-            '<label for="%s" class="privacy-check-label">'
-            '%s '
-            '<span class="title">%s</span></label>'
-            % (attrs['id'], input_txt,
-               policy_txt % reverse('privacy.notices.websites'))
+            '<label for="%s" class="privacy-check-label">' "%s " '<span class="title">%s</span></label>' % (attrs["id"], input_txt, policy_txt)
         )
 
 
@@ -53,36 +45,37 @@ class HoneyPotWidget(widgets.TextInput):
     """Render a text field to (hopefully) trick bots. Will be used on many pages."""
 
     def render(self, name, value, attrs=None, renderer=None):
-        honeypot_txt = _(u'Leave this field empty.')
+        honeypot_txt = ftl("newsletter-form-leave-this-field-empty")
         # semi-randomized in case we have more than one per page.
         # this is maybe/probably overthought
-        honeypot_id = 'office-fax-' + str(randrange(1001)) + '-' + str(datetime.now().strftime("%Y%m%d%H%M%S%f"))
+        honeypot_id = "office-fax-" + str(randrange(1001)) + "-" + str(datetime.now().strftime("%Y%m%d%H%M%S%f"))
         return mark_safe(
             '<div class="super-priority-field">'
             '<label for="%s">%s</label>'
             '<input type="text" name="office_fax" id="%s">'
-            '</div>' % (honeypot_id, honeypot_txt, honeypot_id))
+            "</div>" % (honeypot_id, honeypot_txt, honeypot_id)
+        )
 
 
 class URLInput(widgets.TextInput):
-    input_type = 'url'
+    input_type = "url"
 
 
 class EmailInput(widgets.TextInput):
-    input_type = 'email'
+    input_type = "email"
 
 
 class DateInput(widgets.DateInput):
-    input_type = 'date'
+    input_type = "date"
 
 
 class TimeInput(widgets.TimeInput):
-    input_type = 'time'
+    input_type = "time"
 
 
 class TelInput(widgets.TextInput):
-    input_type = 'tel'
+    input_type = "tel"
 
 
 class NumberInput(widgets.TextInput):
-    input_type = 'number'
+    input_type = "number"

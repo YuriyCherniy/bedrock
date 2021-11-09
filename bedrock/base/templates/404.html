@@ -1,48 +1,48 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
-{% set_lang_files "mozorg/404" %}
-
-{% extends "base-pebbles.html" %}
+{% extends "base-error.html" %}
 
 {% block gtm_page_id %}data-gtm-page-id="404"{% endblock %}
 
-{% block page_title %}{{ _('404: Page Not Found') }}{% endblock %}
-
-{# 404 pages must not include canonical and hreflang x-default: https://github.com/mozilla/bedrock/issues/5895 #}
-{% block canonical_urls %}{% endblock %}
+{% block page_title %}{{ ftl('not-found-page-not-found-page-page-not-found') }}{% endblock %}
 
 {% block page_css %}
   {{ css_bundle('page_not_found') }}
 {% endblock %}
 
+{# 404 pages must not include canonical and hreflang x-default: https://github.com/mozilla/bedrock/issues/5895 #}
+{% block canonical_urls %}{% endblock %}
+
 {% block content %}
-<main>
-  <div class="content">
-    <header>
-      <h1><span>{{ _('Whoops!') }}</span></h1>
-      <p>{{ _('Did you make a left at that last URL instead of a right? No problem. Here are some tips to get you back on your way:') }}</p>
-    </header>
-    <div class="error-content">
-      <ul class="prose">
-        <li>{{ _('If you typed in the address, check your spelling. Could just be a typo.') }}</li>
-        <li>
-        {% trans bugzilla='https://bugzilla.mozilla.org/enter_bug.cgi?product=www.mozilla.org' %}
-          If you’ve found an issue with one of our websites, we’d appreciate it if you could report the problem in Bugzilla, our <a href="{{ bugzilla }}">bug tracker</a>. One of our developers will take a look at it as soon as possible.
-        {% endtrans %}
-        </li>
-        <li>{{ _('If you followed a link, it’s probably broken.') }}</li>
-        <li>
-        {% trans  url=url('mozorg.home') %}
-          If you’re not sure what you’re looking for, start at <a href="{{ url }}">mozilla.org</a>.
-        {% endtrans %}
-        </li>
-      </ul>
-    </div>
-    <aside class="download-firefox">
-      {{ download_firefox() }}
-    </aside>
-  </div>
-</main>
+  <main role="main" class="mzp-l-content message-section">
+    <h1 class="error-title">{{ ftl('not-found-page-sorry-we-cant-find-that-page') }}</h1>
+    <p>{{ftl('not-found-page-were-all-about-a-healthy-internet') }}</p>
+
+    <p class="hide-back" id="go-back">
+      <a class="back-button">{{ ftl('not-found-page-go-back') }}</a>
+    </p>
+
+    <ul class="content-list">
+      <li>
+        <img class="list-icon" alt="" src="{{ static('protocol/img/icons/mozilla.svg') }}" width="30" height="30">
+        {{ ftl('not-found-page-learn-about-mozilla-the-non', about=url('mozorg.about.index')) }}
+      </li>
+      <li>
+        <img class="list-icon" alt="" src="{{ static('protocol/img/logos/firefox/logo-flat.svg') }}" width="30" height="30">
+        {{ ftl('not-found-page-explore-the-entire-family-for', explore=url('firefox')) }}
+      </li>
+      <li>
+        <img class="list-icon" alt="" src="{{ static('protocol/img/icons/desktop.svg') }}" width="30" height="30">
+        {{ ftl('not-found-page-download-the-firefox-browser', download=url('firefox.new')) }}
+      </li>
+    </ul>
+  </main>
+{% endblock %}
+
+{% block js %}
+  {{ js_bundle('page_not_found') }}
 {% endblock %}

@@ -1,30 +1,24 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import "../../../protocol/css/includes/lib";
-@import '../../../protocol/css/components/hero';
-@import '../../../protocol/css/components/picto-card';
-@import '../../../protocol/css/components/feature-card';
-@import '../../../protocol/css/components/call-out';
-@import '../../../protocol/css/templates/card-layout';
+@import "~@mozilla-protocol/core/protocol/css/includes/lib";
+@import '~@mozilla-protocol/core/protocol/css/components/call-out';
+@import '~@mozilla-protocol/core/protocol/css/components/feature-card';
+@import '~@mozilla-protocol/core/protocol/css/components/split';
+@import '~@mozilla-protocol/core/protocol/css/components/button';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark-product-firefox';
+@import '~@mozilla-protocol/core/protocol/css/components/picto';
+@import '~@mozilla-protocol/core/protocol/css/templates/multi-column';
+@import '../../protocol/components/custom-menu-list';
 @import '../../protocol/components/sub-navigation';
 
-/* -------------------------------------------------------------------------- */
-// Smooth Scroll
 
-html {
-    scroll-behavior: smooth;
-
-    @media (prefers-reduced-motion: reduce) {
-        scroll-behavior: auto;
-    }
-}
-
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Generic Container Styles
 
 .cta-container {
@@ -39,7 +33,7 @@ html {
     margin-bottom: $layout-md;
 
     .enterprise-section-title {
-        @include text-display-md;
+        @include text-title-md;
         margin: 0 auto $layout-xs;
         max-width: 18em;
         text-align: center;
@@ -58,23 +52,23 @@ html {
     text-align: center;
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Call Out Theme Color
 
 .mzp-c-call-out-compact.mzp-t-dark.enterprise-callout {
-    background-color: $color-off-black;
+    background-color: $color-ink-80;
 
     .mzp-c-call-out-desc {
         color: $color-white;
     }
 }
 
-/* -------------------------------------------------------------------------- */
-// Hero
+//* -------------------------------------------------------------------------- */
+// Split
 
-.mzp-c-hero.t-enterprise {
+.mzp-c-split.t-enterprise {
     // dark colour fallback incase svg image doesn't load/display
-    background: $color-off-black;
+    background-color: $color-ink-80;
     background-image: url('/media/img/firefox/enterprise/ent-noodles.svg'),
                       linear-gradient(transparent 550px, #fff 550px, #fff 1000px);
     background-position: bottom left, top center;
@@ -85,25 +79,55 @@ html {
     padding-top: $layout-sm;
 
     html[dir=rtl] & {
-        background: $color-off-black;
+        background-color: $color-ink-80;
         min-height: 0;
     }
 
-   &.mzp-t-product-firefox .mzp-c-hero-title {
-       @include at2x('/media/protocol/img/logos/firefox/browser/logo-word-hor-white-sm.png', auto, 48px);
-       @include text-display-xl;
-       padding-top: $layout-lg + 48px;
+   .mzp-c-split-container {
+        // need extra spacing to prevent clipping with the background image
+        padding-bottom: $spacing-xl;
+
+        @media #{$mq-md} {
+            padding-bottom: inherit;
+        }
    }
 
-   .mzp-c-hero-body {
-       background-color: $color-off-black;
+   .mzp-c-split-body {
+       background-color: $color-ink-80;
        border-top-right-radius: 100px;
        margin-bottom: 100px;
-   }
+       max-width: 580px;
+       position: relative;
 
-   .mzp-c-hero-image {
-        display: none;
-    }
+       .mzp-c-split-title {
+            @include text-title-xl;
+            margin-bottom: $spacing-md;
+
+             @media #{$mq-md} {
+               margin-bottom: $spacing-xl;
+            }
+
+       }
+
+       .mzp-c-wordmark {
+            margin-left: auto;
+            margin-right: auto;
+
+            @media #{$mq-lg} {
+                margin-left: 0;
+                margin-right: 0;
+            }
+       }
+
+       .mzp-c-split-desc {
+            @include text-body-lg;
+            margin-bottom: $spacing-md;
+
+            @media #{$mq-md} {
+                margin-bottom: $spacing-2xl;
+            }
+       }
+   }
 
     @media #{$mq-sm} {
         background-position: top left, top center;
@@ -122,7 +146,7 @@ html {
         padding-top: $layout-md;
 
         html[dir=rtl] & {
-            background: $color-off-black;
+            background: $color-ink-80;
             min-height: 0;
         }
 
@@ -138,281 +162,122 @@ html {
     }
 }
 
-/* -------------------------------------------------------------------------- */
-// Picto Cards
+//* -------------------------------------------------------------------------- */
+// Downloads Section
 
-// Custom Overrides pending https://github.com/mozilla/protocol/issues/382
-.mzp-c-card-picto {
-    @include bidi(((text-align, left, right),));
-    padding-top: 0;
-
-    .mzp-c-card-picto-content:before {
-        @include bidi(((left, 0, right, 0),));
-        background-color: transparent;
-        margin-left: 0;
-    }
-
-    @media #{$mq-md} {
-        .mzp-c-card-picto-content:before {
-            @include bidi(((left, $spacing-lg, right, 0),));
-        }
-    }
-
-    &.privacy .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-data-privacy.svg');
-        height: 53px;
-        width: 44px;
-    }
-
-    &.deploy .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-deploy.svg');
-        height: 53px;
-        width: 53px;
-    }
-
-    &.release .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-release.svg');
-        height: 53px;
-        width: 49px;
-    }
-
-    &.win64 .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-win64.svg');
-        height: 58px;
-        width: 56px;
-    }
-
-    &.mac .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-mac.svg');
-        height: 57px;
-        width: 46px;
-    }
-
-    &.win32 .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-win32.svg');
-        height: 58px;
-        width: 56px;
-    }
-
-    &.docs .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-documentation.svg');
-        height: 52px;
-        width: 52px;
-    }
-
-    &.notes .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-notes.svg');
-        height: 52px;
-        width: 45px;
-    }
-
-    &.faq .mzp-c-card-picto-content:before {
-        background-image: url('/media/img/firefox/enterprise/icon-faq.svg');
-        height: 51px;
-        width: 52px;
-    }
-}
-
-// Vertically align buttons in package download lists.
-@supports(display: flex) {
+@supports(display: grid) {
     @media #{$mq-md} {
         .enterprise-download-lists {
-            display: flex;
+            display: grid;
+            grid-column-gap: $layout-md;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-areas:
+                'title-col1    title-col2    title-col3'
+                'list-col1     list-col2     list-col3'
+                'support-col1  support-col2  support-col3';
+            margin-bottom: $layout-md;
+        }
 
-            .mzp-c-card-picto {
-                align-items: stretch;
-                display: flex;
-                flex: 1;
+        .enterprise-download-block {
+            display: contents;
+            margin-bottom: 0;
+        }
+
+        .platform-win64 {
+            .enterprise-download-title {
+                grid-area: title-col1;
             }
 
-            .mzp-c-card-picto-content {
-                display: flex;
-                flex-direction: column;
+            .mzp-c-menu-list {
+                grid-area: list-col1;
             }
 
-            .mzp-c-card-picto-title {
-                flex-grow: 1;
-            }
-
-            .mzp-c-card-picto-desc {
-                display: flex;
-                flex-direction: column;
-                flex-grow: 2;
-                justify-content: space-between;
+            .enterprise-download-support {
+                grid-area: support-col1;
             }
         }
+
+        .platfom-mac {
+            .enterprise-download-title {
+                grid-area: title-col2;
+            }
+
+            .mzp-c-menu-list {
+                grid-area: list-col2;
+            }
+
+            .enterprise-download-support {
+                grid-area: support-col2;
+            }
+        }
+
+        .platform-win32 {
+            .enterprise-download-title {
+                grid-area: title-col3;
+            }
+
+            .mzp-c-menu-list {
+                grid-area: list-col3;
+            }
+
+            .enterprise-download-support {
+                grid-area: support-col3;
+            }
+        }
+
     }
 }
 
-// Resource Link Styles
-.enterprise-resources .mzp-c-card-picto-title {
-    @include text-body-md;
+.enterprise-download-block {
+    margin-bottom: $layout-lg;
 }
 
-/* -------------------------------------------------------------------------- */
-// Comparison Section
+.enterprise-download-title {
+    @include bidi((
+        (padding-left, $layout-lg, 0),
+        (padding-right, 0, $layout-lg),
+    ));
+    @include text-title-sm;
+    margin-bottom: $spacing-lg;
+    min-height: 48px;
+    position: relative;
 
-.enterprise-section-plans {
-    .enterprise-section-title {
-        max-width: 24em;
-    }
-}
-
-// Prototype Pager Component.
-// Should be replaced by  https://github.com/mozilla/protocol/issues/462
-.c-pager {
-    .c-pager-tab {
-        @include clearfix;
-        display: none;
-    }
-
-    .c-pager-tab-button {
-        @include bidi(((float, left, right),));
-        @include border-box;
-        background-color: inherit;
-        border-bottom: 2px solid $color-gray-20;
-        border-left: none;
-        border-right: 1px solid $color-gray-50;
-        border-top: none;
-        padding: $spacing-md $spacing-xs;
-        width: 50%;
-        word-wrap: break-word;
-
-        &:last-child {
-            border-right: none;
-        }
+    &:before {
+        @include bidi(((left, 0, right, auto),));
+        background-position: center center;
+        background-repeat: no-repeat;
+        content: '';
+        display: block;
+        height: 48px;
+        position: absolute;
+        top: -8px;
+        width: 48px;
     }
 
-    .c-pager-page {
-        @include border-box;
-        border-radius: 10px;
-        border: 1px solid $color-gray-50;
-        padding: $spacing-lg;
-        text-align: center;
+    .platform-win64 &:before {
+        background-image: url('/media/img/firefox/enterprise/icon-win64.svg');
+        background-size: 39px 40px;
     }
 
-    &.is-active {
-        .c-pager-tab {
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            border: 1px solid $color-gray-50;
-            border-bottom: none;
-            display: block;
-        }
-
-        .c-pager-page {
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-            border-top: none;
-        }
-
-        .c-pager-tab-button[aria-expanded="true"] {
-            border-bottom: 2px solid $color-blue-50;
-        }
-
-        .c-pager-page[aria-hidden="true"] {
-            display: none;
-        }
-
-        .c-pager-page[aria-hidden="false"] {
-            display: block;
-        }
-
-        .c-pager-hide-when-active {
-            display: none;
-        }
+    .platform-mac &:before {
+        background-image: url('/media/img/firefox/enterprise/icon-mac.svg');
+        background-size: 32px 40px;
     }
 
-    @media #{$mq-md} {
-        .c-pager-page {
-            padding: $spacing-xl;
-        }
-
-        .c-pager-container {
-            @include clearfix;
-        }
-
-        .c-pager-page {
-            @include bidi((
-                (float, left, right),
-                (margin-right, $spacing-xl * 2, margin-left, 0),
-            ));
-            width: calc(50% - #{$spacing-xl});
-
-            &:last-child {
-                margin-left: 0;
-                margin-right: 0;
-            }
-        }
-    }
-
-    @media #{$mq-lg} {
-        .c-pager-page {
-            @include bidi(((margin-right, $spacing-2xl * 2, margin-left, 0),));
-            width: calc(50% - #{$spacing-2xl});
-
-            &:last-child {
-                margin-left: 0;
-                margin-right: 0;
-            }
-        }
-    }
-
-    @supports (display: grid) {
-        @media #{$mq-md} {
-            .c-pager-container {
-                display: grid;
-                grid-column-gap: $spacing-2xl;
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .c-pager-page {
-                @include bidi(((margin, 0, 0),));
-                width: auto;
-            }
-        }
-
-        @media #{$mq-lg} {
-            .c-pager-container {
-                grid-column-gap: $spacing-2xl * 2;
-            }
-        }
+    .platform-win32 &:before {
+        background-image: url('/media/img/firefox/enterprise/icon-win32.svg');
+        background-size: 39px 40px;
     }
 }
 
-.comparison {
-    .comparison-title-tier {
-        @include text-body-lg;
-        font-weight: normal;
-
-        html[lang^='en'] & {
-            text-transform: uppercase;
-        }
-    }
-
-    .comparison-title-price {
-        @include text-display-sm;
-
-        span {
-            @include text-body-md;
-            color: $color-gray-70;
-            display: block;
-            font-weight: normal;
-            margin-top: $spacing-md;
-        }
-    }
-
-    .comparison-list {
-        border-top: 1px solid $color-gray-30;
-        margin: $spacing-xl 0;
-
-        li {
-            border-bottom: 1px solid $color-gray-30;
-            padding: $spacing-lg 0;
-        }
-    }
-
-    .comparison-cta {
-        margin-top: $spacing-lg;
-    }
+.enterprise-download-support {
+    padding-top: $spacing-xl;
+    margin-top: $spacing-xl;
+    border-top: 1px solid $color-marketing-gray-30;
 }
+
+.enterprise-download-subtitle {
+    @include text-title-2xs;
+}
+
+

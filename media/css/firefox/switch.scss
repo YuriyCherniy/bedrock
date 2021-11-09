@@ -1,59 +1,60 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/components/hero';
 
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/split';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark';
+@import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark-product-firefox';
 
-.t-switch.mzp-c-hero {
+.mzp-c-split {
+    overflow: hidden;
+    min-height: 400px;
 
-    &.mzp-t-product-firefox .mzp-c-hero-title {
-        @include at2x('/media/protocol/img/logos/firefox/browser/logo-word-hor-sm.png', auto, 48px);
-        padding-top: $layout-md + 48px;
+    .mzp-c-wordmark {
+        margin-left: auto;
+        margin-right: auto;
+
+        @media #{$mq-md} {
+            margin-left: 0;
+            margin-right: 0;
+        }
     }
 
-    @media #{$mq-md} {
-        &:before {
-            background-image: url('/media/img/firefox/switch/switch.png'), url('/media/img/firefox/switch/bg.svg');
-            background-position: 14px center, top left;
-            background-size: 592px 302px, auto 100%;
-            background-repeat: no-repeat;
-            bottom: 0;
-            content: '';
-            display: block;
-            left: 50%;
-            position: absolute;
-            top: 0;
-            width: 50%;
+    .mzp-c-split-media {
+        position: relative;
+        z-index: 1;
 
-            html[dir=rtl] & {
-                background-image: url('/media/img/firefox/switch/switch-rtl.png'), url('/media/img/firefox/switch/bg-rtl.svg');
-                background-position: right center, top right;
-                right: 50%;
-                left: auto;
-            }
-
-            @media #{$mq-high-res} {
-                background-image: url('/media/img/firefox/switch/switch-high-res.png'), url('/media/img/firefox/switch/bg.svg');
-
-                html[dir=rtl] & {
-                    background-image: url('/media/img/firefox/switch/switch-rtl-high-res.png'), url('/media/img/firefox/switch/bg-rtl.svg');
-                }
+        @media #{$mq-lg} {
+            &:before {
+                background-image: url('/media/img/firefox/switch/bg.svg');
+                background-position: 300px bottom 100px left;
+                background-size: auto 100%;
+                background-repeat: no-repeat;
+                bottom: 0;
+                top: -200px;
+                content: '';
+                display: block;
+                left: -50px;
+                right: 0;
+                position: absolute;
+                width: 1000px;
+                height: 600px;
+                z-index: -1;
             }
         }
     }
 
-    @media #{$mq-lg} {
-        .mzp-l-content {
-            padding-top: 0;
-        }
+    .mzp-c-split-body p {
+        @include text-body-lg;
     }
 }
 
-/* -------------------------------------------------------------------------- */
+
+//* -------------------------------------------------------------------------- */
 // Steps
 
 .c-steps {
@@ -112,7 +113,7 @@ $image-path: '/media/protocol/img';
 .c-share {
     margin-top: $layout-md;
     padding-top: $layout-sm;
-    background-color: $color-gray-20;
+    background-color: $color-marketing-gray-20;
 }
 
 .c-share-options li a {

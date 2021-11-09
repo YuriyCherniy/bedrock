@@ -1,14 +1,18 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "base-article.html" %}
 
-{% block page_title %}{{_('Violating Website Report')}}{% endblock %}
+{% block page_title %}Violating Website Report{% endblock %}
 
 {% block page_css %}
   {{ css_bundle('legal') }}
 {% endblock %}
+
+{% block body_class %}mzp-t-mozilla{% endblock %}
 
 {% block side_nav %}
 <nav class="mzp-c-sidemenu">
@@ -18,152 +22,164 @@
 
   <section class="mzp-c-sidemenu-main" id="sidebar-menu">
     <ul>
-      <li><a href="{{ url('legal.index') }}">{{ _('Back to Legal') }}</a></li>
+      <li><a href="{{ url('legal.index') }}">Back to Legal</a></li>
     </ul>
   </section>
 </nav>
 {% endblock %}
 
 {% block article %}
-{# L10n: The line break below is for visual formatting only #}
-<h1 class="mzp-c-article-title">{{_('Protect the Fox<br> (and More!)')}}</h1>
-<h2>{{ _('Help us safeguard Mozilla’s trademarks by reporting misuse.') }}</h2>
+
+{% if form_submitted %}
+<aside class="mzp-c-notification-bar mzp-t-success">
+  <p><strong>Your report has been sent</strong></p>
+  <p>Thank you for your help. It’s our community that makes us great.</p>
+</aside>
+{% endif %}
+
+{% if form_error %}
+<aside class="mzp-c-notification-bar mzp-t-error">
+  <p><strong>An error has occurred with your submission. Please review your information and try again.</strong></p>
+</aside>
+{% endif %}
+
+<h1 class="mzp-c-article-title">Protect the Fox</h1>
+<h2>Help us safeguard Mozilla’s trademarks by reporting misuse.</h2>
 
 <p>
-  {% trans %}
-    The Firefox name or logo on a product or webpage tells you that you
-    are getting a free, high quality, open source browser that has
-    been tested and released by Mozilla. In order to make sure others
-    are not using our trademarks to mislead users into downloading
-    malware, paying for the software, or providing personal
-    information, we need your help.
-  {% endtrans %}
+  The Firefox name or logo on a product or webpage tells you that you
+  are getting a free, high quality, open source browser that has
+  been tested and released by Mozilla. In order to make sure others
+  are not using our trademarks to mislead users into downloading
+  malware, paying for the software, or providing personal
+  information, we need your help.
 </p>
 
 <section class="mzp-c-emphasis-box">
+
   <p>
-    <strong>{{ _('Please use this form to report any websites or mobile app stores that are:') }}</strong>
+    <strong>This form is ONLY for reporting infringement of Mozilla’s trademarks. Other kinds of malicious sites should be reported to Google Safe Browsing:</strong>
   </p>
 
   <ol class="mzp-u-list-styled">
     <li>
-      {{ _('Distributing harmful products under Mozilla brands such as Firefox.') }}
+      The <a href="https://support.mozilla.org/en-US/kb/how-does-phishing-and-malware-protection-work">Phishing and Malware Protection</a> in Firefox uses the <a href="https://safebrowsing.google.com/">Google Safe Browsing</a> service.
     </li>
     <li>
-      {{ _('Charging for Firefox, Thunderbird, or any of the Mozilla products.') }}
+      Report phishing sites by using the <a href="https://safebrowsing.google.com/safebrowsing/report_phish/">Report Phishing form</a> from Google Safe Browsing.
     </li>
     <li>
-    {% trans %}
+      Report websites that contain malicious software by using the <a href="https://safebrowsing.google.com/safebrowsing/report_badware/">Malicious Software form</a> from Google Safe Browsing.
+    </li>
+    <li>
+      Once again, the form on this page is <strong>ONLY</strong> for reporting infringement of Mozilla trademarks. <strong>DO NOT</strong> submit other kinds of malicious sites via this form. Mozilla cannot and will not respond to other reports submitted via this page.
+    </li>
+
+  </ol>
+
+  <p>
+    <strong>Please use this form to report any websites or mobile app stores that are:</strong>
+  </p>
+
+  <ol class="mzp-u-list-styled">
+    <li>
+      Distributing harmful products under Mozilla brands such as Firefox.
+    </li>
+    <li>
+      Charging for Firefox, Thunderbird, or any of the Mozilla products.
+    </li>
+    <li>
       Collecting personal information as a condition to download any
       of the Mozilla software (registration requirement).
-    {% endtrans %}
     </li>
     <li>
-    {% trans %}
       Using the Mozilla trademarks to mislead the public into
       thinking the site is an official Mozilla site or sponsored by
       Mozilla.
-    {% endtrans %}
     </li>
     <li>
-    {% trans %}
       Distributing modified versions of Firefox, or any of our
       Mozilla software, and still using the trademark. Note: anyone
       may modify Mozilla software, but once modified, it may no
       longer use Mozilla trademark(s) (e.g. be called Firefox)
       without a license.
-    {% endtrans %}
     </li>
     <li>
-    {% trans url=url('foundation.trademarks.policy') %}
       Using the Mozilla trademarks (including logos) in any other way
-      that violates our <a href="{{ url }}">Trademark Policy</a>
+      that violates our <a href="{{ url('foundation.trademarks.policy') }}">Trademark Policy</a>
       (e.g. trademark is modified or used for commercial purposes).
-    {% endtrans %}
     </li>
   </ol>
-  <p><strong>{{ _('Thank you for your help!') }}</strong></p>
+  <p><strong>Thank you for your help!</strong></p>
 </section>
 
 <section>
-  <h2>{{ _('Fraud Report') }}</h2>
-
   {% if not form_submitted or (form_submitted and form_error) %}
-  {% if form_error %}
-  <aside class="mzp-c-notification-bar mzp-t-error">
-    <p><strong>{{ _('An error has occurred with your submission. Please review your information and try again.') }}</strong></p>
-  </aside>
-  {% endif %}
-  <form action="{{ url('legal.fraud-report') }}" method="post" name="reportForm" id="reportForm" enctype="multipart/form-data">
+  <h2>Report of Misuse of Mozilla Trademarks</h2>
+
+  <form class="mzp-c-form" action="{{ url('legal.fraud-report') }}" method="post" name="reportForm" id="reportForm" enctype="multipart/form-data">
 
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
-    <div class="mzp-l-form-field" id="url">
+    <div class="mzp-c-field" id="url">
       {{ form.input_url.errors }}
-      <label for="input_url" >{{ _('URL') }}</label>
+      <label for="input_url" class="mzp-c-field-label">URL</label>
       {{ form.input_url }}
-      <p>{{ _('The URL of the violating website. e.g. http://offendingsite.com/') }}</p>
+      <p class="mzp-c-field-info">The URL of the violating website. e.g. http://offendingsite.com/</p>
     </div>
 
-    <div class="mzp-l-form-field" id="category">
+    <div class="mzp-c-field" id="category">
       {{ form.input_category.errors }}
-      <label for="input_category">{{ _('Category') }}</label>
+      <label for="input_category" class="mzp-c-field-label">Category</label>
       {{ form.input_category }}
     </div>
 
     {{ form.office_fax }}
 
-    <div class="mzp-l-form-field" id="product">
+    <div class="mzp-c-field" id="product">
       {{ form.input_product.errors }}
-      <label for="input_product">{{ _('Product') }}</label>
+      <label for="input_product" class="mzp-c-field-label">Product</label>
       {{ form.input_product }}
     </div>
 
-    <div class="mzp-l-form-field" id="specific_product">
+    <div class="mzp-c-field" id="specific_product">
       {{ form.input_specific_product.errors }}
-      <label for="input_specific_product">{{ _('Name a more specific product, if needed') }}</label>
+      <label for="input_specific_product" class="mzp-c-field-label">Name a more specific product, if needed</label>
       {{ form.input_specific_product }}
     </div>
 
-    <div class="mzp-l-form-field" id="details">
+    <div class="mzp-c-field" id="details">
       {{ form.input_details.errors }}
-      <label for="input_details">{{ _('Please provide additional details') }}</label>
+      <label for="input_details" class="mzp-c-field-label">Please provide additional details</label>
       {{ form.input_details }}
     </div>
 
-    <div class="mzp-l-form-field" id="attachment">
+    <div class="mzp-c-field" id="attachment">
       {{ form.input_attachment.errors }}
-      <label for="input_attachment">{{ _('Attachment') }}</label>
+      <label for="input_attachment" class="mzp-c-field-label">Attachment</label>
       {{ form.input_attachment }}
-      <p>{{ _('Images only. Maximum file size is 5 MB.') }}</p>
+      <p class="mzp-c-field-info">Images only. Maximum file size is 5 MB.</p>
     </div>
 
-    <div class="mzp-l-form-field" id="attachment_desc">
+    <div class="mzp-c-field" id="attachment_desc">
       {{ form.input_attachment_desc.errors }}
-      <label for="input_attachment_desc">{{ _('Attachment Description') }}</label>
+      <label for="input_attachment_desc" class="mzp-c-field-label">Attachment Description</label>
       {{ form.input_attachment_desc }}
-      <p>{{ _('Please describe what you are attaching.') }}</p>
+      <p class="mzp-c-field-info">Please describe what you are attaching.</p>
     </div>
 
-    <div class="mzp-l-form-field" id="email">
+    <div class="mzp-c-field" id="email">
       {{ form.input_email.errors }}
-      <label for="input_email">{{ _('Email address (optional)') }}</label>
+      <label for="input_email" class="mzp-c-field-label">Email address (optional)</label>
       {{ form.input_email }}
-      <p>
-        {% trans url=url('privacy') %}
+      <p class="mzp-c-field-info">
           If you choose to provide it, your email address will only be
           used to contact you about this report. Please see our
-          <a href="{{ url }}">Privacy Policy</a> for more information.
-        {% endtrans %}
+          <a href="{{ url('privacy') }}">Privacy Policy</a> for more information.
       </p>
     </div>
-    <button type="submit" name="submit_form" class="mzp-c-button">{{ _('Send Report') }}</button>
+    <button type="submit" name="submit_form" class="mzp-c-button">Send Report</button>
   </form>
-  {% else %}
-  <aside class="mzp-c-notification-bar mzp-t-success">
-    <p><strong>{{ _('Your report has been sent.') }}</strong></p>
-    <p>{{ _('Thank you for your help. It’s our community that makes us great.') }}</p>
-  </aside>
 {% endif %}
 </section>
 

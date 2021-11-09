@@ -1,6 +1,6 @@
 .. This Source Code Form is subject to the terms of the Mozilla Public
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+.. file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 .. _newsletters:
 
@@ -169,35 +169,3 @@ This is done in a template as follows:
     {% block email_form %}
         {{ email_newsletter_form(button_class='button-light') }}
     {% endblock %}
-
-Creating a signup page
-----------------------
-
-Start with a template that extends ``'newsletter/one_newsletter_signup.html'``.
-It's probably simplest to copy an existing one, like ``'newsletter/mobile.html'``.
-
-Set the ``newsletter_title`` and ``newsletter_id`` variables and override at least
-the ``page_title`` and ``newsletter_content`` blocks:
-
-.. code-block:: jinja
-
-	{% set newsletter_title = _('Firefox and You') %}
-	{% set newsletter_id = 'mozilla-and-you' %}
-
-    {% block page_title %}{{ newsletter_title }}{% endblock %}
-
-    {% block newsletter_content %}
-      <div id="main-feature">
-        <h2>Subscribe to <span>about:mobile</span>!</h2>
-        <p>Our about:mobile newsletter brings you the latest and greatest news
-            from the Mozilla contributor community.
-        </p>
-      </div>
-    {% endblock %}
-
-Then add a url to ``newsletter/urls.py``:
-
-.. code-block:: python
-
-    # "about:mobile"
-    page('newsletter/about_mobile', 'newsletter/mobile.html'),

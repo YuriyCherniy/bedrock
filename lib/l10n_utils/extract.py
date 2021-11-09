@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 # mostly borrowed from tower
 
 from babel.messages.extract import extract_python as babel_extract_py
@@ -8,7 +12,7 @@ from lib.l10n_utils.utils import strip_whitespace
 
 def add_context(context, message):
     # \x04 is a magic gettext number.
-    return u"%s\x04%s" % (context, message)
+    return "%s\x04%s" % (context, message)
 
 
 def tweak_message(message):
@@ -32,20 +36,15 @@ def tweak_message(message):
         elif len(message) == 3:
             if all(isinstance(x, str) for x in message[:2]):
                 singular, plural, num = message
-                message = (strip_whitespace(singular),
-                           strip_whitespace(plural),
-                           num)
+                message = (strip_whitespace(singular), strip_whitespace(plural), num)
         elif len(message) == 4:
             singular, plural, num, ctxt = message
-            message = (add_context(ctxt, strip_whitespace(singular)),
-                       add_context(ctxt, strip_whitespace(plural)),
-                       num)
+            message = (add_context(ctxt, strip_whitespace(singular)), add_context(ctxt, strip_whitespace(plural)), num)
     return message
 
 
 def extract_python(fileobj, keywords, comment_tags, options):
-    for lineno, funcname, message, comments in \
-            list(babel_extract_py(fileobj, keywords, comment_tags, options)):
+    for lineno, funcname, message, comments in list(babel_extract_py(fileobj, keywords, comment_tags, options)):
 
         message = tweak_message(message)
 
@@ -53,8 +52,7 @@ def extract_python(fileobj, keywords, comment_tags, options):
 
 
 def extract_jinja2(fileobj, keywords, comment_tags, options):
-    for lineno, funcname, message, comments in \
-            list(ext.babel_extract(fileobj, keywords, comment_tags, options)):
+    for lineno, funcname, message, comments in list(ext.babel_extract(fileobj, keywords, comment_tags, options)):
 
         message = tweak_message(message)
 

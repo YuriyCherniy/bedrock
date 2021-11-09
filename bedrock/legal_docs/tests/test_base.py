@@ -1,171 +1,191 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from os.path import join
+from pathlib import Path
 
 from django.http import Http404, HttpResponse
-from django.test import override_settings, RequestFactory
+from django.test import RequestFactory, override_settings
 
-from mock import patch, ANY
-
-from bedrock.mozorg.tests import TestCase
+from mock import patch
 
 from bedrock.legal_docs import views
+from bedrock.legal_docs.models import LegalDoc, get_data_from_file_path
+from bedrock.mozorg.tests import TestCase
 
 
-@override_settings(PROD_LANGUAGES=['en-US', 'de', 'hi-IN'])
+@override_settings(PROD_LANGUAGES=["en-US", "de", "hi-IN"])
 class TestLoadLegalDoc(TestCase):
-    @patch.object(views, 'listdir')
-    def test_legal_doc_not_found(self, listdir_mock):
-        listdir_mock.return_value = ['en-US.md']
-        doc = views.load_legal_doc('the_dude_is_legal', 'de')
-        self.assertIsNone(doc['content'])
-        self.assertEqual(doc['active_locales'], ['en-US'])
+    def test_legal_doc_not_found(self):
+        """Missing doc should be None"""
+        doc = views.load_legal_doc("the_dude_is_legal", "de")
+        self.assertIsNone(doc)
 
-    @patch('os.path.exists')
-    @patch.object(views, 'listdir')
-    @patch.object(views.io, 'BytesIO')
-    @patch.object(views, 'md')
-    def test_legal_doc_exists(self, md_mock, bio_mock, listdir_mock, exists_mock):
+    def test_legal_doc_exists(self):
         """Should return the content of the en-US file if it exists."""
-        bio_mock().getvalue.return_value = b"You're not wrong Walter..."
-        exists_mock.return_value = False
-        listdir_mock.return_value = ['.mkdir', 'de.md', 'en-US.md']
-        doc = views.load_legal_doc('the_dude_exists', 'de')
-        good_path = join(views.LEGAL_DOCS_PATH, 'the_dude_exists', 'en-US.md')
-        md_mock.markdownFromFile.assert_called_with(
-            input=good_path, output=ANY, extensions=ANY)
-        self.assertEqual(doc['content'], "You're not wrong Walter...")
-        self.assertEqual(doc['active_locales'], ['de', 'en-US'])
+        LegalDoc.objects.create(
+            name="the_dude_exists",
+            locale="en-US",
+            content="You're not wrong Walter...",
+        )
+        doc = views.load_legal_doc("the_dude_exists", "de")
+        self.assertEqual(doc["content"], "You're not wrong Walter...")
+        self.assertEqual(doc["active_locales"], ["en-US"])
 
-    @patch('os.path.exists')
-    @patch.object(views, 'listdir')
-    @patch.object(views.io, 'BytesIO')
-    @patch.object(views, 'md')
-    def test_localized_legal_doc_exists(self, md_mock, bio_mock, listdir_mock, exists_mock):
+    def test_legal_doc_exists_en_locale(self):
+        """Should return the content of the en file and say it's en-US."""
+        LegalDoc.objects.create(
+            name="the_dude_exists",
+            locale="en",
+            content="You're not wrong Walter...",
+        )
+        doc = views.load_legal_doc("the_dude_exists", "en-US")
+        self.assertEqual(doc["content"], "You're not wrong Walter...")
+        self.assertEqual(doc["active_locales"], ["en-US"])
+
+    def test_legal_doc_exists_snake_case_convert(self):
+        """Should return the content of the file if it exists in snake case."""
+        LegalDoc.objects.create(
+            name="the_dude_exists",
+            locale="en-US",
+            content="You're not wrong Walter...",
+        )
+        doc = views.load_legal_doc("The-Dude-Exists", "de")
+        self.assertEqual(doc["content"], "You're not wrong Walter...")
+        self.assertEqual(doc["active_locales"], ["en-US"])
+
+    def test_localized_legal_doc_exists(self):
         """Localization works, and list of translations doesn't include non .md files and non-prod locales."""
-        bio_mock().getvalue.return_value = b"You're not wrong Walter..."
-        exists_mock.return_value = True
-        listdir_mock.return_value = ['.mkdir', 'de.md', 'en-US.md', 'sw.md']
-        doc = views.load_legal_doc('the_dude_exists', 'de')
-        good_path = join(views.LEGAL_DOCS_PATH, 'the_dude_exists', 'de.md')
-        md_mock.markdownFromFile.assert_called_with(
-            input=good_path, output=ANY, extensions=ANY)
-        self.assertEqual(doc['content'], "You're not wrong Walter...")
-        self.assertEqual(doc['active_locales'], ['de', 'en-US'])
-
-    @patch('os.path.exists')
-    @patch.object(views, 'listdir')
-    @patch.object(views.io, 'BytesIO')
-    @patch.object(views, 'md')
-    def test_localized_legal_doc_mapped_locale(self, md_mock, bio_mock, listdir_mock, exists_mock):
-        """Should output bedrock locale when legal-docs locale exists"""
-        bedrock_locale = 'hi-IN'
-        ld_locale = 'hi'
-        ld_filename = '%s.md' % ld_locale
-        bio_mock().getvalue.return_value = b"You're not wrong Walter..."
-        exists_mock.return_value = True
-        listdir_mock.return_value = [ld_filename, 'en-US.md']
-        doc = views.load_legal_doc('the_dude_exists', bedrock_locale)
-        good_path = join(views.LEGAL_DOCS_PATH, 'the_dude_exists', ld_filename)
-        md_mock.markdownFromFile.assert_called_with(
-            input=good_path, output=ANY, extensions=ANY)
-        self.assertEqual(doc['content'], "You're not wrong Walter...")
-        self.assertEqual(doc['active_locales'], ['hi-IN', 'en-US'])
-
-    @patch('os.path.exists')
-    @patch.object(views, 'listdir')
-    @patch.object(views.io, 'BytesIO')
-    @patch.object(views, 'md')
-    def test_localized_legal_doc_mapped_locale_fixed(self, md_mock, bio_mock, listdir_mock, exists_mock):
-        """Should fallback to bedrock locale when legal-docs locale changes to match"""
-        bedrock_locale = 'hi-IN'
-        ld_filename = '%s.md' % bedrock_locale
-        bio_mock().getvalue.return_value = b"You're not wrong Walter..."
-        exists_mock.side_effect = [False, True]
-        listdir_mock.return_value = [ld_filename, 'en-US.md']
-        doc = views.load_legal_doc('the_dude_exists', bedrock_locale)
-        good_path = join(views.LEGAL_DOCS_PATH, 'the_dude_exists', ld_filename)
-        md_mock.markdownFromFile.assert_called_with(
-            input=good_path, output=ANY, extensions=ANY)
-        self.assertEqual(doc['content'], "You're not wrong Walter...")
-        self.assertEqual(doc['active_locales'], ['hi-IN', 'en-US'])
+        LegalDoc.objects.create(
+            name="the_dude_exists",
+            locale="en",
+            content="You're not wrong Walter...",
+        )
+        LegalDoc.objects.create(
+            name="the_dude_exists",
+            locale="de",
+            content="You're in German Walter...",
+        )
+        doc = views.load_legal_doc("the_dude_exists", "de")
+        self.assertEqual(doc["content"], "You're in German Walter...")
+        self.assertEqual(set(doc["active_locales"]), {"de", "en-US"})
 
 
 class TestLegalDocView(TestCase):
-    @patch.object(views, 'load_legal_doc')
+    @patch.object(views, "load_legal_doc")
     def test_missing_doc_is_404(self, lld_mock):
         lld_mock.return_value = None
-        req = RequestFactory().get('/dude/is/gone/')
-        req.locale = 'de'
-        view = views.LegalDocView.as_view(template_name='base.html',
-                                          legal_doc_name='the_dude_is_gone')
+        req = RequestFactory().get("/dude/is/gone/")
+        req.locale = "de"
+        view = views.LegalDocView.as_view(template_name="base.html", legal_doc_name="the_dude_is_gone")
         with self.assertRaises(Http404):
             view(req)
 
-        lld_mock.assert_called_with('the_dude_is_gone', 'de')
+        lld_mock.assert_called_with("the_dude_is_gone", "de")
 
-    @patch.object(views, 'load_legal_doc')
-    @patch.object(views.l10n_utils, 'render')
+    @patch.object(views, "load_legal_doc")
+    @patch.object(views.l10n_utils, "render")
     def test_good_doc_okay(self, render_mock, lld_mock):
         """Should render correct thing when all is well"""
         doc_value = "Donny, you're out of your element!"
         lld_mock.return_value = {
-            'content': doc_value,
-            'active_locales': ['de', 'en-US'],
+            "content": doc_value,
+            "active_locales": ["de", "en-US"],
         }
         good_resp = HttpResponse(doc_value)
         render_mock.return_value = good_resp
-        req = RequestFactory().get('/dude/exists/')
-        req.locale = 'de'
-        view = views.LegalDocView.as_view(template_name='base.html',
-                                          legal_doc_name='the_dude_exists')
+        req = RequestFactory().get("/dude/exists/")
+        req.locale = "de"
+        view = views.LegalDocView.as_view(template_name="base.html", legal_doc_name="the_dude_exists")
         resp = view(req)
-        assert resp['cache-control'] == 'max-age={0!s}'.format(views.CACHE_TIMEOUT)
-        assert resp.content.decode('utf-8') == doc_value
-        assert render_mock.call_args[0][2]['doc'] == doc_value
-        lld_mock.assert_called_with('the_dude_exists', 'de')
+        assert resp["cache-control"] == "max-age={0!s}".format(views.CACHE_TIMEOUT)
+        assert resp.content.decode("utf-8") == doc_value
+        assert render_mock.call_args[0][2]["doc"] == doc_value
+        lld_mock.assert_called_with("the_dude_exists", "de")
 
-    @patch.object(views, 'load_legal_doc')
-    @patch.object(views.l10n_utils, 'render')
+    @patch.object(views, "load_legal_doc")
+    @patch.object(views.l10n_utils, "render")
     def test_cache_settings(self, render_mock, lld_mock):
         """Should use the cache_timeout value from view."""
         doc_value = "Donny, you're out of your element!"
         lld_mock.return_value = {
-            'content': doc_value,
-            'active_locales': ['es-ES', 'en-US'],
+            "content": doc_value,
+            "active_locales": ["es-ES", "en-US"],
         }
         good_resp = HttpResponse(doc_value)
         render_mock.return_value = good_resp
-        req = RequestFactory().get('/dude/exists/cached/')
-        req.locale = 'es-ES'
-        view = views.LegalDocView.as_view(template_name='base.html',
-                                          legal_doc_name='the_dude_exists',
-                                          cache_timeout=10)
+        req = RequestFactory().get("/dude/exists/cached/")
+        req.locale = "es-ES"
+        view = views.LegalDocView.as_view(template_name="base.html", legal_doc_name="the_dude_exists", cache_timeout=10)
         resp = view(req)
-        assert resp['cache-control'] == 'max-age=10'
+        assert resp["cache-control"] == "max-age=10"
 
-    @patch.object(views, 'load_legal_doc')
-    @patch.object(views.l10n_utils, 'render')
+    @patch.object(views, "load_legal_doc")
+    @patch.object(views.l10n_utils, "render")
     def test_cache_class_attrs(self, render_mock, lld_mock):
         """Should use the cache_timeout value from view class."""
         doc_value = "Donny, you're out of your element!"
         lld_mock.return_value = {
-            'content': doc_value,
-            'active_locales': ['es-ES', 'en-US'],
+            "content": doc_value,
+            "active_locales": ["es-ES", "en-US"],
         }
         good_resp = HttpResponse(doc_value)
         render_mock.return_value = good_resp
-        req = RequestFactory().get('/dude/exists/cached/2/')
-        req.locale = 'es-ES'
+        req = RequestFactory().get("/dude/exists/cached/2/")
+        req.locale = "es-ES"
 
         class DocTestView(views.LegalDocView):
             cache_timeout = 20
-            template_name = 'base.html'
-            legal_doc_name = 'the_dude_abides'
+            template_name = "base.html"
+            legal_doc_name = "the_dude_abides"
 
         view = DocTestView.as_view()
         resp = view(req)
-        assert resp['cache-control'] == 'max-age=20'
-        lld_mock.assert_called_with('the_dude_abides', 'es-ES')
+        assert resp["cache-control"] == "max-age=20"
+        lld_mock.assert_called_with("the_dude_abides", "es-ES")
+
+
+class TestFilePathData(TestCase):
+    def test_legacy_repo_layout(self):
+        path = Path("/repo/data/legal_docs/websites_privacy_notice/en-US.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "en-US",
+            "doc_name": "websites_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/websites_privacy_notice/de.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "de",
+            "doc_name": "websites_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/firefox_privacy_notice/es-ES_b.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "es-ES_b",
+            "doc_name": "firefox_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/WebRTC_ToS/cnh.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "cnh",
+            "doc_name": "WebRTC_ToS",
+        }
+
+    def test_new_repo_layout(self):
+        path = Path("/repo/data/legal_docs/en-US/websites_privacy_notice.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "en-US",
+            "doc_name": "websites_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/de/websites_privacy_notice.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "de",
+            "doc_name": "websites_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/es-ES_b/firefox_privacy_notice.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "es-ES_b",
+            "doc_name": "firefox_privacy_notice",
+        }
+        path = Path("/repo/data/legal_docs/cnh/WebRTC_ToS.md")
+        assert get_data_from_file_path(path) == {
+            "locale": "cnh",
+            "doc_name": "WebRTC_ToS",
+        }

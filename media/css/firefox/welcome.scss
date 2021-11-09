@@ -1,19 +1,35 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/components/modal';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/modal';
+@import '~@mozilla-protocol/core/protocol/css/components/inline-list';
 
+//* -------------------------------------------------------------------------- */
+// Smooth Scroll
+
+html {
+    scroll-behavior: smooth;
+
+    @media (prefers-reduced-motion: reduce) {
+        scroll-behavior: auto;
+    }
+}
 
 //* -------------------------------------------------------------------------- */
 // Page header
 
 .c-page-header {
     background: $color-white;
+
+    .mzp-l-content {
+        padding-top: $spacing-md;
+        padding-bottom: $spacing-md;
+    }
 }
 
 .c-header-logo {
@@ -43,12 +59,45 @@ $image-path: '/media/protocol/img';
 //* -------------------------------------------------------------------------- */
 // Page hero
 
+.mzp-c-hero {
+    .welcome-page4 & {
+        background: $color-orange-70 radial-gradient(circle at 60% 100%, $color-yellow-50 5%, $color-orange-70 94%);
+    }
+
+    .welcome-page9 & {
+        .mzp-l-content {
+            padding-bottom: 0;
+            padding-top: 0;
+        }
+    }
+}
+
 .mzp-c-hero-body {
     @include border-box;
     margin: 0 auto;
     max-width: $content-md;
     padding: $layout-xs 0;
     text-align: center;
+
+    .welcome-page4 & {
+        max-width: $content-md - ($layout-md * 2);
+    }
+
+    .welcome-page8.variation-2-image &,
+    .welcome-page8.variation-3-animation & {
+        max-width: $content-max;
+        padding-right: 0;
+        padding-left: 0;
+    }
+
+    .welcome-page9 & {
+        max-width: $content-lg;
+        padding-top: 0;
+    }
+
+    .welcome-page10 & {
+        padding-top: 0;
+    }
 
     @media #{$mq-md} {
         padding: $layout-md $layout-xl;
@@ -65,6 +114,10 @@ $image-path: '/media/protocol/img';
     .primary-cta {
         margin: 0 auto;
 
+        h2 {
+            @include text-display-xs;
+        }
+
         .mzp-c-button {
             min-width: 180px;
         }
@@ -72,17 +125,29 @@ $image-path: '/media/protocol/img';
 }
 
 .mzp-c-hero-title {
-    @include text-display-lg;
+    @include text-title-lg;
     margin-bottom: $layout-sm;
 
     .welcome-page1 &,
-    .welcome-page3 & {
-        @include text-display-md;
+    .welcome-page3 &,
+    .welcome-page6 &,
+    .welcome-page7 &,
+    .welcome-page8 &,
+    .welcome-page9 &,
+    .welcome-page10 & {
+        @include text-title-md;
     }
 
-    .welcome-page4 & {
+    .welcome-page8 & {
         strong {
-            @include zap('/media/protocol/img/zaps/zap-16.svg');
+            @include zap('/media/protocol/img/zaps/zap-10.svg');
+        }
+    }
+
+    .welcome-page9 &,
+    .welcome-page10 & {
+        strong {
+            color: $color-violet-50;
         }
     }
 }
@@ -90,8 +155,12 @@ $image-path: '/media/protocol/img';
 .mzp-c-hero-desc {
     @include text-body-lg;
     margin-bottom: $layout-sm;
-}
 
+    .welcome-page9 & {
+        margin: 0 auto $layout-sm;
+        max-width: $content-sm;
+    }
+}
 
 //* -------------------------------------------------------------------------- */
 // Primary content
@@ -101,18 +170,38 @@ $image-path: '/media/protocol/img';
     margin: $layout-md auto $layout-lg;
     text-align: center;
 
+    .welcome-page9 &,
+    .welcome-page10 & {
+        margin-bottom: 0;
+    }
+
     .primary-image {
         margin: $layout-sm auto 0;
     }
 
     .primary-image-desc {
-        @include text-display-xxs;
+        @include text-title-2xs;
         font-style: italic;
         margin: $layout-sm 0 $layout-xl 0;
     }
 
     .primary-cta {
         margin: $layout-md auto 0;
+    }
+}
+
+.welcome-page9 {
+    .product-logo {
+        display: block;
+        margin: $spacing-2xl auto;
+    }
+}
+
+.welcome-page10 {
+    .hero-image {
+        display: block;
+        margin: 0 auto;
+        width: 120px;
     }
 }
 
@@ -127,7 +216,7 @@ $image-path: '/media/protocol/img';
     padding: 0 $layout-md;
 
     .c-picto-block-title {
-        @include text-display-xs;
+        @include text-title-xs;
     }
 
     .c-picto-block-image {
@@ -146,7 +235,7 @@ $image-path: '/media/protocol/img';
         position: relative;
 
         & + & {
-            border-top: 1px solid $color-gray-30;
+            border-top: 1px solid $color-marketing-gray-30;
             padding-top: $layout-md;
         }
 
@@ -164,6 +253,21 @@ $image-path: '/media/protocol/img';
     }
 }
 
+@media #{$mq-md} {
+    .l-columns-two {
+        display: flex;
+        margin: 0 auto;
+        max-width: $content-lg;
+        padding: 0 $layout-md;
+        flex-wrap: wrap;
+
+        .c-picto-block {
+            flex: 1 1 50%;
+            padding: 0 $layout-lg;
+        }
+    }
+}
+
 //* -------------------------------------------------------------------------- */
 // Secondary CTA
 
@@ -171,6 +275,10 @@ $image-path: '/media/protocol/img';
     @include text-body-lg;
     margin: $layout-lg auto $layout-sm;
     text-align: center;
+
+    h2 {
+        @include text-display-xs;
+    }
 
     p {
         margin: 0 auto;
@@ -197,15 +305,19 @@ $image-path: '/media/protocol/img';
 
 .mzp-c-hero.mzp-t-dark {
     @include light-links;
-    background-color: $color-off-black;
+    background-color: $color-ink-80;
     color: $color-white;
+
+    .mzp-c-button.mzp-t-product {
+        color: $color-white;
+    }
 }
 
 
 //* -------------------------------------------------------------------------- */
 //  Modal
 
-.no-js .welcome-page4 {
+.no-js {
     .js-modal-link {
         display: none;
     }
@@ -213,22 +325,35 @@ $image-path: '/media/protocol/img';
     .mzp-u-modal-content {
         margin: 0 auto;
         text-align: center;
+    }
 
-        h3 {
-            @include text-display-sm;
-        }
-
-        .modal-logo {
-            margin-top: $spacing-xl;
-        }
+    .modal-title {
+        @include text-title-sm;
+        margin-top: $spacing-xl;
     }
 }
 
-.modal-logo {
-    @include at2x('/media/protocol/img/logos/firefox/browser/logo-lg.png', auto, 100%);
-    @include image-replaced;
-    background-repeat: no-repeat;
-    background-position: center;
+.modal-title {
+    padding-top: $layout-xl;
+    position: relative;
+
+    &::before {
+        @include image-replaced;
+        background-position: center;
+        background-repeat: no-repeat;
+        content: '';
+        height: $layout-lg;
+        left: 50%;
+        margin-left: -($layout-lg*0.5);
+        position: absolute;
+        top: 0;
+        width: $layout-lg;
+
+        .welcome-page6 & {
+            @include background-size(64px, 64px);
+            background-image: url('/media/protocol/img/logos/firefox/browser/logo.svg');
+        }
+    }
 }
 
 .mzp-c-modal-window {
@@ -239,9 +364,9 @@ $image-path: '/media/protocol/img';
     background-color: transparent;
     padding: 0;
 
-    h3 {
-        @include text-display-md;
-        color: $color-off-black;
+    .modal-title {
+        @include text-title-md;
+        color: $color-ink-80;
         margin-bottom: 0;
 
         + p {
@@ -266,10 +391,21 @@ $image-path: '/media/protocol/img';
     width: $content-xs;
 }
 
+.c-store-badges {
+    text-align: center;
+    margin-top: $layout-sm;
+
+    li {
+        display: inline-block;
+        margin: 0 $spacing-sm $spacing-lg;
+    }
+}
+
 @media #{$mq-sm} {
     .mzp-c-modal-window {
         padding: $layout-xs;
     }
+
 }
 
 @media #{$mq-md} {
@@ -294,5 +430,210 @@ $image-path: '/media/protocol/img';
 
     footer {
         display: none;
+    }
+
+    // send to device is inline on this page.
+    .welcome-page4 & {
+        color: $color-ink-80;
+        margin-top: $spacing-md;
+
+        .mzp-c-button-info {
+            width: unset;
+        }
+    }
+}
+
+//* -------------------------------------------------------------------------- */
+//  Set as default conditionals
+
+.state-is-default {
+    display: none;
+}
+
+.is-firefox-default {
+    .state-is-default {
+        display: inline-block;
+    }
+
+    .state-not-default {
+        display: none;
+    }
+}
+
+.welcome-page8.variation-2-image,
+.welcome-page8.variation-3-animation {
+    .mzp-l-content {
+        padding: 24px 52px;
+    }
+
+    .mzp-c-hero-title {
+        max-width: $content-md;
+        margin: 0 auto;
+    }
+}
+
+.image-container {
+    margin: 35px 0 70px 0;
+
+    .image-wrapper {
+        display: inline-block;
+        vertical-align: top;
+        margin: 0 50px 0 50px;
+        position: relative;
+
+        // This test is not being performed in any RTL locales
+        &:first-of-type {
+            margin: 0 50px 0 0;
+        }
+
+        &:last-child {
+            margin: 0 0 0 50px;
+        }
+
+        p {
+            @include font-size(17px);
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        img {
+            vertical-align: top;
+            height: 290px;
+            width: auto;
+        }
+
+        video {
+            vertical-align: top;
+            pointer-events: none;
+        }
+    }
+
+    #arrow-right,
+    #arrow-down {
+        position: absolute;
+    }
+
+    #arrow-right {
+        top: 110px;
+        right: -90px;
+        height: 85px;
+    }
+
+    #arrow-down {
+        display: none;
+    }
+}
+
+@media (max-width: 1190px) {
+    .welcome-page8.variation-2-image {
+        .image-container {
+            .image-wrapper {
+                margin: 0 30px 0 30px;
+
+                &:first-of-type {
+                    margin: 0 30px 0 0;
+                }
+
+                &:last-child {
+                    margin: 0 0 0 30px;
+                }
+
+                p {
+                    @include font-size(16px);
+                    max-width: 178px;
+                }
+
+                img {
+                    height: 178px;
+                }
+
+                #arrow-right {
+                    top: 62px;
+                    right: -55px;
+                    height: 60px;
+                }
+            }
+        }
+    }
+}
+
+.welcome-page8.variation-2-image {
+    .image-container {
+        @media (max-width: 767px) {
+            max-width: 300px;
+            margin: 5px auto 70px auto;
+
+            #arrow-right {
+                display: none;
+            }
+
+            .image-wrapper {
+                margin: 0;
+
+                &:last-child {
+                    margin: 0;
+                }
+
+                &:first-of-type {
+                    margin: 0 0 50px 0;
+                }
+
+                img {
+                    height: 250px;
+                }
+
+                p {
+                    max-width: 230px;
+                }
+            }
+
+            #arrow-down {
+                display: block;
+                bottom: -63px;
+                left: 84px;
+                height: 45px;
+            }
+        }
+    }
+}
+
+.welcome-page8.variation-3-animation {
+    .image-container {
+        margin: 35px auto 70px auto;
+        max-width: 1000px;
+
+        @media (max-width: 767px) {
+            margin: 35px auto 45px auto;
+        }
+
+        .image-wrapper {
+            display: inline-block;
+            vertical-align: top;
+            margin: 0 5% 0 5%;
+            position: relative;
+            width: 25%;
+
+            &:first-of-type {
+                margin: 0 5% 0 0;
+            }
+
+            &:last-child {
+                margin: 0 0 0 5%;
+            }
+        }
+    }
+}
+
+//* -------------------------------------------------------------------------- */
+// Featured Press Logos
+
+.welcome-page9-press-logos {
+    margin: 0 0 $layout-lg;
+    text-align: center;
+
+    .welcome-page9-press-logos-heading {
+        @include font-base;
+        @include font-size(18px);
+        font-weight: normal;
     }
 }

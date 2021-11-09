@@ -1,17 +1,17 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from selenium.webdriver.common.by import By
 
-from pages.firefox.base import FirefoxBasePage
+from pages.base import BasePage
 
 
-class FirefoxWhatsNewNightly70Page(FirefoxBasePage):
+class FirefoxWhatsNewNightly70Page(BasePage):
 
-    URL_TEMPLATE = '/{locale}/firefox/70.0a1/whatsnew/all/'
+    _URL_TEMPLATE = "/{locale}/firefox/70.0a1/whatsnew/"
 
-    _upgrade_message_locator = (By.CSS_SELECTOR, '.main-content header > h2')
+    _upgrade_message_locator = (By.CSS_SELECTOR, ".content-wrapper .c-emphasis-box-title")
 
     @property
     def is_upgrade_message_displayed(self):

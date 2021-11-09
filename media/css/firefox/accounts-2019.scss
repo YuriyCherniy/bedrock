@@ -1,12 +1,14 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-@import '../../protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/emphasis-box';
+@import '../protocol/components/fxa-form';
 
 .c-section-title {
-    @include text-display-md;
-    max-width: $content-sm;
+    @include text-title-md;
+    max-width: $content-sm + $layout-xl;
     margin: 0 auto $layout-xl;
     text-align: center;
 }
@@ -24,9 +26,8 @@
     }
 
     .c-accounts-hero-title {
-        @include text-display-lg;
+        @include text-title-lg;
         margin-bottom: $spacing-xl;
-        padding-top: (60px + $spacing-2xl);
 
         span {
             color: $color-red-50;
@@ -101,34 +102,25 @@
 // FxA signup form
 
 .c-accounts-form {
-    background: $color-white;
-    border-radius: 6px;
-    box-shadow: 0 0 16px 0 rgba(0, 0, 0, .15);
-    margin: $layout-lg auto 0;
+    margin: 0 auto;
     max-width: 330px;
-    padding: $spacing-lg;
     text-align: center;
 
-    .fxa-email-form-title {
-        @include text-display-sm;
+    .mzp-c-form-title {
+        @include font-firefox;
+        @include text-title-sm;
     }
 
     .state-fxa-supported-signed-in & {
         display: none;
     }
 
-    .mzp-c-button {
-        width: 100%;
-    }
-
     .fxa-signin {
-        @include text-body-sm;
-        margin-top: $spacing-lg;
+        margin-bottom: 0;
     }
 
     @media #{$mq-lg} {
         @include bidi(((float, right, left),));
-        margin-top: (60px + $spacing-2xl);
 
         @supports (display: grid) {
             float: none;
@@ -141,22 +133,36 @@
 // Products
 
 .c-product-list {
-    max-width: $content-md;
     margin: $spacing-2xl auto;
+    max-width: $content-sm;
 
-    @media #{$mq-sm} {
+    @media #{$mq-md} {
         @supports (display: grid) {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-gap: $layout-md $layout-lg;
+            &.l-columns-two {
+                display: grid;
+                grid-gap: $layout-md;
+                grid-template-columns: repeat(2, 1fr);
+                max-width: $content-md;
+            }
+        }
+    }
+
+    @media #{$mq-lg} {
+        @supports (display: grid) {
+            &.l-columns-three {
+                display: grid;
+                grid-gap: $layout-md;
+                grid-template-columns: repeat(3, 1fr);
+                max-width: $content-lg;
+            }
         }
     }
 }
 
 .c-product-list-item {
     margin: 0 auto $layout-lg;
-    text-align: center;
     max-width: $content-xs;
+    text-align: center;
 
     a:link,
     a:visited {
@@ -164,7 +170,7 @@
         text-decoration: none;
 
         .c-product-list-title {
-            color: $color-off-black;
+            color: $color-ink-80;
         }
 
         .c-product-list-desc {
@@ -180,10 +186,10 @@
         }
     }
 
-    @media #{$mq-sm} {
-        @include bidi(((text-align, left, right),));
-
+    @media #{$mq-lg} {
         @supports (display: grid) {
+            @include bidi(((text-align, left, right),));
+            max-width: none;
             margin: 0;
         }
     }
@@ -191,52 +197,50 @@
 
 .c-product-list-title {
     @include image-replaced;
-    @include text-display-sm;
+    @include text-title-sm;
     background-position: center top;
     background-repeat: no-repeat;
     margin: 0 auto $spacing-lg;
     height: 50px;
 
     .t-product-firefox & {
-        @include at2x('/media/protocol/img/logos/firefox/browser/logo-word-hor-stack-md.png', 144px, 50px);
-    }
-
-    .t-product-lockwise & {
-        @include at2x('/media/protocol/img/logos/firefox/lockwise/logo-word-hor-stack-md.png', 154px, 50px);
+        @include background-size(144px, 50px);
+        background-image: url('/media/protocol/img/logos/firefox/browser/logo-word-hor-stack.svg');
     }
 
     .t-product-monitor & {
-        @include at2x('/media/protocol/img/logos/firefox/monitor/logo-word-hor-stack-md.png', 138px, 50px);
+        @include background-size(138px, 50px);
+        background-image: url('/media/protocol/img/logos/firefox/monitor/logo-word-hor-stack.svg');
     }
 
-    .t-product-send & {
-        @include at2x('/media/protocol/img/logos/firefox/send/logo-word-hor-stack-md.png', 130px, 50px);
-    }
-
-    @media #{$mq-sm} {
-        @include bidi(((background-position, left top, right top),));
-        margin: 0 0 $spacing-lg;
+    .t-product-vpn & {
+        @include background-size(143px, 50px);
+        background-image: url('/media/protocol/img/logos/mozilla/vpn/logo-word-hor-stack.svg');
     }
 
     @media #{$mq-md} {
         height: 64px;
+        margin: 0 0 $spacing-lg;
 
         .t-product-firefox & {
             @include background-size(184px,  64px);
-        }
-
-        .t-product-lockwise & {
-            @include background-size(197px, 64px);
         }
 
         .t-product-monitor & {
             @include background-size(176px, 64px);
         }
 
-        .t-product-send & {
-            @include background-size(167px, 64px);
+        .t-product-vpn & {
+            @include background-size(184px, 64px);
         }
     }
+
+    @media #{$mq-lg} {
+        @supports (display: grid) {
+            @include bidi(((background-position, left top, right top),));
+        }
+    }
+
 }
 
 .c-product-list-desc {
@@ -347,7 +351,7 @@
 
             .c-accounts-value-content {
                 grid-row: 1;
-                max-width: ($content-max / 2) - $spacing-lg;
+                max-width: ($content-max * 0.5) - $spacing-lg;
                 padding: 0;
             }
 
@@ -424,7 +428,7 @@
 }
 
 .c-accounts-value-title {
-    @include text-display-md;
+    @include text-title-md;
 }
 
 
@@ -488,7 +492,7 @@
 }
 
 .c-accounts-movement-title {
-    @include text-display-md;
+    @include text-title-sm;
 }
 
 .c-accounts-movement-desc {

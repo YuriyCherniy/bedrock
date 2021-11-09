@@ -1,13 +1,15 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
-
-{% add_lang_files "firefox/products/developer-quantum" "firefox/shared" %}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "firefox/base/base-protocol.html" %}
 
-{% block page_title %}{{_('Firefox Developer Edition')}}{% endblock %}
-{% block page_desc %}{{ _('Firefox Developer Edition is the blazing fast browser that offers cutting edge developer tools and latest features like CSS Grid support and framework debugging') }}{% endblock %}
+{% from "macros-protocol.html" import split with context %}
+
+{% block page_title %}{{ ftl('firefox-developer-page-title') }}{% endblock %}
+{% block page_desc %}{{ ftl('firefox-developer-firefox-developer-edition-desc') }}{% endblock %}
 {% block page_image %}{{ static('protocol/img/logos/firefox/browser/developer/og.png') }}{% endblock %}
 {% block page_favicon %}{{ static('img/favicons/firefox/browser/developer/favicon.ico') }}{% endblock %}
 {% block page_favicon_large %}{{ static('img/favicons/firefox/browser/developer/favicon-196x196.png') }}{% endblock %}
@@ -22,23 +24,43 @@
 
 {% block site_header %}
   {% with hide_nav_download_button=True %}
-    {% include 'includes/protocol/navigation/menu-firefox/index.html' %}
+    {% include 'includes/protocol/navigation/navigation.html' %}
   {% endwith %}
+{% endblock %}
+
+{% block sub_navigation %}
+<nav class="c-sub-navigation">
+  <div class="mzp-l-content">
+    <div class="c-sub-navigation-content">
+      <h2 class="c-sub-navigation-title">
+        <a href="{{ url('firefox.browsers.index') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Firefox">
+          <img class="c-sub-navigation-icon" src="{{ static('protocol/img/logos/firefox/logo.svg') }}" width="24" height="24" alt="">
+         {{ ftl('sub-navigation-firefox') }}
+        </a>
+      </h2>
+      <ul class="c-sub-navigation-list">
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.enterprise.index') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Enterprise">{{ ftl('sub-navigation-enterprise') }}</a></li>
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.channel.desktop') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Nightly and Beta">{{ ftl('sub-navigation-nightly-and-beta') }}</a></li>
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.all') }}" data-link-type="nav" data-link-position="subnav" data-link-name="All Languages">{{ ftl('sub-navigation-all-languages', fallback='download-button-systems-languages') }}</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 {% endblock %}
 
 {% block content %}
 <main role="main">
   <section class="t-intro">
     <div class="mzp-l-content">
-      {{ high_res_img('protocol/img/logos/firefox/browser/developer/logo-word-hor-lg.png', {'alt': '', 'width': '368', 'height': '68'}) }}
-      <h1 class="intro-title">Firefox Browser Developer Edition</h1>
-      <p class="intro-tagline">{{ _('Welcome to your new favorite browser. Get the latest features, fast performance, and the development tools you need to build for the open web.') }}</p>
+      <div class="mzp-c-wordmark mzp-t-wordmark-lg mzp-t-product-developer"></div>
+      <h1 class="intro-title">{{ ftl('firefox-developer-firefox-browser') }}</h1>
+      <p class="intro-tagline">{{ ftl('firefox-developer-welcome-to-your-new-favorite') }}</p>
 
-      {{ download_firefox('alpha', platform='desktop', dom_id='intro-download', button_color='button-arrow', download_location='primary cta') }}
+      {{ download_firefox('alpha', platform='desktop', dom_id='intro-download', download_location='primary cta') }}
 
       <p class="intro-feedback-note">
-        {{ _('Firefox Developer Edition automatically sends feedback to Mozilla.') }}
-        <a href="{{ url('privacy.notices.firefox') }}#pre-release" class="more">{{ _('Learn more') }}</a>
+        {{ ftl('firefox-developer-firefox-developer-edition-sends') }}
+        <a href="{{ url('privacy.notices.firefox') }}#pre-release" class="more">{{ ftl('ui-learn-more') }}</a>
       </p>
     </div>
     <div class="intro-image">
@@ -46,7 +68,7 @@
     </div>
   </section>
 
-  {% if l10n_has_tag('made_for_devs_102019') %}
+  {% if ftl_has_messages('firefox-developer-made-for-developers', 'firefox-developer-all-the-latest') %}
     {% include '/firefox/developer/includes/for-developers.html' %}
   {% else %}
     {% include '/firefox/developer/includes/performance.html' %}
@@ -59,23 +81,15 @@
   <section class="t-engage mzp-t-dark">
     {% include '/firefox/developer/includes/engage.html' %}
 
-    <div class="mzp-l-content t-download">
-      <section class="mzp-c-card-feature mzp-has-aspect-3-2 mzp-l-card-feature-right-half">
-        <div class="mzp-c-card-feature-media-wrapper">
-          <div class="mzp-c-card-feature-media">
-              {{ high_res_img('img/firefox/developer/browser.png', {'alt': '', 'width': '334', 'height': '228'}) }}
-          </div>
-        </div>
-        <div class="mzp-c-card-feature-content">
-          <div class="mzp-c-card-feature-content-container">
-            <h2 class="mzp-c-card-feature-title">{{ _('Download the Firefox browser made for developers') }}</h2>
-            <div class="mzp-c-card-feature-desc">
-                {{ download_firefox('alpha', platform='desktop', dom_id='footer-download', button_color='button-arrow', download_location='footer cta') }}
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    {% call split(
+      image_url='img/firefox/developer/browser.png',
+      include_highres_image=True,
+      block_class='mzp-l-split-reversed mzp-l-split-center-on-sm-md',
+      media_after=True
+    ) %}
+      <h2>{{ ftl('firefox-developer-download-the-firefox-browser') }}</h2>
+      {{ download_firefox('alpha', platform='desktop', dom_id='footer-download', download_location='footer cta') }}
+    {% endcall %}
   </section>
   <section class="t-newsletter">
     <div class="mzp-l-content">
@@ -83,15 +97,13 @@
         {{ email_newsletter_form(
           'app-dev',
           title='Get the most out of Firefox Developer Edition',
-          subtitle='Learn about Dev Edition and subscribe to the Mozilla Developer Newsletter.',
-          button_class='mzp-t-product mzp-t-small',
-          include_language=False,
-          protocol_component=True) }}
+          desc='Learn about Dev Edition and subscribe to the Mozilla Developer Newsletter.',
+          button_class='mzp-t-product mzp-t-lg',
+          include_language=False) }}
       {% else %}
         {{ email_newsletter_form(
-          protocol_component=True,
           spinner_color='#fff',
-          button_class='mzp-c-button mzp-t-product') }}
+          button_class='mzp-c-button mzp-t-product mzp-t-lg') }}
       {% endif %}
     </div>
   </section>
@@ -99,9 +111,6 @@
 {% endblock %}
 
 {% block email_form %}{% endblock %}
-
-{# Bug 1381776 #}
-{% block update_notification %}{% endblock %}
 
 {% block js %}
   {{ js_bundle('firefox_developer') }}

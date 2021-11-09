@@ -1,5 +1,9 @@
-@import '../../../../protocol/css/includes/lib';
-@import '../../../../protocol/css/components/newsletter-form';
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/newsletter-form';
 
 //*------------------------------------------------------------------*/
 // Newsletter
@@ -10,24 +14,27 @@
 
     .mzp-l-content {
         background: #fff;
-        border-radius: 6px;
-        box-shadow: 0 4px 16px 0 #20123A;
+        border-radius: $border-radius-md;
+        box-shadow: $box-shadow-md;
         padding-top: $layout-md;
         padding-bottom: $layout-md;
         min-width: 0;
         max-width: $content-sm;
     }
 
+    .mzp-c-newsletter-content {
+        margin-bottom: 0;
+    }
+
     .mzp-c-newsletter-form {
         padding-top: 0;
         @include font-size(14px);
 
-        input[type=email] {
-            border: 2px solid $color-gray-30;
-            border-radius: 2px;
-            padding-top: 10px; // to make input match button height
-            padding-bottom: 10px; // to make input match button height
+        input[type=email],
+        select {
+            min-width: 0; // https://github.com/mozilla/protocol/issues/607
         }
+
         label[for=id_email]{
             @include visually-hidden;
         }

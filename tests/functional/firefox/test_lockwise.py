@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import pytest
 
@@ -14,7 +14,8 @@ def test_mobile_buttons_are_displayed(base_url, selenium):
     assert page.is_play_store_button_displayed
 
 
-@pytest.mark.skip_if_firefox(reason='Download button is displayed only to non-Firefox users')
+@pytest.mark.smoke
+@pytest.mark.skip_if_firefox(reason="Download button is displayed only to non-Firefox users")
 @pytest.mark.nondestructive
 def test_download_button_is_displayed(base_url, selenium):
     page = LockwisePage(selenium, base_url).open()

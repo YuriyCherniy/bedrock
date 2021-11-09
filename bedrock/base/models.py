@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 from django.db import models
 
 
@@ -6,10 +10,10 @@ class ConfigValue(models.Model):
     value = models.CharField(max_length=200)
 
     class Meta:
-        app_label = 'base'
+        app_label = "base"
 
     def __str__(self):
-        return '%s=%s' % (self.name, self.value)
+        return "%s=%s" % (self.name, self.value)
 
 
 def get_config_dict():

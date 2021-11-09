@@ -1,13 +1,15 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
 // Create namespace
 if (typeof window.Mozilla === 'undefined') {
     window.Mozilla = {};
 }
 
-(function() {
+(function () {
     'use strict';
 
     /**
@@ -20,14 +22,14 @@ if (typeof window.Mozilla === 'undefined') {
      */
     var Pixel = {};
 
-    Pixel.getPixelData = function() {
-        return $('#strings').data('pixels');
+    Pixel.getPixelData = function () {
+        return document.getElementById('strings').getAttribute('data-pixels');
     };
 
-    Pixel.setPixels = function() {
-        var $body = $('body');
+    Pixel.setPixels = function () {
+        var body = document.querySelector('body');
         var pixels = Pixel.getPixelData();
-        var $pixel;
+        var pixel;
 
         if (typeof pixels !== 'string' || pixels === '') {
             return;
@@ -37,17 +39,25 @@ if (typeof window.Mozilla === 'undefined') {
         pixels = pixels.split('::');
 
         for (var i = 0; i < pixels.length; i++) {
-            $pixel = $('<img />', {
-                width: '1',
-                height: '1',
-                src: pixels[i].replace(/\s/g, '')
-            });
-            $pixel.addClass('moz-px');
-            $body.append($pixel);
+            pixel = document.createElement('img');
+            pixel.width = 1;
+            pixel.height = 1;
+            pixel.src = pixels[i].replace(/\s/g, '');
+
+            // Cache bust doubleclick pixel (see issue 9128)
+            // https://support.google.com/dcm/answer/2837746?hl=en
+            if (pixels[i].indexOf('ad.doubleclick.net') !== -1) {
+                var axel = Math.random() + '';
+                var num = axel * 10000000000000;
+                pixel.src += ';num=' + num;
+            }
+
+            pixel.className = 'moz-px';
+            body.appendChild(pixel);
         }
     };
 
-    Pixel.init = function() {
+    Pixel.init = function () {
         // Do not set pixels if visitor has DNT enabled.
         if (!Mozilla.dntEnabled()) {
             Pixel.setPixels();

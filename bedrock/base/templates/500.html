@@ -1,36 +1,25 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
-{% set_lang_files "mozorg/500" %}
-
-{% extends "base-pebbles.html" %}
+{% extends "base-error.html" %}
 
 {% block gtm_page_id %}data-gtm-page-id="500"{% endblock %}
 
-{% block page_title %}{{ _('500: Internal Server Error') }}{% endblock %}
+{% block page_title %}{{ ftl('error-page-error-page-internal-server-error') }}{% endblock %}
 
 {% block page_css %}
   {{ css_bundle('page_not_found') }}
 {% endblock %}
 
 {% block content %}
-<main>
-  <div class="content">
-    <header>
-      <h1><span>{{ _('Oh Noes!') }}</span></h1>
-      <h2>{{ _('An error occurred.') }}</h2>
-    </header>
-    <div class="error-content">
-      <p>
-      {% trans bugzilla='https://bugzilla.mozilla.org/enter_bug.cgi?product=www.mozilla.org' %}
-        If you’ve found an issue with one of our websites, we’d appreciate it if you could report the problem in Bugzilla, our <a href="{{ bugzilla }}">bug tracker</a>. One of our developers will take a look at it as soon as possible.
-      {% endtrans %}
-      </p>
-    </div>
-    <aside class="download-firefox">
-      {{ download_firefox() }}
-    </aside>
-  </div>
-</main>
+  <main role="main" class="mzp-l-content message-section">
+    <h1 class="error-title">{{ ftl('error-page-something-went-wrong') }}</h1>
+    <p>
+      {{ ftl('error-page-its-probably-just-a-server-error') }}<br>
+      {{ ftl('error-page-you-can-also-try-refreshing', firefox="https://firefox.com", mozilla=url('mozorg.home')) }}
+    </p>
+  </main>
 {% endblock %}

@@ -1,4 +1,8 @@
-@import '../../../../protocol/css/includes/lib';
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
 
 //*------------------------------------------------------------------*/
 // Intro
@@ -10,10 +14,15 @@
     .mzp-l-content {
         padding-top: $layout-lg;
     }
+
+    .mzp-c-wordmark {
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 .intro-title {
-    @include text-display-lg;
+    @include text-title-md;
     background-position: top center;
     background-repeat: no-repeat;
     margin: $layout-sm auto;
@@ -43,6 +52,7 @@
     background-size: auto 420px;
     height: 420px;
     position: relative;
+    overflow: hidden;
 
     img {
         bottom: 0;

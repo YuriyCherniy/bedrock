@@ -1,6 +1,8 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
 // Depends on Mozilla-client.js
 // adds classes to the body to indicate state of fxaccount
@@ -10,21 +12,21 @@ if (typeof window.Mozilla === 'undefined') {
     window.Mozilla = {};
 }
 
-(function(Mozilla) {
+(function (Mozilla) {
     'use strict';
 
     var FxaState = {
         body: document.getElementsByTagName('body')[0],
-        defaultStateClass : 'state-fxa-default', // only present if added manually to page in HTML
+        defaultStateClass: 'state-fxa-default' // only present if added manually to page in HTML
     };
 
-    FxaState.getStateClassAndDo = function(callback) {
-        Mozilla.Client.getFxaDetails(function(details) {
+    FxaState.getStateClassAndDo = function (callback) {
+        Mozilla.Client.getFxaDetails(function (details) {
             FxaState.convertFxaDetailsToStateAndDo(details, callback);
         });
     };
 
-    FxaState.convertFxaDetailsToStateAndDo = function(details, callback) {
+    FxaState.convertFxaDetailsToStateAndDo = function (details, callback) {
         var stateClass = '';
 
         if (details.firefox) {
@@ -38,7 +40,10 @@ if (typeof window.Mozilla === 'undefined') {
                 }
             } else {
                 // Query param `signed-in=true` is used for integration testing and demo review only.
-                if (details.setup || window.location.search.indexOf('signed-in=true') !== -1) {
+                if (
+                    details.setup ||
+                    window.location.search.indexOf('signed-in=true') !== -1
+                ) {
                     stateClass = 'state-fxa-supported-signed-in';
                 } else {
                     stateClass = 'state-fxa-supported-signed-out';
@@ -50,11 +55,10 @@ if (typeof window.Mozilla === 'undefined') {
         callback(stateClass);
     };
 
-    FxaState.applyStateToBody = function(stateClass) {
+    FxaState.applyStateToBody = function (stateClass) {
         FxaState.body.classList.remove(FxaState.defaultStateClass);
         FxaState.body.classList.add(stateClass);
     };
 
     Mozilla.FxaState = FxaState;
-
 })(window.Mozilla);

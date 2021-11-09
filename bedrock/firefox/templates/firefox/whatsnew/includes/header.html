@@ -1,16 +1,17 @@
-<header class="main-header">
-  <div class="content">
-    <div class="inner-container">
-      <div class="mozilla-logo">
-        <a href="{{ url('mozorg.home') }}" data-link-type="nav" data-link-name="Mozilla">Mozilla</a>
-      </div>
-      <h1 class="up-to-date-messaging hidden">
-      {% if custom_message %}
-        {{ custom_message }}
-      {% else %}
-        {{ _('Your Firefox is up to date.') }}
-      {% endif %}
-      </h1>
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
+<header class="c-page-header">
+  <div class="mzp-l-content c-page-header-inner">
+    <h2 class="c-page-header-logo-fx">{{ ftl('whatsnew-firefox-browser') }}</h2>
+    <div class="mzp-c-notification-bar mzp-t-success up-to-date">
+      <p>{{ ftl('whatsnew-up-to-date-notification') }}</p>
+    </div>
+    <div class="mzp-c-notification-bar out-of-date">
+      <p>{{ ftl('whatsnew-out-of-date-notification') }}</p>
     </div>
   </div>
 </header>

@@ -1,203 +1,249 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "firefox/base/base-protocol.html" %}
 
-{% from "macros-protocol.html" import call_out_compact, feature_card, picto_card, hero with context %}
+{% from "macros-protocol.html" import call_out_compact, picto, split with context %}
 
-{% block page_title_full %}{{_('Get Firefox for your enterprise with ESR and Rapid Release')}}{% endblock %}
-{% block page_desc %}{{_('Get unmatched data protection on the release cadence that suits you with Firefox for enterprise. Download ESR and Rapid Release.')}}{% endblock %}
+{% block page_title_full %}{{ ftl('firefox-enterprise-get-firefox-for-your-enterprise-with') }}{% endblock %}
+{% block page_desc %}{{ ftl('firefox-enterprise-get-unmatched-data-protection') }}{% endblock %}
 
 {% block page_css %}
   {{ css_bundle('firefox-enterprise') }}
 {% endblock %}
 
+{% set utm_params = '?utm_source=www.mozilla.org-enterprise&utm_campaign=enterprise&utm_medium=referral' %}
+
 {% block body_id %}firefox{% endblock %}
 
 {% block site_header %}
   {% with hide_nav_download_button=True %}
-    {% include 'includes/protocol/navigation/menu-firefox/index.html' %}
+    {% include 'includes/protocol/navigation/navigation.html' %}
   {% endwith %}
+{% endblock %}
+
+{% block sub_navigation %}
+<nav class="c-sub-navigation">
+  <div class="mzp-l-content">
+    <div class="c-sub-navigation-content">
+      <h2 class="c-sub-navigation-title">
+        <a href="{{ url('firefox.browsers.index') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Firefox">
+          <img class="c-sub-navigation-icon" src="{{ static('protocol/img/logos/firefox/logo.svg') }}" width="24" height="24" alt="">
+         {{ ftl('sub-navigation-firefox') }}
+        </a>
+      </h2>
+      <ul class="c-sub-navigation-list">
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.developer.index') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Developer Edition">{{ ftl('sub-navigation-developer-edition') }}</a></li>
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.channel.desktop') }}" data-link-type="nav" data-link-position="subnav" data-link-name="Nightly and Beta">{{ ftl('sub-navigation-nightly-and-beta') }}</a></li>
+        <li class="c-sub-navigation-item"><a href="{{ url('firefox.all') }}" data-link-type="nav" data-link-position="subnav" data-link-name="All Languages">{{ ftl('sub-navigation-all-languages', fallback='download-button-systems-languages') }}</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
 {% endblock %}
 
 {% block content %}
 <main role="main">
-  <nav class="c-sub-navigation">
-    <div class="mzp-l-content">
-      <div class="c-sub-navigation-content">
-        <h2 class="c-sub-navigation-title">{{ _('Enterprise') }}</h2>
-        <ul class="c-sub-navigation-list">
-          <li class="c-sub-navigation-item"><a href="#overview">{{ _('Overview') }}</a></li>
-          <li class="c-sub-navigation-item"><a href="#download">{{ _('Downloads') }}</a></li>
-          <li class="c-sub-navigation-item"><a href="#resources">{{ _('Resources') }}</a></li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-  {% call hero(
-    title=_('Get Firefox for your enterprise'),
-    class='mzp-t-product-firefox mzp-has-image mzp-t-dark t-enterprise',
+  {% call split(
     image_url='img/firefox/enterprise/fx-browser-img.svg',
-    include_cta=True,
-    heading_level=1
+    block_class='mzp-t-dark t-enterprise mzp-t-split-nospace mzp-l-split-hide-media-on-sm-md mzp-l-split-center-on-sm-md',
+    media_class='mzp-l-split-v-start mzp-l-split-h-start',
+    media_after=True
   ) %}
-    <p class="mzp-c-hero-desc">
-      {{ _('Get the <a href="%s">Firefox Extended Support Release or Rapid Release</a> browser for comprehensive data security and data protection.')|format('https://support.mozilla.org/kb/choosing-firefox-update-channel') }}
+    <div class="mzp-c-wordmark mzp-t-wordmark-md mzp-t-product-firefox"></div>
+    <h1 class="mzp-c-split-title">{{ftl('firefox-enterprise-get-firefox-for-your-enterprise')}}</h1>
+    <p class="mzp-c-split-desc">
+      {{ ftl('firefox-enterprise-get-the-firefox-extended-support', url='https://support.mozilla.org/kb/choosing-firefox-update-channel') }}
     </p>
     <div class="cta-container">
       <div class="mzp-c-button-download-container">
-        <a id="primary-download-button" href="#download" class="mzp-c-button mzp-t-product">{{ _('Download') }}</a>
-        <a href="{{ url('privacy.notices.firefox') }}" class="mzp-c-button-download-privacy-link">{{ _('Firefox Privacy Notice') }}</a>
+        <a id="primary-download-button" href="#download" class="mzp-c-button mzp-t-product mzp-t-xl">{{ ftl('download-button-download') }}</a>
+        <a href="{{ url('privacy.notices.firefox') }}" class="mzp-c-button-download-privacy-link">{{ ftl('download-button-firefox-privacy-notice') }}</a>
       </div>
     </div>
   {% endcall %}
 
-  <div class="mzp-l-content">
+  <div class="mzp-l-content mzp-t-content-lg">
     <section id="overview" class="enterprise-section">
-      <h2 class="enterprise-section-title">{{ _('Unmatched data protection — on the release cadence that suits you') }}</h2>
+      <h2 class="enterprise-section-title">{{ ftl('firefox-enterprise-unmatched-data-protection') }}</h2>
 
-      <ul class="mzp-l-card-third">
-        {% if LANG == 'en-US' %}
-          {% set _desc = _('The Firefox browser is open source, provides Enhanced Tracking Protection and soon will support DNS over HTTPS — all part of our longstanding commitment to data protection.') %}
-        {% else %}
-          {% set _desc = _('The Firefox browser is open source and provides Enhanced Tracking Protection — all part of our longstanding commitment to data protection.') %}
-        {% endif %}
+      <ul class="mzp-l-columns mzp-t-columns-three">
+        {% call picto(
+          title=ftl('firefox-enterprise-your-data-stays-your-business'),
+          image_url='img/firefox/enterprise/icon-data-privacy.svg',
+          image_width='44',
+          body=True,
+        ) %}
+          {% if LANG == 'en-US' %}
+            <p>The Firefox browser is open source, provides Enhanced Tracking Protection and soon will support DNS over HTTPS — all part of our longstanding commitment to data protection.</p>
+          {% else %}
+            <p>{{ ftl('firefox-enterprise-the-firefox-browser-is-open') }}</p>
+          {% endif %}
+        {% endcall %}
 
-        {{ picto_card(title=_('Your data stays your business'), desc=_desc, class='privacy') }}
-        {{ picto_card(title=_('Deploy when and how you want'), desc=_('With install packages and a wide expansion of group policies and features, deployment is faster and more flexible than ever — and a breeze in Windows and MacOS environments.'), class='deploy') }}
-        {{ picto_card(title=_('Choose your release cadence'), desc=_('Get rapid releases to make sure you get the latest features faster, or go extended to ensure a super stable experience.'), class='release') }}
+        {% call picto(
+          title=ftl('firefox-enterprise-deploy-when-and-how-you-want'),
+          image_url='img/firefox/enterprise/icon-deploy.svg',
+          image_width='53',
+          body=True,
+        ) %}
+          <p>{{ ftl('firefox-enterprise-with-install-packages-and') }}</p>
+        {% endcall %}
+
+        {% call picto(
+          title=ftl('firefox-enterprise-choose-your-release-cadence'),
+          image_url='img/firefox/enterprise/icon-release.svg',
+          image_width='49',
+          body=True,
+        ) %}
+          <p>{{ ftl('firefox-enterprise-get-rapid-releases-to-make') }}</p>
+        {% endcall %}
       </ul>
     </section>
   </div>
 
   <div class="mzp-l-content">
     <section id="download" class="enterprise-section enterprise-download">
-      <h2 class="enterprise-section-title">{{ _('Enterprise package downloads') }}</h2>
+      <h2 class="enterprise-section-title">{{ ftl('firefox-enterprise-enterprise-downloads') }}</h2>
 
-      <ul class="mzp-l-card-third enterprise-download-lists">
-        {% call picto_card(
-          title=_('Windows 64-bit'),
-          class='enteprise-download-package win64',
-          heading_level=3,
-          custom_desc=True
-        ) %}
-          <ul class="mzp-u-list-styled">
-            <li>{{ _('The latest Firefox browser') }}</li>
-            <li>{{ _('The latest <a href="%s">Firefox Extended Support Release (ESR)</a>')|format('https://support.mozilla.org/kb/firefox-esr-release-cycle') }}</li>
-            <li><a href="https://support.mozilla.org/kb/deploy-firefox-msi-installers">{{ _('MSI Installer') }}</a></li>
-            <li>{{ _('<a href="%s">Legacy browser</a> support')|format('https://support.mozilla.org/kb/legacy-browser-support-extension-windows') }}</li>
-            <li><a href="https://support.mozilla.org/kb/customizing-firefox-using-group-policy-windows">{{ _('ADMX templates') }}</a></li>
-            <li>{{ _('Deployment guide') }}</li>
-            <li>{{ _('Policy documentation') }}</li>
-          </ul>
+      <div class="enterprise-download-lists">
 
-          <div class="cta-container">
-            <div class="mzp-c-button-download-container">
-              <a id="package-win64-download-button" href="https://mozilla.box.com/s/5uvc1hjsimtx3wvs9qdpbda47h2tix5c" class="mzp-c-button mzp-t-product" data-cta-type="Enterprise-Package" data-cta-text="Windows64" data-cta-position="Primary">
-                {{ _('Download') }}
-              </a>
-              <a href="{{ url('privacy.notices.firefox') }}" class="mzp-c-button-download-privacy-link">{{ _('Firefox Privacy Notice') }}</a>
-            </div>
+        <section class="enterprise-download-block platform-win64">
+          <h3 class="enterprise-download-title">{{ ftl('firefox-enterprise-windows-64-bit') }}</h3>
+
+          <div class="mzp-c-menu-list mzp-t-cta mzp-t-download" id="win64-download-list">
+            <h4 class="mzp-c-menu-list-title">{{ ftl('firefox-enterprise-select-your-download') }}</h4>
+            <ul class="mzp-c-menu-list-list download-platform-list">
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-latest-ssl&os=win64&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win64" data-display-name="Firefox">
+                  {{ ftl('firefox-enterprise-firefox-browser') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-msi-latest-ssl&os=win64&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win64-msi" data-display-name="Firefox">
+                  {{ ftl('firefox-enterprise-firefox-browser-msi-installer') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-esr-latest-ssl&os=win64&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win64" data-display-name="Firefox Extended Support Release">
+                  {{ ftl('firefox-enterprise-firefox-extended-support-release') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-esr-msi-latest-ssl&os=win64&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win64-msi" data-display-name="Firefox Extended Support Release">
+                  {{ ftl('firefox-enterprise-firefox-extended-support-release-msi') }}
+                </a>
+              </li>
+            </ul>
           </div>
 
-        {% endcall %}
+          <div class="enterprise-download-support">
+            <h4 class="enterprise-download-subtitle">{{ ftl('firefox-enterprise-support') }}</h4>
+            <ul class="mzp-u-list-styled">
+              <li><a href="https://support.mozilla.org/kb/deploy-firefox-msi-installers/{{ utm_params }}">{{ ftl('firefox-enterprise-msi-installers') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/legacy-browser-support-extension-windows/{{ utm_params }}">{{ ftl('firefox-enterprise-legacy-browser-support') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/customizing-firefox-using-group-policy-windows/{{ utm_params }}">{{ ftl('firefox-enterprise-admx-templates') }}</a></li>
+              <li><a href="https://assets.mozilla.net/pdf/Firefox.for.Enterprise.Browser.Deployment.Guide.pdf">{{ ftl('firefox-enterprise-deployment-guide') }}</a></li>
+              <li><a href="https://github.com/mozilla/policy-templates/blob/master/README.md">{{ ftl('firefox-enterprise-policy-documentation') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/where-find-release-notes-firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-release-notes') }}</a></li>
+              <li><a href="https://support.mozilla.org/products/firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-documentation-and-community') }}</a></li>
+            </ul>
+          </div>
+        </section>
 
-        {% call picto_card(
-          title=_('Mac'),
-          class='enteprise-download-package mac',
-          heading_level=3,
-          custom_desc=True
-        ) %}
-          <ul class="mzp-u-list-styled">
-            <li>{{ _('The latest Firefox browser') }}</li>
-            <li>{{ _('The latest Firefox ESR') }}</li>
-            <li>{{ _('Sample plist for configuration profile') }}</li>
-            <li>{{ _('PKG installer') }}</li>
-            <li>{{ _('Deployment guide') }}</li>
-            <li>{{ _('Policy documentation') }}</li>
-          </ul>
+        <section class="enterprise-download-block platform-mac">
+          <h3 class="enterprise-download-title">{{ ftl('firefox-enterprise-macos') }}</h3>
 
-          <div class="cta-container">
-            <div class="mzp-c-button-download-container">
-              <a id="package-mac-download-button" href="https://mozilla.box.com/s/qd58fn88r0zxg3pw132ul489egxqvi6k" class="mzp-c-button mzp-t-product" data-cta-type="Enterprise-Package" data-cta-text="Mac" data-cta-position="Primary">
-                {{ _('Download') }}
-              </a>
-              <a href="{{ url('privacy.notices.firefox') }}" class="mzp-c-button-download-privacy-link">{{ _('Firefox Privacy Notice') }}</a>
-            </div>
+          <div class="mzp-c-menu-list mzp-t-cta mzp-t-download" id="mac-download-list">
+            <h4 class="mzp-c-menu-list-title">{{ ftl('firefox-enterprise-select-your-download') }}</h4>
+            <ul class="mzp-c-menu-list-list download-platform-list">
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-latest-ssl&os=osx&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="osx" data-display-name="Firefox">
+                  {{ ftl('firefox-enterprise-firefox-browser') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-esr-latest-ssl&os=osx&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="osx" data-display-name="Firefox Extended Support Release">
+                  {{ ftl('firefox-enterprise-firefox-extended-support-release') }}
+                </a>
+              </li>
+            </ul>
           </div>
 
-        {% endcall %}
-
-        {% call picto_card(
-          title=_('Windows 32-bit'),
-          class='enteprise-download-package win32',
-          heading_level=3,
-          custom_desc=True
-        ) %}
-          <ul class="mzp-u-list-styled">
-            <li>{{ _('The latest Firefox browser') }}</li>
-            <li>{{ _('The latest Firefox ESR') }}</li>
-            <li>{{ _('MSI Installer') }}</li>
-            <li>{{ _('Legacy browser support') }}</li>
-            <li>{{ _('ADMX templates') }}</li>
-            <li>{{ _('Deployment guide') }}</li>
-            <li>{{ _('Policy documentation') }}</li>
-          </ul>
-
-          <div class="cta-container">
-            <div class="mzp-c-button-download-container">
-              <a id="package-win32-download-button" href="https://mozilla.box.com/s/yjerfy3sgre39mve7n5jjtcy9p10vf3k" class="mzp-c-button mzp-t-product" data-cta-type="Enterprise-Package" data-cta-text="Windows32" data-cta-position="Primary">
-                {{ _('Download') }}
-              </a>
-              <a href="{{ url('privacy.notices.firefox') }}" class="mzp-c-button-download-privacy-link">{{ _('Firefox Privacy Notice') }}</a>
-            </div>
+          <div class="enterprise-download-support">
+            <h4 class="enterprise-download-subtitle">{{ ftl('firefox-enterprise-support') }}</h4>
+            <ul class="mzp-u-list-styled">
+              <li>{{ ftl('firefox-enterprise-sample-plist-for-configuration', url='https://github.com/mozilla/policy-templates/blob/master/mac/org.mozilla.firefox.plist') }}</li>
+              <li><a href="https://support.mozilla.org/kb/deploying-firefox-macos-using-pkg-and-jamf/{{ utm_params }}">{{ ftl('firefox-enterprise-pkg-installer') }}</a></li>
+              <li><a href="https://assets.mozilla.net/pdf/Firefox.for.Enterprise.Browser.Deployment.Guide.pdf">{{ ftl('firefox-enterprise-deployment-guide') }}</a></li>
+              <li><a href="https://github.com/mozilla/policy-templates/blob/master/README.md">{{ ftl('firefox-enterprise-policy-documentation') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/where-find-release-notes-firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-release-notes') }}</a></li>
+              <li><a href="https://support.mozilla.org/products/firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-documentation-and-community') }}</a></li>
+            </ul>
           </div>
-        {% endcall %}
-      </ul>
+        </section>
+
+        <section class="enterprise-download-block platform-win32">
+          <h3 class="enterprise-download-title">{{ ftl('firefox-enterprise-windows-32-bit') }}</h3>
+
+          <div class="mzp-c-menu-list mzp-t-cta mzp-t-download" id="win32-download-list">
+            <h4 class="mzp-c-menu-list-title">{{ ftl('firefox-enterprise-select-your-download') }}</h4>
+            <ul class="mzp-c-menu-list-list download-platform-list">
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-latest-ssl&os=win&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win" data-display-name="Firefox">
+                  {{ ftl('firefox-enterprise-firefox-browser') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-msi-latest-ssl&os=win&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win-msi" data-display-name="Firefox">
+                  {{ ftl('firefox-enterprise-firefox-browser-msi-installer') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-esr-latest-ssl&os=win&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win" data-display-name="Firefox Extended Support Release">
+                  {{ ftl('firefox-enterprise-firefox-extended-support-release') }}
+                </a>
+              </li>
+              <li class="mzp-c-menu-list-item">
+                <a class="download-link" href="https://download.mozilla.org/?product=firefox-esr-msi-latest-ssl&os=win&lang={{ LANG }}" data-link-type="download" data-download-os="Desktop" data-download-version="win-msi" data-display-name="Firefox Extended Support Release">
+                  {{ ftl('firefox-enterprise-firefox-extended-support-release-msi') }}
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <div class="enterprise-download-support">
+            <h4 class="enterprise-download-subtitle">{{ ftl('firefox-enterprise-support') }}</h4>
+            <ul class="mzp-u-list-styled">
+              <li><a href="https://support.mozilla.org/kb/deploy-firefox-msi-installers/{{ utm_params }}">{{ ftl('firefox-enterprise-msi-installers') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/legacy-browser-support-extension-windows/{{ utm_params }}">{{ ftl('firefox-enterprise-legacy-browser-support') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/customizing-firefox-using-group-policy-windows/{{ utm_params }}">{{ ftl('firefox-enterprise-admx-templates') }}</a></li>
+              <li><a href="https://assets.mozilla.net/pdf/Firefox.for.Enterprise.Browser.Deployment.Guide.pdf">{{ ftl('firefox-enterprise-deployment-guide') }}</a></li>
+              <li><a href="https://github.com/mozilla/policy-templates/blob/master/README.md">{{ ftl('firefox-enterprise-policy-documentation') }}</a></li>
+              <li><a href="https://support.mozilla.org/kb/where-find-release-notes-firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-release-notes') }}</a></li>
+              <li><a href="https://support.mozilla.org/products/firefox-enterprise/{{ utm_params }}">{{ ftl('firefox-enterprise-documentation-and-community') }}</a></li>
+            </ul>
+          </div>
+        </section>
+      </div>
 
       <p class="enterprise-languages">
-        <a class="mzp-c-cta-link" href="{{ firefox_url('desktop', 'all', 'esr') }}">{{ _('Download Firefox ESR or Rapid Release for another language or platform.') }}</a>
+        {{ ftl('firefox-enterprise-download-firefox-esr-or-rapid', firefox_all=firefox_url('desktop', 'all', 'esr')) }}
       </p>
     </section>
 
-    <section id="resources" class="enterprise-section enterprise-resources">
-      <h2 class="enterprise-section-title">{{ _('Enterprise resources') }}</h2>
-
-      <ul class="mzp-l-card-half">
-        {% call picto_card(
-          title=None,
-          class='docs',
-          custom_desc=True
-        ) %}
-          <h3 class="mzp-c-card-picto-title">
-            <a class="mzp-c-cta-link" href="https://support.mozilla.org/products/firefox-enterprise/?utm_source=www.mozilla.org-enterprise&utm_campaign=enterprise&utm_medium=referral">
-              {{ _('Documentation and Community Support') }}
-            </a>
-          </h3>
-        {% endcall %}
-
-        {% call picto_card(
-          title=None,
-          class='notes',
-          custom_desc=True
-        ) %}
-          <h3 class="mzp-c-card-picto-title">
-            <a class="mzp-c-cta-link" href="https://support.mozilla.org/kb/where-find-release-notes-firefox-enterprise/?utm_source=www.mozilla.org-enterprise&utm_campaign=enterprise&utm_medium=referral">
-              {{ _('Release Notes') }}
-            </a>
-          </h3>
-        {% endcall %}
-      </ul>
-    </section>
   </div>
 
 </main>
 {% endblock %}
 
-{# Bug 1381776 #}
-{% block update_notification %}{% endblock %}
-
 {% block structured_data %}
   {% include 'includes/structured-data/software/firefox-enterprise-software.json' %}
+{% endblock %}
+
+{% block js %}
+  {{ js_bundle('firefox-enterprise') }}
 {% endblock %}

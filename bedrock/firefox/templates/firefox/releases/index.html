@@ -1,3 +1,9 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
 {% extends "firefox/base/base-protocol.html" %}
 
 {% block page_title %}{{ _('Mozilla Firefox Release Notes') }}{% endblock %}
@@ -8,16 +14,12 @@
   {{ css_bundle('firefox_releases_index') }}
 {% endblock %}
 
-{% block global_nav %}
-  {% include 'includes/protocol/navigation/menu-firefox/index.html' %}
-{% endblock %}
-
 {% block body_class %}{{ super() }} mzp-t-firefox{% endblock %}
 
 {% block content %}
   <main id="main-content" class="mzp-l-content">
-    <a href="{{ url('firefox.new') }}" class="c-logo">
-      Firefox
+    <a href="{{ url('firefox.new') }}">
+      <span class="mzp-c-wordmark mzp-t-wordmark-md mzp-t-product-firefox">Firefox</span>
     </a>
     <h1>{{ _('Firefox Releases') }}</h1>
     <p>{{ _('Firefox release notes are specific to each version of the application. Select your version from the list below to see the release notes for it.') }}</p>

@@ -1,6 +1,6 @@
 .. This Source Code Form is subject to the terms of the Mozilla Public
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+.. file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 .. _l10n:
 
@@ -16,11 +16,11 @@ can be cloned and kept up-to-date using the ``l10n_update`` management command:
 
     $ ./manage.py l10n_update
 
-If you don't already have a ``locale`` directory, this command will clone the
+If you don't already have a ``data/locale`` directory, this command will clone the
 git repo containing the .lang translation files (either the dev or prod files
 depending on your ``DEV`` setting). If the folder is already present, it will
-update the repository to the latest version. It do the same thing for the
-repository for the .ftl translation files in ``git-repos/www-l10n`` directory.
+update the repository to the latest version. It does the same thing for the
+repository for the .ftl translation files in ``data/www-l10n`` directory.
 
 Fluent
 ======
@@ -70,7 +70,7 @@ exactly this works later.
 Translating with .ftl files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `Fluent file syntax`_ is well document on the Fluent Project's site. We use "double hash" or
+The `Fluent file syntax`_ is well documented on the Fluent Project's site. We use "double hash" or
 "group" comments to indicate strings required for activation. A group comment only ends when
 another group comment starts however, so you should either group your required strings at the
 bottom of a file, or also have a "not required" group comment. Here's an example:
@@ -80,11 +80,11 @@ bottom of a file, or also have a "not required" group comment. Here's an example
     ### File for example.html
 
     ## Required
-    example_page_title = The Page Title
-    example_page_desc = This page is a test.
+    example-page-title = The Page Title
+    example-page-desc = This page is a test.
 
-    ## Not required
-    example_footer = This string isn't as important
+    ##
+    example-footer = This string isn't as important
 
 
 Any group comment (a comment that starts with "##") that starts with "Required" (case does not
@@ -121,8 +121,35 @@ Our convention for string ID creation is the following:
 3. IDs should be prefixed with the name of the template file (e.g. ``firefox-new-skyline`` for ``firefox-new-skyline.html``)
 4. If you need to create a new string for the same place on a page and to transition to it as it is translated, you can
    add a version suffix to the string ID: e.g. ``firefox-new-skyline-main-page-title-v2``.
-4. The ID should be as descriptive as possible to make sense to the developer, but could be anything as long as it adheres
+5. The ID should be as descriptive as possible to make sense to the developer, but could be anything as long as it adheres
    to the rules above.
+
+Using brand names
+~~~~~~~~~~~~~~~~~
+
+Common brand names are stored in a global `brands.ftl`_ file, in the form of `terms`_. Terms are useful for
+keeping brand names separated from the rest of the translations, so that they can be managed in a consistent
+way across all translated files, and also updated easily in a global context. In general the brand names in
+this file remain in English and should not be translated, however locales still have the choice and control
+to make adjustments should it suit their particular language.
+
+.. code-block:: text
+
+    -brand-name = Firefox
+
+    about = About { -brand-name }.
+    update-successful = { -brand-name } has been updated.
+
+.. important::
+
+    When adding a new term to ``brands.ftl``, the new term should also be manually added to the
+    `mozilla-l10n/www-l10n`_ repo for *all locales*. The reason for this is that if a term does not exist
+    for a particular locale, then it does not fall back to English like a regular string does. Instead,
+    the term variable name is displayed on the page.
+
+.. _brands.ftl: https://github.com/mozilla/bedrock/blob/master/l10n/en/brands.ftl
+.. _terms: https://projectfluent.org/fluent/guide/terms.html
+.. _mozilla-l10n/www-l10n: https://github.com/mozilla-l10n/www-l10n
 
 The ``ftl`` helper function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -165,17 +192,22 @@ always call it in the view itself:
     from lib.l10n_utils.fluent import ftl
 
     def about_view(request):
-        hello_string = ftl('about-hello')
-        render(request, 'about.html', {'hello': hello_string}, ftl_files='about')
+        ftl_files = 'mozorg/about'
+        hello_string = ftl('about-hello', ftl_files=ftl_files)
+        render(request, 'about.html', {'hello': hello_string}, ftl_files=ftl_files)
 
 If you need to use this string in a view, but define it outside of the view itself, you can use the
 ``ftl_lazy`` variant which will delay evaluation until render time. This is mostly useful for defining
 messages shared among several views in constants in a ``views.py`` or ``models.py`` file.
 
+Whether you use this function in a Python view or a Jinja template it will always use the default
+list of Fluent files defined in the ``FLUENT_DEFAULT_FILES`` setting. If you don't specify any additional
+Fluent files via the ``fluent_files`` keyword argument, then only those default files will be used.
+
 The ``ftl_has_messages`` helper function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Another useful template too is the ``ftl_has_messages()`` function. You pass it any number
+Another useful template tool is the ``ftl_has_messages()`` function. You pass it any number
 of string IDs and it will return ``True`` only if all of those message IDs exist in the current
 translation. This is useful when you want to add a new block of HTML to a page that is already
 translated, but don't want it to appear untranslated on any page.
@@ -204,14 +236,16 @@ same way but is meant to be used in the view Python code.
     from lib.l10n_utils.fluent import ftl, has_messages
 
     def about_view(request):
-        if has_messages('about-hello-v2', 'about-title-v2'):
-            hello_string = ftl('about-hello-v2')
-            title_string = ftl('about-title-v2')
+        ftl_files = 'mozorg/about'
+        if has_messages('about-hello-v2', 'about-title-v2',
+                        ftl_files=ftl_files):
+            hello_string = ftl('about-hello-v2', ftl_files=ftl_files)
+            title_string = ftl('about-title-v2', ftl_files=ftl_files)
         else:
-            hello_string = ftl('about-hello')
-            title_string = ftl('about-title')
+            hello_string = ftl('about-hello', ftl_files=ftl_files)
+            title_string = ftl('about-title', ftl_files=ftl_files)
 
-        render(request, 'about.html', {'hello': hello_string, 'title': title_string}, ftl_files='about')
+        render(request, 'about.html', {'hello': hello_string, 'title': title_string}, ftl_files=ftl_files)
 
 .. _fluent variables: https://projectfluent.org/fluent/guide/variables.html
 
@@ -243,8 +277,8 @@ to use:
 .. code-block:: python
 
     urlpatterns = [
-        page('about', 'about.html', ftl_files='about'),
-        page('about/contact', 'about/contact.html', ftl_files=['about/contact', 'about']),
+        page('about', 'about.html', ftl_files='mozorg/about'),
+        page('about/contact', 'about/contact.html', ftl_files=['mozorg/about/contact', 'mozorg/about']),
     ]
 
 The system uses the first (or only) file in the list to determine which locales are active for that
@@ -265,7 +299,7 @@ than just render the page, then you can use this:
 
     class AboutView(L10nTemplateView):
         template_name = 'about.html'
-        ftl_files = ['about']
+        ftl_files = 'mozorg/about'
 
 Using that CBV will do the right things for l10n, and then you can override other useful methods
 (e.g. ``get_context_data``) to do what you need. Also, if you do need to do anything fancy with
@@ -281,12 +315,47 @@ so by setting ``ftl_files`` in the context instead of the class attribute.
 
         def get_context_data(self, **kwargs):
             ctx = super().get_context_data(**kwargs)
-            ftl_files = ['about']
+            ftl_files = ['mozorg/about']
             if request.GET.get('fancy'):
                 ftl_files.append('fancy')
 
             ctx['ftl_files'] = ftl_files
             return ctx
+
+A common case is needing to use FTL files when one template is used, but not with another. In this case
+you would have some logic to decide which template to use in the ``get_template_names()`` method. You can
+set the ``ftl_files_map`` class variable to a dict containing a map of template names to the list of
+FTL files for that template (or a single file name if that's all you need).
+
+.. code-block:: python
+
+    # views.py
+    from lib.l10n_utils import L10nTemplateView
+
+    # class-based view example
+    class AboutView(L10nTemplateView):
+        ftl_files_map = {
+            'about_es.html': ['about_es']
+            'about_new.html': ['about']
+        }
+
+        def get_template_names(self):
+            if self.request.locale.startswith('en'):
+                template_name = 'about_new.html'
+            elif self.request.locale.startswith('es'):
+                template_name = 'about_es.html'
+            else:
+                # FTL system not used
+                template_name = 'about.html'
+
+            return [template_name]
+
+If you need for your URL to use multiple Fluent files to determine the full list of active locales,
+for example when you are redesigning a page and have multiple templates in use for a single URL depending
+on locale, you can use the `activation_files` parameter. This should be a list of FTL filenames
+(or template file names if they are still using .lang) that should all be used when determining the full
+list of translations for the URL. Bedrock will gather the full list for each file and combine them into a
+single list so that the footer language switcher works properly.
 
 Using in a view function
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,7 +368,59 @@ the template with the context. You can use the ``ftl_files`` argument with this 
     from lib.l10n_utils import render
 
     def about_view(request):
-        render(request, 'about.html', {'name': 'Duder'}, ftl_files='about')
+        render(request, 'about.html', {'name': 'Duder'}, ftl_files='mozorg/about')
+
+Fluent File Configuration
+-------------------------
+
+In order for a Fluent file to be extracted through automation and sent out for localization,
+it must first be configured to go through one or more distinct pipelines. This is controlled
+via a set of configuration files:
+
+- `Vendor`_, locales translated by an agency, and paid for by Marketing (locales covered by staff are also included in this group).
+- `Pontoon`_, locales translated by Mozilla contributors.
+- `Special templates`_, for locales with dedicated templates that don't go through the localization process (not currently used).
+
+Each configuration file consists of a pre-defined set of locales for which each group is
+responsible for translating. The locales defined in each file should not be changed without
+first consulting the with L10n team, and such changes should not be a regular occurence.
+
+To establish a localization strategy for a Fluent file, it needs to be included as a path
+in one or more configuration files. For example:
+
+.. code-block:: text
+
+    [[paths]]
+        reference = "en/mozorg/mission.ftl"
+        l10n = "{locale}/mozorg/mission.ftl"
+
+You can read more about configuration files in the `L10n Project Configuration`_ docs.
+
+.. important::
+
+    Path definitions in Fluent configuration files are not source order dependent. A broad
+    definition using a wild card can invalidate all previous path definitions for example.
+    Paths should be defined carefully to avoid exposing .ftl files to unintended locales.
+
+Using a combination of vendor and pontoon configuration offers a flexible but specific set of
+options to choose from when it comes to defining an l10n strategy for a page. The available
+choices are:
+
+#. Staff locales.
+#. Staff + select vendor locales.
+#. Staff + all vendor locales.
+#. Staff + vendor + pontoon.
+#. All pontoon locales (for non-marketing content only).
+
+When choosing an option, it's important to consider that vendor locales have a cost associated
+with them, and pontoon leans on the goodwill of our volunteer community. Typically, only
+non-marketing content should go through Pontoon for all locales. Everything that is marketing
+related should feature one of the staff/vendor/pontoon configurations.
+
+.. _Vendor: https://github.com/mozilla/bedrock/blob/master/l10n/configs/vendor.toml
+.. _Pontoon: https://github.com/mozilla/bedrock/blob/master/l10n/configs/pontoon.toml
+.. _Special templates: https://github.com/mozilla/bedrock/blob/master/l10n/configs/special-templates.toml
+.. _L10n Project Configuration: https://moz-l10n-config.readthedocs.io/
 
 Fluent File Activation
 ----------------------
@@ -370,24 +491,26 @@ For example:
 
     # class-based view example
     class AboutView(L10nTemplateView):
+        ftl_files_map = {
+            'about.html': ['about']
+            'about_new.html': ['about_new', 'about']
+        }
         def get_template_names(self):
-            if ftl_file_is_active('about_new'):
+            if ftl_file_is_active('mozorg/about_new'):
                 template_name = 'about_new.html'
-                self.ftl_files = ['about_new', 'about']
             else:
                 template_name = 'about.html'
-                self.ftl_files = ['about']
 
             return [template_name]
 
     # function view example
     def about_view(request):
-        if ftl_file_is_active('about_new'):
-            template = 'about_new.html'
-            ftl_files = ['about_new', 'about']
+        if ftl_file_is_active('mozorg/about_new'):
+            template = 'mozorg/about_new.html'
+            ftl_files = ['mozorg/about_new', 'mozorg/about']
         else:
             template = 'about.html'
-            ftl_files = ['about']
+            ftl_files = ['mozorg/about']
 
         render(request, template, ftl_files=ftl_files)
 
@@ -403,7 +526,14 @@ if you'd like something a bit nicer looking and more convenient there is the
 .. code-block:: bash
 
     $ ./manage.py l10n_update
+
+.. code-block:: bash
+
     $ ./manage.py active_locales mozorg/mission
+
+
+.. code-block:: bash
+
     There are 91 active locales for mozorg/mission.ftl:
     - af
     - an
@@ -418,6 +548,18 @@ if you'd like something a bit nicer looking and more convenient there is the
 You get an alphabetically sorted list of all of the active locales for that .ftl file.
 You should run ``./manage.py l10n_update`` as shown above for the most accurate and
 up-to-date results.
+
+String extraction
+-----------------
+
+The string extraction process for both new .ftl content and updates to existing .ftl
+content is handled through automation. On each commit to master a command is run that
+looks for changes to the ``l10n/`` directory. If a change is detected, it will copy
+those files into a new branch in `mozilla-l10n/www-l10n`_ and then a bot will open a
+pull request containing those changes. Once the pull request has been reviewed and
+merged by the L10n team, everything is done.
+
+.. _mozilla-l10n/www-l10n: https://github.com/mozilla-l10n/www-l10n
 
 Legacy
 ======
@@ -611,7 +753,7 @@ The English source template, created by a developer, lives under
 
 .. code-block:: jinja
 
-    {% extends "base-pebbles.html" %}
+    {% extends "base-protocol.html" %}
 
     {% block content %}
       <img src="someimage.jpg">
@@ -705,6 +847,9 @@ You can specify a list of locales to update:
 .. code-block:: console
 
     $ ./manage.py l10n_check fr
+
+.. code-block:: console
+
     $ ./manage.py l10n_check fr de es
 
 Currency

@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 """
 Replacement library (function really) for Waffle that uses environment variables.
 """
@@ -20,5 +24,5 @@ def switch(name):
     would check for an environment variable called `SWITCH_DUDE_AND_WALTER`. The string from the
     `switch()` call is converted to uppercase and dashes replaced with underscores.
     """
-    env_name = name.upper().replace('-', '_')
-    return config(env_name, default=str(settings.DEV), parser=bool, namespace='SWITCH')
+    env_name = name.upper().replace("-", "_")
+    return config(env_name, default=str(settings.DEV), parser=bool, namespace="SWITCH")

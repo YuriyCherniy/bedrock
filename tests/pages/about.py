@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from selenium.webdriver.common.by import By
 
@@ -9,9 +9,9 @@ from pages.base import BasePage
 
 class AboutPage(BasePage):
 
-    URL_TEMPLATE = '/{locale}/about/'
+    _URL_TEMPLATE = "/{locale}/about/"
 
-    _read_mission_button_locator = (By.ID, 'read-mission-button')
+    _read_mission_button_locator = (By.ID, "read-mission-button")
 
     @property
     def is_read_mission_button_displayed(self):

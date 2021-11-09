@@ -1,71 +1,62 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../../protocol/css/includes/lib';
-@import '../../../protocol/css/templates/main-with-sidebar';
-@import '../../../protocol/css/components/modal';
-@import '../../../protocol/css/components/sidebar-menu';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/includes/forms/lib';
+@import '~@mozilla-protocol/core/protocol/css/templates/main-with-sidebar';
+@import '~@mozilla-protocol/core/protocol/css/components/modal';
+@import '~@mozilla-protocol/core/protocol/css/components/sidebar-menu';
 
 .c-product-select-form {
     @include clearfix;
     position: relative;
 
-    &[data-current="desktop_release"] {
-        .c-selection-options[data-product="desktop_release"] {
-            display: block;
-        }
+    .c-download-button {
+        display: none;
+    }
 
-        .c-product-links[data-product="desktop_release"] {
+    &[data-current^="desktop"] {
+        #download-button-primary {
+            display: inline-block;
+        }
+    }
+
+    &[data-current="desktop_release"] {
+        [data-product="desktop_release"] {
             display: block;
         }
     }
 
     &[data-current="desktop_beta"] {
-        .c-selection-options[data-product="desktop_beta"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="desktop_beta"] {
+       [data-product="desktop_beta"] {
             display: block;
         }
     }
 
     &[data-current="desktop_developer"] {
-        .c-selection-options[data-product="desktop_developer"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="desktop_developer"] {
+        [data-product="desktop_developer"] {
             display: block;
         }
     }
 
     &[data-current="desktop_nightly"] {
-        .c-selection-options[data-product="desktop_nightly"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="desktop_nightly"] {
+        [data-product="desktop_nightly"] {
             display: block;
         }
     }
 
     &[data-current="desktop_esr"] {
-        .c-selection-options[data-product="desktop_esr"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="desktop_esr"] {
+        [data-product="desktop_esr"] {
             display: block;
         }
     }
 
     &[data-current="desktop_esr_next"] {
-        .c-selection-options[data-product="desktop_esr_next"] {
+        [data-product="desktop_esr_next"] {
             display: block;
         }
 
@@ -76,46 +67,57 @@ $image-path: '/media/protocol/img';
     }
 
     &[data-current="android_release"] {
-        .c-selection-options[data-product="android_release"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="android_release"] {
+        [data-product="android_release"] {
             display: block;
         }
     }
-
     &[data-current="android_beta"] {
-        .c-selection-options[data-product="android_beta"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="android_beta"] {
+        [data-product="android_beta"] {
             display: block;
         }
     }
-
     &[data-current="android_nightly"] {
-        .c-selection-options[data-product="android_nightly"] {
-            display: block;
-        }
-
-        .c-product-links[data-product="android_nightly"] {
+        [data-product="android_nightly"] {
             display: block;
         }
     }
+
+    &[data-current="ios_release"] {
+        [data-product="ios_release"] {
+            display: block;
+        }
+    }
+}
+
+.c-selection-formset {
+    margin-bottom: 0;
 }
 
 .c-intro {
     margin-bottom: $layout-md;
 
     .c-intro-heading {
-        @include at2x('/media/protocol/img/logos/firefox/browser/logo-sm.png', 64px, 64px);
+        @include background-size(64px, 64px);
         @include bidi(((background-position, top left, top right),));
-        @include text-display-lg;
+        @include text-title-md;
+        background-image: url('/media/protocol/img/logos/firefox/browser/logo.svg');
         background-repeat: no-repeat;
         margin-bottom: $spacing-xl;
         padding-top: 64px + $spacing-lg;
+
+        [data-current="desktop_beta"] &,
+        [data-current="android_beta"] & {
+            background-image: url('/media/protocol/img/logos/firefox/browser/beta/logo.svg');
+        }
+
+        [data-current="desktop_developer"] &{
+            background-image: url('/media/protocol/img/logos/firefox/browser/developer/logo.svg');
+        }
+
+        [data-current="desktop_nightly"] &,
+        [data-current="android_nightly"] & {
+            background-image: url('/media/protocol/img/logos/firefox/browser/nightly/logo.svg');
+        }
     }
 
     .c-product-links {
@@ -139,8 +141,18 @@ $image-path: '/media/protocol/img';
     background-repeat: no-repeat;
     display: inline-block;
     height: 21px;
+    padding-bottom: $spacing-sm;
     vertical-align: middle;
     width: 21px;
+}
+
+.c-get-app {
+    @include font-size(14px);
+    background: center right url('/media/img/firefox/all/icon-get.svg') no-repeat;
+    background-size: auto 1em;
+    display: inline-block;
+    padding-right: 20px;
+    margin-top: $spacing-sm;
 }
 
 .c-selection-form {
@@ -177,7 +189,31 @@ $image-path: '/media/protocol/img';
     }
 }
 
+.c-download-info {
+    border-bottom: 1px solid rgba(0, 0, 0, .2);
+    margin-bottom: $layout-sm;
+    width: 100%;
+}
+
+.c-download-info-caption {
+    @include field-label();
+    display: table-caption;
+}
+
+.c-download-info-label {
+    font-weight: normal;
+    // make first column as narrow as possible https://stackoverflow.com/a/11267268/462195
+    width: 1%;
+    white-space: nowrap;
+}
+
+.c-download-info-content {
+    font-weight: bold;
+}
+
 .c-download {
+    @include bidi (((text-align, right, left),));
+
     .c-download-error {
         color: $color-red-60;
         display: none;
@@ -195,6 +231,24 @@ $image-path: '/media/protocol/img';
         #download-button-primary {
             display: none;
         }
+    }
+}
+
+.c-download-button {
+    a {
+        display:inline-block;
+    }
+
+    a[data-link-type="download"]:focus,
+    a[data-link-type="download"]:active {
+        box-shadow: 0 0 0 2px $field-border-color-hover, 0 0 0 4px mix($color-blue-40, $color-white);
+        border-radius: 6px;
+        background-color: $field-border-color-hover;
+    }
+
+    img {
+        display: block; // get rid of line height
+        border-radius: 6px;
     }
 }
 
@@ -222,7 +276,7 @@ $image-path: '/media/protocol/img';
 }
 
 .c-product-heading {
-    @include text-display-md;
+    @include text-title-md;
     background: $color-white;
     padding: $spacing-md 0;
     position: -webkit-sticky;
@@ -235,22 +289,22 @@ $image-path: '/media/protocol/img';
 }
 
 .c-product-subheading {
-    @include text-display-sm;
+    @include text-title-sm;
 }
 
 .c-locale-list {
     margin-bottom: $layout-lg;
 
     .c-locale-list-item {
-        border-top: 2px solid $color-gray-20;
+        border-top: 2px solid $color-marketing-gray-20;
         padding-top: $spacing-md;
     }
 
     .c-locale-label {
-        @include text-display-sm;
+        @include text-title-sm;
 
         span {
-            @include text-display-xs;
+            @include text-title-xs;
             display: block;
             font-weight: normal;
         }
@@ -270,11 +324,11 @@ $image-path: '/media/protocol/img';
     }
 }
 
-/**
- * Custom narrow modal style.
- * These should be standardized into a narrow theme.
- * https://github.com/mozilla/protocol/issues/358
- */
+
+// Custom narrow modal style.
+// These should be standardized into a narrow theme.
+// https://github.com/mozilla/protocol/issues/358
+
  .mzp-c-modal.help-modal {
 
     .mzp-c-modal-window > .mzp-c-modal-inner {
@@ -303,16 +357,16 @@ $image-path: '/media/protocol/img';
     a:link,
     a:visited {
         color: $color-black;
-    }
 
-    a:hover,
-    a:active,
-    a:focus {
-        color: $color-black;
+        &:hover,
+        &:active,
+        &:focus {
+            color: $color-black;
+        }
     }
 
     .c-help-title {
-        @include text-display-xs;
+        @include text-title-xs;
 
         span {
             font-weight: normal;

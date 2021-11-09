@@ -1,6 +1,6 @@
 .. This Source Code Form is subject to the terms of the Mozilla Public
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+.. file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 .. _install:
 
@@ -11,13 +11,23 @@ Installing Bedrock
 Installation Methods
 ====================
 
-There are two primary methods of installing bedrock: Docker and Local. Whichever you choose you'll start by getting the source::
+There are two primary methods of installing bedrock: Docker and Local. Whichever you choose you'll start by getting the source
 
-    $ git clone --recursive git://github.com/mozilla/bedrock.git
+.. code-block:: bash
+
+    $ git clone git://github.com/mozilla/bedrock.git
+
+.. code-block:: bash
+
     $ cd bedrock
 
 After these basic steps you can choose your install method below. Docker is the easiest and recommended way, but local is also possible
 and may be preferred by people for various reasons.
+
+You should also install our git pre-commit hooks. Our setup uses the `pre-commit <https://pre-commit.com/>`_
+framework. Install the framework using the instructions on their site depending on your platform, then run
+``pre-commit install``. After that it will check your Python, JS, and CSS files before you commit to save you
+time waiting for the tests to run in our CI before noticing a linting error.
 
 Docker Installation
 -------------------
@@ -49,14 +59,19 @@ choice and modify things and you should see those changes reflected in your brow
     ensuring that you have the latest dependencies installed among other things. If you see any strange errors after a
     ``git pull`` then ``make pull`` is a good thing to try for a quick fix.
 
-If you don't have or want to use Make you can call the docker and compose commands directly::
+If you don't have or want to use Make you can call the docker and compose commands directly
+
+.. code-block:: bash
 
     $ docker-compose pull
-    $ git submodule sync
-    $ git submodule update --init --recursive
+
+.. code-block:: bash
+
     $ [[ ! -f .env ]] && cp .env-dist .env
 
-Then starting it all is simply::
+Then starting it all is simply
+
+.. code-block:: bash
 
     $ docker-compose up app assets
 
@@ -69,6 +84,16 @@ or Node then you'll need to build new images for local testing. You can do this 
 files and/or package.json file then simply running::
 
     $ make build
+
+
+.. note::
+
+    **For Apple Silicon / M1 users**
+
+    If you find that when you're building you hit issues with Puppeteer not installing, these will help:
+
+    * `Set up a Rosetta Terminal <https://github.com/puppeteer/puppeteer/issues/6622#issuecomment-910101797>`_.
+    * Follow these `Puppeter installation tips: <https://github.com/puppeteer/puppeteer/issues/6622#issuecomment-787912758>`_.
 
 **Asset bundles**
 
@@ -87,16 +112,33 @@ Local Installation
 These instructions assume you have Python 3.6+, pip, and NodeJS installed. If you don't have `pip` installed
 (you probably do) you can install it with the instructions in `the pip docs <https://pip.pypa.io/en/stable/installing/>`_.
 
-You need to create a virtual environment for Python libraries::
+You need to create a virtual environment for Python libraries:
 
-    $ python3 -m venv venv                         # create a virtual env in the folder `venv`
-    $ source venv/bin/activate                     # activate the virtual env. On Windows, run: venv\Scripts\activate.bat
-    $ pip install --upgrade pip                    # securely upgrade pip
-    $ pip install -r requirements/dev.txt          # installs dependencies
+1. Create a virtual env in the folder `venv` ::
 
-If you are on OSX and some of the compiled dependencies fails to compile, try explicitly setting the arch flags and try again::
+    $ python3 -m venv venv
+
+2. Activate the virtual env. On Windows, run: venv\Scripts\activate.bat ::
+
+    $ source venv/bin/activate
+
+3. Securely upgrade pip ::
+
+    $ pip install --upgrade pip
+
+4. Installs dependencies ::
+
+    $ pip install -r requirements/dev.txt
+
+
+If you are on OSX and some of the compiled dependencies fails to compile, try explicitly setting the arch flags and try again
+
+.. code-block:: bash
 
     $ export ARCHFLAGS="-arch i386 -arch x86_64"
+
+.. code-block:: bash
+
     $ pip install -r requirements/dev.txt
 
 If you are on Linux, you will need at least the following packages or their equivalent for your distro::
@@ -108,20 +150,16 @@ credits, release notes, localizations, legal-docs etc::
 
     $ bin/bootstrap.sh
 
-Next, you need to have `Node.js <https://nodejs.org/>`_ and `Yarn <https://yarnpkg.com/>`_ installed.
-The node dependencies for running the site can be installed with ``yarn``::
+Next, you need to have `Node.js <https://nodejs.org/>`_ and `npm <https://www.npmjs.com/>`_ installed.
+The node dependencies for running the site can be installed with ``npm install``::
 
-    $ yarn
-
-You'll also need to install the `Gulp <http://gulpjs.com/>`_ cli globally::
-
-    $ npm install -g gulp-cli
+    $ npm install
 
 .. note::
 
-    Bedrock uses yarn to ensure that Node.js
+    Bedrock uses npm to ensure that Node.js
     packages that get installed are the exact ones we meant (similar to pip hash checking mode for python). Refer
-    to the `yarn documentation <https://yarnpkg.com/en/docs/yarn-workflow>`_
+    to the `npm documentation <https://docs.npmjs.com/>`_
     for adding or upgrading Node.js dependencies.
 
 .. _run-python-tests:
@@ -206,26 +244,62 @@ refreshing of the page works by injecting a small JS snippet into the page that 
 and will refresh the page when it receives a signal. It also injects a script that shows a small notification in the
 top-right corner of the page to inform you that a refresh is happening and when the page connects to or is disconnected
 from the browsersync service. We've not seen issues with this, but since it is modifying the page it is possible that this
-could conflict with something on the page itself. Please let us know if you suspect this is happening for you. This notification
-can be disabled in the browsersync options in the ``gulpfile.js`` by setting ``notify: false`` in the ``browser-sync`` task.
+could conflict with something on the page itself. Please let us know if you suspect this is happening for you. This
+notification can be disabled in the browsersync options in ``webpack.config.js`` by setting ``notify: false`` in the
+``BrowserSyncPlugin`` config.
 
-Legal Docs
-==========
+Prod Mode
+---------
 
-Legal docs (for example: the privacy policy) are generated from markdown files in the
-`legal-docs repo <https://github.com/mozilla/legal-docs>`_.
+There are certain things about the site that behave differently when running locally in dev mode using Django's development
+server than they do when running in the way it runs in production. Static assets that work fine locally can be a problem
+in production if referenced improperly, and the normal error pages won't work unless ``DEBUG=False`` and doing that will
+make the site throw errors since the Django server doesn't have access to all of the built static assets. So we have a couple
+of extra Docker commands (via make) that you can use to run the site locally in a more prod-like way.
 
-To view them or update to a more recent version update the submodule::
+First you should ensure that your ``.env`` file is setup the way you need. This usually means adding ``DEBUG=False``
+and ``DEV=False``, though you may want ``DEV=True`` if you want the site to act more like www-dev.allizom.org in that all
+feature switches are ``On`` and all locales are active for every page. After that you can run the following:
 
-    $ git submodule update --init --recursive
+.. code-block:: bash
 
-To add a new commit of the git submodule to bedrock:
+    $ make run-prod
 
-    $ cd vendor-local/src/legal-docs
-    $ git checkout master
-    $ git pull
-    $ cd .. (back to project root)
-    $ git commit -am "Update legal-docs git submodule"
+This will run the latest bedrock image using your local bedrock files and templates, but not your local static assets. If you
+need an updated image just run ``make pull``.
+
+If you need to include the changes you've made to your local static files (images, css, js, etc.) then you have to build the
+image first:
+
+.. code-block:: bash
+
+    $ make build-prod run-prod
+
+Documentation
+-------------
+
+This is a great place for coders and non-coders alike to contribute! Please note most of the documentation is currently in `reStructuredText <https://bashtage.github.io/sphinx-material/basics.html>`_ but we also support `Markdown <https://www.markdownguide.org/>`_ files.
+
+If you see a typo or similarly small change, you can use the "Edit in GitHub" link to propose a fix through GitHub. Note: you will not see your change directly committed to the master branch. You will commit the change to a separate branch so it can be reviewed by a staff member before merging to master.
+
+If you want to make a bigger change or `find a Documentation issue on the repo <https://github.com/mozilla/bedrock/labels/Documentation>`_, it is best to edit and preview locally before submitting a pull request. You can do this with Docker or Local installations. Run the commands from your root folder. They will build documentation and start a live server to auto-update any changes you make to a documentation file.
+
+Docker:
+
+.. code-block:: bash
+
+    $ make docs
+
+Local:
+
+.. code-block:: bash
+
+    $ pip install -r requirements/docs.txt
+
+.. code-block:: bash
+
+    $ make livedocs
+
 
 Localization
 ============

@@ -1,17 +1,18 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/components/article';
-@import '../../protocol/css/includes/mixins/details';
+@use "sass:math";
+
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/article';
+@import '~@mozilla-protocol/core/protocol/css/includes/mixins/details';
 
 //* -------------------------------------------------------------------------- */
 // Index
 
 dt {
-    @include font-mozilla;
-    @include text-display-xs;
+    @include text-title-xs;
     font-weight: bold;
     margin-top: $spacing-sm;
 }
@@ -23,10 +24,6 @@ dd {
 //* -------------------------------------------------------------------------- */
 // Base Template
 
-.l-content-narrow {
-    max-width: $content-lg;
-}
-
 .reports-nav {
     margin: 0 auto;
     text-align: center;
@@ -36,7 +33,7 @@ dd {
 
         a {
             display: block;
-            min-width: ($content-md / 3);
+            min-width: math.div($content-md, 3);
         }
 
         @media #{$mq-md} {
@@ -72,13 +69,16 @@ dd {
 // Report Template
 
 .c-page-header {
-    @include font-mozilla;
-    @include text-display-xs;
-    background: $color-black;
-    color: $color-white;
+    @include text-title-xs;
+    background: get-theme('background-color-inverse');
+    color: get-theme('body-text-color-inverse');
+
+    h1 {
+        color: get-theme('title-text-color-inverse');
+    }
 
     span {
-        @include text-display-xs;
+        @include text-title-xs;
         display: block;
         margin-top: $spacing-md;
     }
@@ -89,14 +89,12 @@ dd {
 }
 
 h2 {
-    @include font-mozilla;
-    @include text-display-md;
+    @include text-title-md;
     margin-top: $spacing-2xl;
 }
 
 h3 {
-    @include font-mozilla;
-    @include text-display-sm;
+    @include text-title-sm;
     margin-top: $spacing-2xl;
 }
 
@@ -108,9 +106,8 @@ h3 {
 // Collapsible Sections
 
   .c-collapsible-section button {
-    @include font-mozilla;
     @include summary;
-    @include text-display-md;
+    @include text-title-md;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -118,12 +115,12 @@ h3 {
     padding-right: 48px;
     text-align: inherit;
     width: 100%;
-  }
+}
 
-  .c-collapsible-section button[aria-expanded=true]:before {
-      @include summary-open;
-  }
+.c-collapsible-section button[aria-expanded=true]:before {
+    @include summary-open;
+}
 
-  .c-collapsible-section .is-closed[aria-hidden=true] {
-      display: none;
-  }
+.c-collapsible-section .is-closed[aria-hidden=true] {
+    display: none;
+}

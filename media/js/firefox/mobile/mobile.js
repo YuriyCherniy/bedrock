@@ -1,49 +1,24 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
-(function(Mozilla, $) {
+// create namespace
+if (typeof window.Mozilla === 'undefined') {
+    window.Mozilla = {};
+}
+
+(function (Mozilla) {
     'use strict';
+    var sendToPrimary = document.getElementById('s2d-primary');
+    var sendToSecondary = document.getElementById('s2d-primary');
 
-    var $body = $('body');
-    var $modalContents = $('#modal-wrapper');
+    if (sendToPrimary && sendToSecondary) {
+        var formPrimary = new Mozilla.SendToDevice('s2d-primary');
+        formPrimary.init();
 
-    function openModal(e) {
-        e.preventDefault();
-
-        var product = $(this).data('product');
-
-        var selectorToHide = (product === 'firefox') ? '.focus' : '.firefox';
-        var selectorToShow = (product === 'firefox') ? '.firefox' : '.focus';
-
-        // control styling of modal: blue for firefox, purple for focus
-        $body.attr('data-modal-product', product);
-
-        $modalContents.find(selectorToHide).addClass('hidden');
-        $modalContents.find(selectorToShow).removeClass('hidden');
-
-        Mozilla.Modal.createModal(this, $modalContents);
+        var formSecondary = new Mozilla.SendToDevice('s2d-secondary');
+        formSecondary.init();
     }
-
-    // clicking any download-looking button opens the modal
-    $('.get-firefox, .get-focus').attr('role', 'button').on('click', openModal);
-
-    // add class to widget button here to avoid messing with macro markup
-    $('#send-to-device button[type="submit"]').addClass('button-hollow button-light');
-
-    // anchor 'See more' links should smooth scroll
-    $('.see-more').on('click', function(e) {
-        e.preventDefault();
-
-        var offset = $(e.target.getAttribute('href')).offset().top;
-
-        Mozilla.smoothScroll({
-            top: offset
-        });
-    });
-
-    // initialize send to device widget
-    var form = new Mozilla.SendToDevice();
-
-    form.init();
-})(window.Mozilla, window.jQuery);
+})(window.Mozilla);

@@ -1,16 +1,17 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-from pypom import Region
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as expected
 
+from pages.base import BaseRegion
 
-class Modal(Region):
 
-    _root_locator = (By.ID, 'modal')
-    _close_locator = (By.ID, 'modal-close')
+class Modal(BaseRegion):
+
+    _root_locator = (By.ID, "modal")
+    _close_locator = (By.ID, "modal-close")
 
     def close(self):
         modal = self.selenium.find_element(*self._root_locator)
@@ -25,10 +26,10 @@ class Modal(Region):
         return self.is_element_displayed(*selector)
 
 
-class ModalProtocol(Region):
+class ModalProtocol(BaseRegion):
 
-    _root_locator = (By.CLASS_NAME, 'mzp-c-modal')
-    _close_locator = (By.CLASS_NAME, 'mzp-c-modal-button-close')
+    _root_locator = (By.CLASS_NAME, "mzp-c-modal")
+    _close_locator = (By.CLASS_NAME, "mzp-c-modal-button-close")
 
     def close(self):
         modal = self.selenium.find_element(*self._root_locator)

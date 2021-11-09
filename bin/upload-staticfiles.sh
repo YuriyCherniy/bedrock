@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 set -exo pipefail
 
 source docker/bin/set_git_env_vars.sh
@@ -17,12 +21,16 @@ fi
 
 TMP_DIR="s3-static"
 TMP_DIR_HASHED="s3-static-hashed"
-CONTAINER_NAME="bedrock-${BRANCH_AND_COMMIT}"
+CONTAINER_NAME="bedrock-${GIT_COMMIT}"
 
 rm -rf "${TMP_DIR}"
 rm -rf "${TMP_DIR_HASHED}"
 
+# .env file must exist for docker-compose
+touch .env
+
 # have to rerun staticfiles without symlinks or we just copy broken symlinks
+docker rm -f "$CONTAINER_NAME" || true
 docker-compose run --name "$CONTAINER_NAME" release docker/bin/build_staticfiles.sh --nolink
 docker cp "${CONTAINER_NAME}:/app/static" "${TMP_DIR}"
 docker rm -f "$CONTAINER_NAME"
@@ -35,7 +43,6 @@ for BUCKET in "${BUCKETS[@]}"; do
     aws s3 sync \
         --acl public-read \
         --cache-control "max-age=315360000, public, immutable" \
-        --profile bedrock-media \
         "./${TMP_DIR_HASHED}" "s3://bedrock-${BUCKET}-media/media/"
     # non-hashed filenames
     # may not need to include non-hashed files
@@ -43,7 +50,6 @@ for BUCKET in "${BUCKETS[@]}"; do
     aws s3 sync \
         --acl public-read \
         --cache-control "max-age=21600, public" \
-        --profile bedrock-media \
         "./${TMP_DIR}" "s3://bedrock-${BUCKET}-media/media/"
 done
 

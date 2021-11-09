@@ -1,18 +1,18 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from selenium.webdriver.common.by import By
 
-from pages.firefox.base import FirefoxBasePage
+from pages.base import BasePage
 from pages.regions.download_button import DownloadButton
 
 
-class FirefoxSwitchPage(FirefoxBasePage):
+class FirefoxSwitchPage(BasePage):
 
-    URL_TEMPLATE = '/{locale}/firefox/switch/'
+    _URL_TEMPLATE = "/{locale}/firefox/switch/"
 
-    _download_button_locator = (By.ID, 'download-button-desktop-release')
+    _download_button_locator = (By.ID, "download-button-desktop-release")
 
     @property
     def download_button(self):

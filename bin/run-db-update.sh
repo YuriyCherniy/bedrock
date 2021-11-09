@@ -1,4 +1,8 @@
 #!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 set -ex
 
 # run all jobs
@@ -22,23 +26,17 @@ done
 
 python manage.py update_product_details_files
 python manage.py update_security_advisories --quiet
-python manage.py update_wordpress --quiet
+#python manage.py update_wordpress --quiet
 python manage.py update_release_notes --quiet
 python manage.py update_content_cards --quiet
+python manage.py update_contentful --quiet
 python manage.py update_externalfiles --quiet
 python manage.py update_newsletter_data --quiet
 python manage.py update_www_config --quiet
+python manage.py update_legal_docs --quiet
+python manage.py update_sitemaps_data --quiet
 
 if [[ "$AUTH" == true ]]; then
     # jobs that require some auth. don't run these during build.
     python manage.py update_pocketfeed --quiet
-fi
-
-if [[ "$ALL" == true ]]; then
-    # less frequent. these will modify the DB every time.
-    # TODO fix this
-    if [[ "$AUTH" == true ]]; then
-        python manage.py update_tweets
-    fi
-    python manage.py update_ical_feeds
 fi

@@ -1,10 +1,13 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 # mimic django's language activation machinery. it checks for .mo files
 # and we don't need anything nearly as complex.
 
-from _threading_local import local
-
 from django.conf import settings
 
+from _threading_local import local
 
 _active = local()
 
@@ -27,11 +30,11 @@ def deactivate():
 
 def _fix_case(locale):
     """Convert lowercase locales to uppercase: en-us -> en-US"""
-    parts = locale.split('-')
+    parts = locale.split("-")
     if len(parts) == 1:
         return locale
     else:
-        return '%s-%s' % (parts[0], parts[1].upper())
+        return "%s-%s" % (parts[0], parts[1].upper())
 
 
 def get_language(fix_case=False):
@@ -53,5 +56,5 @@ def get_language_bidi():
     * False = left-to-right layout
     * True = right-to-left layout
     """
-    base_lang = get_language().split('-')[0]
+    base_lang = get_language().split("-")[0]
     return base_lang in settings.LANGUAGES_BIDI

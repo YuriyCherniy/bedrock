@@ -1,19 +1,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/components/billboard';
-@import '../../protocol/css/components/feature-card';
-@import '../../protocol/css/components/hero';
-@import '../../protocol/css/components/newsletter-form';
-@import '../../protocol/css/templates/card-layout';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/billboard';
+@import '~@mozilla-protocol/core/protocol/css/components/card';
+@import '~@mozilla-protocol/core/protocol/css/components/split';
+@import '~@mozilla-protocol/core/protocol/css/components/hero';
+@import '~@mozilla-protocol/core/protocol/css/components/newsletter-form';
+@import '~@mozilla-protocol/core/protocol/css/templates/card-layout';
 
-
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Hero image
 
 .mzp-c-hero.t-mission {
@@ -21,7 +21,7 @@ $image-path: '/media/protocol/img';
     @include border-box;
     background-repeat: no-repeat;
     background-position: bottom center;
-    height: 400px;
+    min-height: 400px;
 
     @media #{$mq-xs} {
         @include at2x('/media/img/mozorg/about/about-hero-xs.jpg', auto, 400px);
@@ -39,7 +39,6 @@ $image-path: '/media/protocol/img';
         flex-direction: column;
         height: 100%;
         justify-content: center;
-        padding-bottom: 0;
     }
 }
 
@@ -53,23 +52,19 @@ $image-path: '/media/protocol/img';
 }
 
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Intro section
 
 .t-shade {
-    background: $color-gray-20;
-    background: $color-gray-20 linear-gradient($color-gray-20, #fff 350px);
-
-    @media #{$mq-lg}{
-        margin-bottom: $layout-xl;
-    }
+    background: $color-marketing-gray-20;
+    background: $color-marketing-gray-20 linear-gradient($color-marketing-gray-20, $color-white 350px);
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Page title
 
 .c-page-title {
-    @include text-display-sm;
+    @include text-title-sm;
     margin-top: $spacing-xs;
     margin-bottom: $spacing-md;
 
@@ -79,16 +74,7 @@ $image-path: '/media/protocol/img';
     }
 }
 
-/* -------------------------------------------------------------------------- */
-// Foundation
-
-@media #{$mq-lg}{
-    .mzp-c-card-feature.t-foundation {
-        margin-bottom: $layout-xl * 2;
-    }
-}
-
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Cities
 
 .mzp-c-hero.t-global {
@@ -132,10 +118,6 @@ $city-image-size: 106px;
 
     &.c-city-berlin:before {
         background-image: url('/media/img/mozorg/about/city-berlin.png');
-    }
-
-    &.c-city-taipei:before {
-        background-image: url('/media/img/mozorg/about/city-taipei.png');
     }
 
     &.c-city-toronto:before {
@@ -193,7 +175,7 @@ $city-image-size: 106px;
             position: absolute;
             top: 50%;
             left: $spacing-xl;
-            margin-top: ($city-image-size / 2 * -1) - 3px; // minus half to vertically centre and then -3px to account for the little bits that stick up past the circle part
+            margin-top: ($city-image-size * 0.5 * -1) - 3px; // minus half to vertically centre and then -3px to account for the little bits that stick up past the circle part
         }
     }
 
@@ -214,13 +196,13 @@ $city-image-size: 106px;
     .c-city {
         @include grid-half;
         @include bidi(((float, left, right),));
-        padding: 0 ($spacing-xl / 2);
+        padding: 0 ($spacing-xl * 0.5);
         margin: $spacing-xl 0;
     }
 }
 
 @media #{$mq-lg} {
     .c-city {
-        @include grid-quarter;
+        @include grid-third;
     }
 }

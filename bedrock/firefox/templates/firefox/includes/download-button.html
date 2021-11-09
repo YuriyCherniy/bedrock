@@ -1,24 +1,26 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% macro alt_buttons(builds) %}
   <div class="download download-dumb">
     <p role="heading" class="download-heading">
       {% if channel == 'beta' %}
-        {{ _('Firefox Beta') }}
+        {{ ftl('download-button-firefox-beta') }}
       {% elif channel == 'alpha' %}
-        {{ _('<span>Firefox</span> Developer Edition') }}
+        {{ ftl('download-button-firefox-developer-edition') }}
       {% elif channel == 'nightly' %}
-        {{ _('Firefox Nightly') }}
+        {{ ftl('download-button-firefox-nightly') }}
       {% else %}
-        {{ _('Download Firefox') }}
+        {{ ftl('download-button-download-firefox') }}
       {% endif %}  — {{ locale_name|safe }}
     </p>
     <ul>
       {% for plat in builds -%}
         <li><a href="{{ plat.download_link_direct or plat.download_link }}"
-               class="download-link button button-green mzp-c-button mzp-t-product"
+               class="download-link mzp-c-button mzp-t-product"
                data-link-type="download"
                data-download-version="{{ plat.os }}"
                {% if plat.os == 'android' %}data-download-os="Android"
@@ -43,25 +45,17 @@
     {{ alt_buttons(builds) }}
   </div>
   {% if show_desktop %}
-    {# unrecognized/unsupported platform #}
-    <div class="unrecognized-download">
-      <p>{{ _('Your system may not meet the requirements for Firefox, but you can try one of these versions:') }}</p>
+    {# Unrecognized/unsupported messaging. Exclude from search result snippets using `data-nosnippet` (issue 8739) #}
+    <div class="unrecognized-download" data-nosnippet="true">
+      <p>{{ ftl('download-button-your-system-may') }}</p>
       {{ alt_buttons(builds) }}
     </div>
-    <p class="unsupported-download">
-      {{ _("Your system doesn't meet the <a href=\"%(url)s\">requirements</a> to run Firefox.")|format(url=firefox_url('desktop', 'sysreq', channel)) }}
-    </p>
-    <p class="unsupported-download-osx">
-      {{ _("Your system doesn't meet the <a href=\"%(url)s\">requirements</a> to run Firefox.")|format(url='https://support.mozilla.org/kb/firefox-osx') }}
-    </p>
-    <p class="linux-arm-download">
-      {{ _('Please follow <a href="%(url)s">these instructions</a> to install Firefox.')|format(url='https://support.mozilla.org/kb/install-firefox-linux') }}
-    </p>
   {% endif %}
   <ul class="download-list">
     {% for plat in builds %}
       <li class="os_{{ plat.os }}{% if plat.arch %} {{ plat.arch }}{% endif %}">
-        <a class="download-link button {{ button_color }} mzp-c-button mzp-t-product"
+        <a class="download-link button {{ button_class }} mzp-c-button mzp-t-product"
+           id="{{ id }}-{{ plat.os }}"
            href="{{ plat.download_link }}"{% if plat.download_link_direct %}
            data-direct-link="{{ plat.download_link_direct }}"{% endif %}
            data-link-type="download"
@@ -77,25 +71,25 @@
             {% else %}
               {% if plat.os == 'android' %}
                 {% if channel == 'beta' %}
-                  {{ _('<span>Firefox Beta</span> for Android') }}
+                  {{ ftl('download-button-firefox-beta-android') }}
                 {% elif channel == 'alpha' %}
-                  {{ _('<span>Firefox Aurora</span> for Android') }}
+                  {{ ftl('download-button-firefox-aurora-android') }}
                 {% elif channel == 'nightly' %}
-                  {{ _('<span>Firefox Nightly</span> for Android') }}
+                  {{ ftl('download-button-firefox-nightly-android') }}
                 {% else %}
-                  {{ _('<span>Firefox</span> for Android') }}
+                  {{ ftl('download-button-firefox-android') }}
                 {% endif %}
               {% elif plat.os == 'ios' %}
-                {{ _('<span>Firefox</span> for iOS') }}
+                {{ ftl('download-button-firefox-ios') }}
               {% else %}
                 {% if channel == 'beta' %}
-                  {{ _('Firefox Beta') }}
+                  {{ ftl('download-button-firefox-beta') }}
                 {% elif channel == 'alpha' %}
-                  {{ _('<span>Firefox</span> Developer Edition') }}
+                  {{ ftl('download-button-firefox-developer-edition') }}
                 {% elif channel == 'nightly' %}
-                  {{ _('Firefox Nightly') }}
+                  {{ ftl('download-button-firefox-nightly') }}
                 {% else %}
-                  {{ _('Download Firefox') }}
+                  {{ ftl('download-button-download-firefox') }}
                 {% endif %}
               {% endif %}
             {% endif %}
@@ -105,11 +99,8 @@
     {% endfor %}
   </ul>
   <small class="fx-privacy-link mzp-c-button-download-privacy-link">
-    {% if LANG.startswith('en-') %}
-      {% set privacy_text = _('Firefox Privacy Notice') %}
-    {% else %}
-      {% set privacy_text = _('Firefox Privacy') %}
-    {% endif %}
-    <a href="{{ url('privacy.notices.firefox') }}">{{ privacy_text }}</a>
+    <a href="{{ url('privacy.notices.firefox') }}">
+      {{ ftl('download-button-firefox-privacy-notice', fallback='download-button-firefox-privacy') }}
+    </a>
   </small>
 </div>

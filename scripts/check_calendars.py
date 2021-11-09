@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 import os
 import sys
 
@@ -7,11 +11,11 @@ from icalendar import Calendar
 
 
 def get_ics(filename):
-    return filename.endswith('ics')
+    return filename.endswith("ics")
 
 
 def check_if_correct_parse(ics_file):
-    fh = open(ics_file, 'rb')
+    fh = open(ics_file, "rb")
     try:
         # some calendars, such as Austrian ones have multiple
         # vCalendar entries - we probably don't want them to fail
@@ -24,7 +28,7 @@ def check_if_correct_parse(ics_file):
 
 
 def run(*args):
-    calendars_dir = os.path.join('media', 'caldata')
+    calendars_dir = os.path.join("media", "caldata")
     ics_files = [os.path.join(calendars_dir, x) for x in list(filter(get_ics, os.listdir(calendars_dir)))]
 
     format_str = "Failed to parse the icalendar file: {}. {}"

@@ -1,6 +1,8 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {% extends "foundation/base.html" %}
 
@@ -24,7 +26,7 @@
 
   <ul class="mzp-u-list-styled">
     <li>{% trans join="http://www.drumbeat.org/people" %}<a href="{{ join }}">Join</a> Mozilla Drumbeat and start making the web more open and awesome right now{% endtrans %}</li>
-    <li>{% trans getinvolved=url('mozorg.contribute.index') %}<a href="{{ getinvolved }}">Get involved</a> with Mozilla{% endtrans %}</li>
+    <li>{% trans getinvolved=url('mozorg.contribute') %}<a href="{{ getinvolved }}">Get involved</a> with Mozilla{% endtrans %}</li>
     <li>{% trans firefox=url('firefox.new') %}Introduce someone to <a href="{{ firefox }}">Mozilla Firefox</a>{% endtrans %}</li>
   </ul>
 

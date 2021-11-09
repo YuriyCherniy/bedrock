@@ -1,11 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../../protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
 
 // Security impact levels
 
@@ -16,16 +16,16 @@ $image-path: '/media/protocol/img';
 
 .level {
     @include text-body-xs;
-    background: $color-gray-10;
-    border-right: 3px solid $color-gray-30;
+    background: $color-marketing-gray-10;
+    border-right: 3px solid $color-marketing-gray-30;
     box-shadow: 0 1px 1px rgba(0,0,0,0.05), 0 -1px 0 rgba(0,0,0,0.05) inset;
     color: #000;
     display: inline-block;
     font-style: normal;
     font-weight: bold;
     line-height: 1;
-    padding: 4px 2px 4px 4px;
-    width: 90px;
+    padding: 4px;
+    min-width: 90px;
 
     &.moderate {
         background: $color-yellow-10;
@@ -78,7 +78,7 @@ $image-path: '/media/protocol/img';
         position: absolute;
         left: -1em;
         width: 1em;
-        color: $color-gray-40;
+        color: $color-marketing-gray-40;
         vertical-align: middle;
     }
 }

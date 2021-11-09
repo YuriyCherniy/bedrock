@@ -1,48 +1,41 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
- Portions based on http://blog.gospodarets.com/native_smooth_scrolling/
-*/
+/*
+ * Portions based on http://blog.gospodarets.com/native_smooth_scrolling/
+ */
 
 if (typeof window.Mozilla === 'undefined') {
     window.Mozilla = {};
 }
 
-Mozilla.smoothScroll = (function() {
+Mozilla.smoothScroll = (function () {
     'use strict';
 
     var _smoothScroll;
-    var $htmlBody;
 
-    var _init = function(unitTest) {
+    var _init = function (unitTest) {
         var hasSmoothScroll;
 
         // try to use native smooth scrolling
         if (unitTest) {
-            hasSmoothScroll = (unitTest === 'native') ? true : false;
+            hasSmoothScroll = unitTest === 'native' ? true : false;
         } else {
-            hasSmoothScroll = 'scrollBehavior' in document.documentElement.style;
+            hasSmoothScroll =
+                'scrollBehavior' in document.documentElement.style;
         }
 
         // use native smooth scrolling
         if (hasSmoothScroll) {
-            _smoothScroll = function(opts) {
+            _smoothScroll = function (opts) {
                 window.scrollTo(opts);
             };
-        // otherwise, use jQuery if it's available
-        } else if (window.jQuery) {
-            $htmlBody = $('html, body');
-
-            _smoothScroll = function(opts) {
-                $htmlBody.animate({
-                    scrollTop: opts.top,
-                    scrollLeft: opts.left
-                }, 400);
-            };
-        // default to regular ol' jump scrolling
+            // default to regular ol' jump scrolling
         } else {
-            _smoothScroll = function(opts) {
+            _smoothScroll = function (opts) {
                 window.scrollTo(opts.top, opts.left);
             };
         }
@@ -56,7 +49,7 @@ Mozilla.smoothScroll = (function() {
 
     At least one of the two axes (top, left) should be specified.
     */
-    return function(userOpts) {
+    return function (userOpts) {
         // set up defaults
         var opts = {
             behavior: userOpts.behavior || 'smooth',

@@ -1,17 +1,17 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $image-path: '/media/protocol/img';
 
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/includes/mixins/details';
-@import '../../protocol/css/components/sidebar-menu';
-@import '../../protocol/css/templates/main-with-sidebar';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/includes/mixins/details';
+@import '~@mozilla-protocol/core/protocol/css/components/sidebar-menu';
+@import '~@mozilla-protocol/core/protocol/css/templates/main-with-sidebar';
 
 @import '../protocol/basic-article';
 
-$border: 2px solid $color-gray-20;
+$border: 2px solid $color-marketing-gray-20;
 
 .mzp-c-sidemenu .mzp-c-sidemenu-title  {
     @include font-base;
@@ -37,7 +37,7 @@ $border: 2px solid $color-gray-20;
     }
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Policy header
 
 .privacy-logo {
@@ -82,7 +82,7 @@ $border: 2px solid $color-gray-20;
     }
 
     h1 {
-        @include text-display-xs;
+        @include text-title-xs;
         font-weight: bold;
     }
 
@@ -101,7 +101,7 @@ $border: 2px solid $color-gray-20;
 }
 
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Policy header intro
 
 .privacy-lead-in {
@@ -111,11 +111,11 @@ $border: 2px solid $color-gray-20;
     padding-bottom: $layout-xs;
 
     h2 {
-        @include text-display-lg;
+        @include text-title-md;
     }
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Main policy content
 
 .privacy-body {
@@ -125,12 +125,12 @@ $border: 2px solid $color-gray-20;
     }
 
     h2 {
-        @include font-size(32px);
-        margin-bottom: $layout-md;
+        @include text-title-sm;
+        margin-bottom: $layout-sm;
     }
 
     h3 {
-        @include text-display-xs;
+        @include text-title-xs;
         margin: $layout-sm 0;
     }
 
@@ -151,16 +151,16 @@ $border: 2px solid $color-gray-20;
 }
 
 #optional-features {
-    margin-top: $spacing-xl;
+    margin-top: $layout-lg;
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Privacy choices widget
 
 .data-choices {
     @include clearfix;
-    background-color: $color-gray-20;
-    border-radius: 8px;
+    background-color: $color-marketing-gray-20;
+    border-radius: $border-radius-md;
     margin-top: $spacing-xl;
     padding: $spacing-sm;
     position: relative;
@@ -191,7 +191,7 @@ $border: 2px solid $color-gray-20;
     }
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Policy footer
 
 .privacy-footnote {
@@ -203,7 +203,7 @@ $border: 2px solid $color-gray-20;
     }
 }
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Summary and details widget
 
 .format-headings .privacy-body {
@@ -253,7 +253,7 @@ $border: 2px solid $color-gray-20;
 }
 
 
-/* -------------------------------------------------------------------------- */
+//* -------------------------------------------------------------------------- */
 // Privacy Principles page
 
 #privacy-principles,
@@ -266,7 +266,7 @@ $border: 2px solid $color-gray-20;
 #privacy-principles {
 
     ol {
-        @include text-display-md;
+        @include text-title-md;
         @include font-mozilla;
         font-weight: bold;
         margin-left: 1.15em;

@@ -1,29 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 import datetime
+import logging
 import urllib.parse
 
 from django.conf import settings
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.utils.encoding import smart_str
 
-from django_jinja import library
 import jinja2
+from django_jinja import library
 
-from ..urlresolvers import reverse
 from bedrock.base import waffle
 from bedrock.utils import expand_locale_groups
 
+from ..urlresolvers import reverse
 
 CSS_TEMPLATE = '<link href="%s" rel="stylesheet" type="text/css" />'
 JS_TEMPLATE = '<script type="text/javascript" src="%s" charset="utf-8"></script>'
-
-
-@library.global_function
-def send_to_device_sms_countries(message_set):
-    try:
-        countries = settings.SEND_TO_DEVICE_MESSAGE_SETS[message_set]['sms_countries']
-    except KeyError:
-        countries = ['US']
-    return '|%s|' % '|'.join(cc.lower() for cc in countries)
+log = logging.getLogger(__name__)
 
 
 @library.global_function
@@ -47,7 +44,7 @@ def switch(cxt, name, locales=None):
     which is a list of locales for a prefix (e.g. "en" expands to "en-US, en-GB").
     """
     if locales:
-        if cxt['LANG'] not in expand_locale_groups(locales):
+        if cxt["LANG"] not in expand_locale_groups(locales):
             return False
 
     return waffle.switch(name)
@@ -80,10 +77,8 @@ def urlparams(url_, hash=None, **query):
     query_dict = dict(urllib.parse.parse_qsl(smart_str(q))) if q else {}
     query_dict.update((k, v) for k, v in query.items())
 
-    query_string = _urlencode([(k, v) for k, v in query_dict.items()
-                               if v is not None])
-    new = urllib.parse.ParseResult(
-        url.scheme, url.netloc, url.path, url.params, query_string, fragment)
+    query_string = _urlencode([(k, v) for k, v in query_dict.items() if v is not None])
+    new = urllib.parse.ParseResult(url.scheme, url.netloc, url.path, url.params, query_string, fragment)
     return new.geturl()
 
 
@@ -99,7 +94,7 @@ def _urlencode(items):
 def mailtoencode(txt):
     """Url encode a string using %20 for spaces."""
     if isinstance(txt, str):
-        txt = txt.encode('utf-8')
+        txt = txt.encode("utf-8")
     return urllib.parse.quote(txt)
 
 
@@ -107,16 +102,20 @@ def mailtoencode(txt):
 def urlencode(txt):
     """Url encode a string using + for spaces."""
     if isinstance(txt, str):
-        txt = txt.encode('utf-8')
+        txt = txt.encode("utf-8")
     return urllib.parse.quote_plus(txt)
 
 
 @library.global_function
 def static(path):
-    if settings.DEBUG and path.startswith('/'):
-        raise ValueError('Static paths must not begin with a slash')
+    if settings.DEBUG and path.startswith("/"):
+        raise ValueError("Static paths must not begin with a slash")
 
-    return staticfiles_storage.url(path)
+    try:
+        return staticfiles_storage.url(path)
+    except ValueError as e:
+        log.warning(str(e))
+        return path
 
 
 @library.global_function
@@ -125,7 +124,7 @@ def js_bundle(name):
 
     Bundles are defined in the "media/static-bundles.json" file.
     """
-    path = 'js/BUNDLES/{}.js'.format(name)
+    path = "js/{}.js".format(name)
     path = staticfiles_storage.url(path)
     return jinja2.Markup(JS_TEMPLATE % path)
 
@@ -136,7 +135,7 @@ def css_bundle(name):
 
     Bundles are defined in the "media/static-bundles.json" file.
     """
-    path = 'css/BUNDLES/{}.css'.format(name)
+    path = "css/{}.css".format(name)
     path = staticfiles_storage.url(path)
     return jinja2.Markup(CSS_TEMPLATE % path)
 
@@ -144,7 +143,7 @@ def css_bundle(name):
 @library.global_function
 def alternate_url(path, locale):
     alt_paths = settings.ALT_CANONICAL_PATHS
-    path = path.lstrip('/')
+    path = path.lstrip("/")
     if path in alt_paths and locale in alt_paths[path]:
         return alt_paths[path][locale]
 
@@ -160,10 +159,9 @@ def get_donate_params(ctx):
     :returns: dictionary of donation values, including list of amount presets
     """
 
-    donate_params = settings.DONATE_PARAMS.get(
-        ctx['LANG'], settings.DONATE_PARAMS['en-US'])
+    donate_params = settings.DONATE_PARAMS.get(ctx["LANG"], settings.DONATE_PARAMS["en-US"])
 
     # presets are stored as a string but we need a list for views
-    donate_params['preset_list'] = donate_params['presets'].split(',')
+    donate_params["preset_list"] = donate_params["presets"].split(",")
 
     return donate_params

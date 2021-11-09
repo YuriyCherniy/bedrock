@@ -1,23 +1,23 @@
 ########
 # assets builder and dev server
 #
-FROM node:8-slim AS assets
+FROM node:14-slim AS assets
 
 ENV PATH=/app/node_modules/.bin:$PATH
 WORKDIR /app
 
 # copy dependency definitions
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
 
 # install dependencies
-RUN yarn install --pure-lockfile
-RUN yarn global add gulp-cli@2.0.1
+RUN npm ci
 
 # copy supporting files and media
-COPY .eslintrc.js .stylelintrc gulpfile.js ./
+COPY .eslintrc.js .eslintignore .stylelintrc .stylelintignore .prettierignore .prettierrc.json webpack.config.js webpack.static.config.js ./
 COPY ./media ./media
+COPY ./tests/unit ./tests/unit
 
-RUN gulp build --production
+RUN npm run build
 
 
 ########
@@ -33,9 +33,7 @@ ENV PATH="/venv/bin:$PATH"
 
 COPY docker/bin/apt-install /usr/local/bin/
 RUN apt-install gettext build-essential libxml2-dev libxslt1-dev libxslt1.1
-
-RUN pip install virtualenv
-RUN virtualenv /venv
+RUN python -m venv /venv
 
 COPY requirements/base.txt requirements/prod.txt ./requirements/
 
@@ -78,7 +76,6 @@ COPY manage.py LICENSE newrelic.ini contribute.json ./
 
 # changes more frequently
 COPY ./docker ./docker
-COPY ./vendor-local ./vendor-local
 COPY ./bedrock ./bedrock
 COPY ./l10n ./l10n
 COPY ./media ./media
@@ -92,29 +89,22 @@ FROM app-base AS devapp
 CMD ["./bin/run-tests.sh"]
 
 RUN apt-install make
-COPY requirements/base.txt requirements/dev.txt requirements/docs.txt ./requirements/
+COPY requirements/base.txt requirements/dev.txt requirements/migration.txt requirements/docs.txt ./requirements/
 RUN pip install --no-cache-dir -r requirements/dev.txt
 RUN pip install --no-cache-dir -r requirements/docs.txt
 COPY ./setup.cfg ./
+COPY ./pyproject.toml ./
+COPY ./.coveragerc ./
 COPY ./tests ./tests
 
-# build args
-ARG GIT_SHA=latest
-ARG BRANCH_NAME=master
-ENV GIT_SHA=${GIT_SHA}
-ENV BRANCH_NAME=${BRANCH_NAME}
-
-# get fresh database
-RUN ./bin/run-db-download.py --force
-
-# rely on build args
 RUN bin/run-sync-all.sh
-
-# get fresh l10n files
-RUN ./manage.py l10n_update
 
 RUN chown webdev.webdev -R .
 USER webdev
+
+# build args
+ARG GIT_SHA=latest
+ENV GIT_SHA=${GIT_SHA}
 
 
 ########
@@ -122,20 +112,18 @@ USER webdev
 #
 FROM app-base AS release
 
-COPY --from=assets /app/static_final /app/static_final
-RUN honcho run --env docker/envfiles/prod.env docker/bin/build_staticfiles.sh
-
-# build args
-ARG GIT_SHA=latest
-ARG BRANCH_NAME=master
-ENV GIT_SHA=${GIT_SHA}
-ENV BRANCH_NAME=${BRANCH_NAME}
-
-# rely on build args
 RUN bin/run-sync-all.sh
+
+COPY --from=assets /app/assets /app/assets
+
+RUN honcho run --env docker/envfiles/prod.env docker/bin/build_staticfiles.sh
 
 RUN echo "${GIT_SHA}" > ./root_files/revision.txt
 
 # Change User
 RUN chown webdev.webdev -R .
 USER webdev
+
+# build args
+ARG GIT_SHA=latest
+ENV GIT_SHA=${GIT_SHA}

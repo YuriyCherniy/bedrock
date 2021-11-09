@@ -1,17 +1,17 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import pytest
 
-from selenium.common.exceptions import TimeoutException
 from pages.firefox.ios_testflight import iOSTestFlightPage
 
 
 @pytest.mark.nondestructive
 def test_signup_default_values(base_url, selenium):
     page = iOSTestFlightPage(selenium, base_url).open()
-    assert '' == page.email
+    page.expand_form()
+    assert "" == page.email
     assert page.html_format_selected
     assert not page.text_format_selected
     assert not page.privacy_policy_accepted
@@ -21,9 +21,10 @@ def test_signup_default_values(base_url, selenium):
 
 
 @pytest.mark.nondestructive
-def test_successful_sign_up(base_url, selenium):
+def test_sign_up_success(base_url, selenium):
     page = iOSTestFlightPage(selenium, base_url).open()
-    page.type_email('success@example.com')
+    page.expand_form()
+    page.type_email("success@example.com")
     page.select_text_format()
     page.accept_privacy_policy()
     page.accept_terms()
@@ -32,7 +33,12 @@ def test_successful_sign_up(base_url, selenium):
 
 
 @pytest.mark.nondestructive
-def test_sign_up_fails_when_missing_required_fields(base_url, selenium):
+def test_sign_up_failure(base_url, selenium):
     page = iOSTestFlightPage(selenium, base_url).open()
-    with pytest.raises(TimeoutException):
-        page.click_sign_me_up()
+    page.expand_form()
+    page.type_email("invalid@email")
+    page.select_text_format()
+    page.accept_privacy_policy()
+    page.accept_terms()
+    page.click_sign_me_up(expected_result="error")
+    assert page.is_form_error_displayed

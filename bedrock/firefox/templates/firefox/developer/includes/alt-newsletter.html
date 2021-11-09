@@ -1,19 +1,22 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
 <section class="t-newsletter">
   <div class="mzp-l-content">
     {% if LANG.startswith('en-') %}
-      {# L10n: line break for visual formatting #}
       {{ email_newsletter_form(
         'app-dev',
         title='Mozilla Developer Newsletter',
-        subtitle=_('Get developer news, tricks and resources <br /> sent straight to your inbox.'),
-        button_class='mzp-t-product',
-        include_language=False,
-        protocol_component=True) }}
+        desc='Get developer news, tricks and resources <br /> sent straight to your inbox.'|safe,
+        button_class='mzp-t-product mzp-t-lg',
+        include_language=False) }}
     {% else %}
       {{ email_newsletter_form(
-        protocol_component=True,
         spinner_color='#fff',
-        button_class='mzp-c-button mzp-t-product') }}
+        button_class='mzp-c-button mzp-t-product mzp-t-lg') }}
     {% endif %}
   </div>
 </section>

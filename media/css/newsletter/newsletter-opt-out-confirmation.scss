@@ -1,25 +1,25 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-@import '../pebbles/includes/lib';
-@import '../hubs/sections';
-@import '../quantum/common';
+$font-path: '/media/fonts';
+$image-path: '/media/protocol/img';
+
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/forms/form';
+@import '~@mozilla-protocol/core/protocol/css/components/forms/field';
+@import '~@mozilla-protocol/core/protocol/css/components/forms/button-container';
 
 /* -------------------------------------------------------------------------- */
 // Common elements
 
 
 main {
-    padding: 20px 0;
+    padding: $spacing-lg 0;
 
-    @media #{$mq-tablet} {
-        padding: 60px 0;
+    @media #{$mq-md} {
+        padding: $spacing-2xl 0;
     }
-}
-
-.inner-content {
-    max-width: 600px;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -27,52 +27,29 @@ main {
 
 header {
     h1 {
-        @include zilla-slab;
-        font-weight: bold;
-        margin-bottom: 40px;
+        margin-bottom: $spacing-sm;
     }
 
     .tagline {
         font-weight: bold;
-    }
-
-    @media #{$mq-tablet} {
-        .tagline {
-            @include font-size(24px);
-        }
+        margin-bottom: $layout-lg;
     }
 }
 
 /* -------------------------------------------------------------------------- */
 // Email recovery form
 
-form {
-    margin-bottom: 60px;
-
-    .form-fields {
-        max-width: 300px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 5px;
-    }
-
-    input[type="email"] {
-        border-radius: 4px;
-        line-height: 1.1;
-        margin-bottom: 10px;
-        padding: 0.75em 20px;
-        width: 100%;
-    }
-
-    button[type="submit"] {
-        width: 100%;
-    }
+.mzp-c-form {
+    margin-bottom: $layout-lg;
 }
 
-.errorlist li {
-    color: $color-mozred;
+.mzp-c-field {
+    max-width: $content-xs;
+    padding-bottom: $label-v-spacing;
+}
+
+.mzp-c-button-container {
+    max-width: $content-xs;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -80,20 +57,8 @@ form {
 
 aside {
     h2 {
-        @include font-size-level4;
-        font-weight: bold;
+        @include text-title-sm;
         margin-bottom: 40px;
-    }
-
-    a:link,
-    a:visited {
-        color: #000;
-
-        &:hover,
-        &:active,
-        &:focus {
-            color: #555;
-        }
     }
 
     .social-links {
@@ -115,21 +80,21 @@ aside {
                 }
 
                 &.instagram {
-                    background-position: 0 -25px;
-                    width: 19px;
+                    background-position: 0 -18px;
+                    width: 18px;
                     height: 19px;
                 }
 
                 &.youtube {
-                    background-position: 0 -54px;
-                    width: 19px;
-                    height: 13px;
+                    background-position: 0 -45px;
+                    width: 17px;
+                    height: 14px;
                 }
 
                 &.facebook {
-                    background-position: 0 -77px;
-                    width: 10px;
-                    height: 19px;
+                    background-position: 0 -83px;
+                    width: 18px;
+                    height: 18px;
                 }
             }
         }

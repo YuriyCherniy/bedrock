@@ -1,32 +1,34 @@
 #!/bin/bash
-# Needs DOCKER_USERNAME, DOCKER_PASSWORD, DOCKER_REPOSITORY,
-# FROM_DOCKER_REPOSITORY environment variables.
-#
-# To set them go to Job -> Configure -> Build Environment -> Inject
-# passwords and Inject env variables
-#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 set -exo pipefail
 
 BIN_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source $BIN_DIR/set_git_env_vars.sh
 
-if [[ "$FROM_DOCKER_REPOSITORY" == "mozorg/bedrock" ]]; then
-    DOCKER_TAG="${BRANCH_AND_COMMIT}"
+FROM_DOCKER_REPOSITORY="$1"
+IMG_TO_PUSH="$FROM_DOCKER_REPOSITORY:${GIT_COMMIT}"
+
+if docker pull $IMG_TO_PUSH; then
+    echo "image already exists, skipping the push"
 else
-    DOCKER_TAG="${GIT_COMMIT}"
+    # Push to docker hub
+    docker push "$IMG_TO_PUSH"
 fi
 
-# Push to docker hub
-docker push $FROM_DOCKER_REPOSITORY:${DOCKER_TAG}
-
 if [[ "$BRANCH_NAME" == "master" ]]; then
-    docker tag $FROM_DOCKER_REPOSITORY:${DOCKER_TAG} $FROM_DOCKER_REPOSITORY:latest
+    docker tag $IMG_TO_PUSH $FROM_DOCKER_REPOSITORY:latest
     docker push $FROM_DOCKER_REPOSITORY:latest
 fi
 
-if [[ "$GIT_TAG_DATE_BASED" == true ]]; then
-    docker tag $FROM_DOCKER_REPOSITORY:${DOCKER_TAG} $FROM_DOCKER_REPOSITORY:$GIT_TAG
-    docker tag $FROM_DOCKER_REPOSITORY:${DOCKER_TAG} $FROM_DOCKER_REPOSITORY:prod-latest
-    docker push $FROM_DOCKER_REPOSITORY:$GIT_TAG
+if [[ "$BRANCH_NAME" == "prod" ]]; then
+    docker tag $IMG_TO_PUSH $FROM_DOCKER_REPOSITORY:prod-latest
     docker push $FROM_DOCKER_REPOSITORY:prod-latest
+fi
+
+if [[ "$GIT_TAG_DATE_BASED" == true ]]; then
+    docker tag $IMG_TO_PUSH $FROM_DOCKER_REPOSITORY:$GIT_TAG
+    docker push $FROM_DOCKER_REPOSITORY:$GIT_TAG
 fi

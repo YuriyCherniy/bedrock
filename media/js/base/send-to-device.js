@@ -1,37 +1,44 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/* globals Spinner */
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
 
 // create namespace
 if (typeof window.Mozilla === 'undefined') {
     window.Mozilla = {};
 }
 
-(function($) {
+var Spinner = require('../libs/spin.min.js');
+
+(function () {
     'use strict';
 
-    var SendToDevice = function(id) {
-
-        this.formId = typeof id !== 'undefined' ? '#' + id : '#send-to-device';
+    var SendToDevice = function (id) {
+        this.formId = typeof id !== 'undefined' ? id : 'send-to-device';
 
         this.formLoaded = false;
         this.formTimeout = null;
-        this.smsEnabled = false;
 
-        this.$widget = $(this.formId);
-        this.$form = this.$widget.find('.send-to-device-form');
-        this.$formFields = this.$form.find('.send-to-device-form-fields');
-        this.$input = this.$formFields.find('.send-to-device-input');
-        this.$thankyou = this.$widget.find('.thank-you');
-        this.$errorList = this.$form.find('.error-list');
-        this.$spinnerTarget = this.$form.find('.loading-spinner');
-        this.$footerLinks = this.$widget.find('footer > ul');
-        this.$sendAnotherLink = this.$form.find('.send-another');
-        this.$formHeading = this.$widget.find('.form-heading');
-        this.spinnerColor = this.$widget.data('spinnerColor') || '#000';
-        this.countries = this.$widget.data('countries');
+        this.widget = document.getElementById(this.formId);
+
+        // If there's no widget on the page, do nothing.
+        if (!this.widget) {
+            return;
+        }
+
+        this.form = this.widget.querySelector('.send-to-device-form');
+        this.formFields = this.form.querySelector(
+            '.send-to-device-form-fields'
+        );
+        this.input = this.formFields.querySelector('.send-to-device-input');
+        this.thankyou = this.widget.querySelectorAll('.thank-you');
+        this.errorList = this.form.querySelector('.mzp-c-form-errors');
+        this.spinnerTarget = this.form.querySelector('.loading-spinner');
+        this.sendAnotherLink = this.form.querySelector('.send-another');
+        this.formHeading = this.widget.querySelector('.form-heading');
+        this.spinnerColor =
+            this.widget.getAttribute('data-spinner-color') || '#000';
 
         this.spinner = new Spinner({
             lines: 12, // The number of lines to draw
@@ -49,144 +56,78 @@ if (typeof window.Mozilla === 'undefined') {
         });
     };
 
-    // static value for user country code
-    SendToDevice.COUNTRY_CODE = '';
-
-    SendToDevice.prototype.geoCallback; // jshint ignore:line
-
     /**
      * Initialise the form messaging and bind events.
      */
-    SendToDevice.prototype.init = function() {
-        if (this.$widget.length === 1) {
-            this.getLocation();
+    SendToDevice.prototype.init = function () {
+        if (this.widget) {
+            this.formSubmitHandler = this.onFormSubmit.bind(this);
+            this.sendAnotherHandler = this.sendAnother.bind(this);
             this.bindEvents();
         }
     };
 
     /**
-     * Gets the country code of the location of the user
-     * using bedrock's /country-code.json service
-     */
-    SendToDevice.prototype.getLocation = function() {
-        var self = this;
-
-        // if a dev has added ?geo=<country code> to the URL
-        // we can skip the geo lookup and act as if it worked
-        if (window.location.search.indexOf('geo=') !== -1) {
-            var urlRe = /geo=([a-z]{2})/i;
-            var match = urlRe.exec(window.location.search);
-            if (match) {
-                SendToDevice.COUNTRY_CODE = match[1].toLowerCase();
-                self.updateMessaging();
-                if (typeof self.geoCallback === 'function') {
-                    self.geoCallback(SendToDevice.COUNTRY_CODE);
-                }
-                return;
-            }
-        }
-
-        // should /country-code.json be slow to load,
-        // just show the email messaging after 5 seconds waiting.
-        this.formTimeout = setTimeout(self.updateMessaging, 5000);
-
-        $.get('/country-code.json')
-            .done(function(data) {
-                if (data && data.country_code) {
-                    SendToDevice.COUNTRY_CODE = data.country_code.toLowerCase();
-                }
-                self.updateMessaging();
-            })
-            .fail(function() {
-                // something went wrong, show only the email messaging.
-                self.updateMessaging();
-            }).always(function() {
-                if (typeof self.geoCallback === 'function') {
-                    self.geoCallback(SendToDevice.COUNTRY_CODE);
-                }
-            });
-    };
-
-    /**
-     * Returns boolean indication whether or not the user is in a supported country
-     */
-    SendToDevice.prototype.inSupportedCountry = function() {
-        var ccode = SendToDevice.COUNTRY_CODE;
-        return (ccode && this.countries.indexOf('|' + ccode + '|') !== -1);
-    };
-
-    /**
-     * Checks to update the form messaging based on the users location
-     */
-    SendToDevice.prototype.updateMessaging = function() {
-        clearTimeout(this.formTimeout);
-        if (!this.formLoaded) {
-            this.formLoaded = true;
-
-            // if the page visitor is in a supportec country, show the SMS messaging / copy
-            if (this.inSupportedCountry()) {
-                this.showSMS();
-            }
-        }
-    };
-
-    /**
-     * Updates the form fields to include SMS messaging
-     */
-    SendToDevice.prototype.showSMS = function() {
-        var $label = this.$formFields.find('.form-input-label');
-        this.$form.addClass('sms-country');
-        $label.html($label.data('alt'));
-        this.$input.attr('placeholder', this.$input.data('alt'));
-        this.smsEnabled = true;
-    };
-
-    /**
      * Binds form submission and click events
      */
-    SendToDevice.prototype.bindEvents = function() {
-        this.$form.on('submit', $.proxy(this.onFormSubmit, this));
-        this.$sendAnotherLink.on('click', $.proxy(this.sendAnother, this));
+    SendToDevice.prototype.bindEvents = function () {
+        this.form.addEventListener('submit', this.formSubmitHandler, false);
+        this.sendAnotherLink.addEventListener(
+            'click',
+            this.sendAnotherHandler,
+            false
+        );
     };
 
     /**
      * Remove all form event handlers
      */
-    SendToDevice.prototype.unbindEvents = function() {
-        this.$form.off('submit');
-        this.$footerLinks.off('click');
-        this.$sendAnotherLink.off('click');
+    SendToDevice.prototype.unbindEvents = function () {
+        this.form.removeEventListener('submit', this.formSubmitHandler, false);
+        this.sendAnotherLink.removeEventListener(
+            'click',
+            this.sendAnotherHandler,
+            false
+        );
     };
 
     /**
      * Show the form again to send another link
      */
-    SendToDevice.prototype.sendAnother = function(e) {
+    SendToDevice.prototype.sendAnother = function (e) {
         e.preventDefault();
-        this.$input.val('');
-        this.$errorList.addClass('hidden');
-        this.$thankyou.addClass('hidden');
-        this.$formHeading.removeClass('hidden');
-        this.$formFields.removeClass('hidden');
-        this.$input.trigger('focus');
+        this.input.value = '';
+        this.errorList.classList.add('hidden');
+
+        for (var i = 0; i < this.thankyou.length; i++) {
+            this.thankyou[i].classList.add('hidden');
+        }
+
+        if (this.formHeading) {
+            this.formHeading.classList.remove('hidden');
+        }
+
+        this.formFields.classList.remove('hidden');
+        this.input.focus();
     };
 
     /**
      * Enable form fields and hide loading indicator
      */
-    SendToDevice.prototype.enableForm = function() {
-        this.$input.prop('disabled', false);
-        this.$form.removeClass('loading');
-        this.$spinnerTarget.hide();
+    SendToDevice.prototype.enableForm = function () {
+        this.input.disabled = false;
+        this.form.classList.remove('loading');
+        this.spinnerTarget.style.display = 'none';
     };
 
     /**
      * Disable form fields and show loading indicator
      */
-    SendToDevice.prototype.disableForm = function() {
-        this.$input.prop('disabled', true);
-        this.$form.addClass('loading');
-        this.spinner.spin(this.$spinnerTarget.show()[0]);
+    SendToDevice.prototype.disableForm = function () {
+        this.input.disabled = true;
+        this.form.classList.add('loading');
+        this.spinnerTarget.style.display = 'block';
+        this.spinner.spin(this.spinnerTarget);
     };
 
     /**
@@ -194,88 +135,142 @@ if (typeof window.Mozilla === 'undefined') {
      * matches built-in validation in Firefox
      * @param {email}
      */
-    SendToDevice.prototype.checkEmailValidity = function(email) {
+    SendToDevice.prototype.checkEmailValidity = function (email) {
         return /\S+@\S+/.test(email);
+    };
+
+    /**
+     * Helper function to serialize form data for XHR request.
+     */
+    SendToDevice.prototype.serialize = function () {
+        var q = [];
+        for (var i = 0; i < this.form.elements.length; i++) {
+            var elem = this.form.elements[i];
+            if (elem.name) {
+                q.push(elem.name + '=' + encodeURIComponent(elem.value));
+            }
+        }
+        var formData = q.join('&');
+
+        return formData;
     };
 
     /**
      * Handle form submission via XHR
      */
-    SendToDevice.prototype.onFormSubmit = function(e) {
+    SendToDevice.prototype.onFormSubmit = function (e) {
         e.preventDefault();
 
         var self = this;
-        var action = this.$form.attr('action');
-        var formData = this.$form.serialize();
+        var action = this.form.getAttribute('action');
+        var formData = this.serialize();
 
         this.disableForm();
 
-        // if we know the user has not been prompted to enter an SMS number,
         // perform some basic email validation before submitting the form.
-        if (!this.smsEnabled && !this.checkEmailValidity(this.$input.val())) {
+        if (!this.checkEmailValidity(this.input.value)) {
             this.onFormError(['email']);
             return;
         }
 
-        if (SendToDevice.COUNTRY_CODE) {
-            formData += '&country=' + SendToDevice.COUNTRY_CODE;
-        }
+        var xhr = new XMLHttpRequest();
 
-        // else POST and let the server work out whether the input is a
-        // valid email address or US phone number.
-        $.post(action, formData)
-            .done(function(data) {
-                if (data.success) {
-                    self.onFormSuccess(data.success);
-                } else if (data.errors) {
-                    self.onFormError(data.errors);
+        xhr.onload = function (r) {
+            if (r.target.status >= 200 && r.target.status < 300) {
+                var response = r.target.response || r.target.responseText;
+
+                if (typeof response !== 'object') {
+                    response = JSON.parse(response);
                 }
-            })
-            .fail(function(error) {
-                self.onFormFailure(error);
-            });
+
+                if (response.success) {
+                    self.onFormSuccess(response.success);
+                } else {
+                    self.onFormError(response.errors);
+                }
+            } else {
+                self.onFormFailure();
+            }
+        };
+
+        xhr.onerror = function (e) {
+            self.onFormFailure(e);
+        };
+
+        xhr.open('POST', action, true);
+        xhr.setRequestHeader(
+            'Content-type',
+            'application/x-www-form-urlencoded'
+        );
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.timeout = 5000;
+        xhr.ontimeout = self.onFormFailure;
+        xhr.responseType = 'json';
+        xhr.send(formData);
     };
 
-    SendToDevice.prototype.onFormSuccess = function() {
-        this.$errorList.addClass('hidden');
-        this.$formFields.addClass('hidden');
-        this.$formHeading.addClass('hidden');
-        this.$thankyou.removeClass('hidden');
+    SendToDevice.prototype.onFormSuccess = function () {
+        this.errorList.classList.add('hidden');
+        this.formFields.classList.add('hidden');
+
+        if (this.formHeading) {
+            this.formHeading.classList.add('hidden');
+        }
+
+        for (var i = 0; i < this.thankyou.length; i++) {
+            this.thankyou[i].classList.remove('hidden');
+        }
+
         this.enableForm();
 
-        // track signup type in GA
-        var isEmail = this.checkEmailValidity(this.$input.val());
-
         window.dataLayer.push({
-            'event': 'send-to-device-success',
-            'input': isEmail ? 'email-address' : 'phone-number'
+            event: 'send-to-device-success',
+            input: 'email-address'
         });
     };
 
-    SendToDevice.prototype.onFormError = function(errors) {
+    SendToDevice.prototype.onFormError = function (errors) {
         var errorClass;
-        this.$errorList.find('li').hide();
-        this.$errorList.removeClass('hidden');
+        var errorListItems = this.errorList.querySelectorAll('li');
 
-        if ($.inArray('platform', errors) !== -1) {
+        for (var i = 0; i < errorListItems.length; i++) {
+            errorListItems[i].style.display = 'none';
+        }
+
+        this.errorList.classList.remove('hidden');
+
+        if (errors.indexOf('platform', errors) !== -1) {
             errorClass = '.system';
-        } else if (this.smsEnabled && $.inArray('number', errors) !== -1) {
-            errorClass = '.sms';
         } else {
             errorClass = '.email';
         }
 
-        this.$errorList.find(errorClass).show();
+        var foundErrors = this.errorList.querySelectorAll(errorClass);
+
+        for (var j = 0; j < foundErrors.length; j++) {
+            foundErrors[j].style.display = 'block';
+        }
+
         this.enableForm();
     };
 
-    SendToDevice.prototype.onFormFailure = function() {
-        this.$errorList.find('li').hide();
-        this.$errorList.removeClass('hidden');
-        this.$errorList.find('.system').show();
+    SendToDevice.prototype.onFormFailure = function () {
+        var errorListItems = this.errorList.querySelectorAll('li');
+
+        for (var i = 0; i < errorListItems.length; i++) {
+            errorListItems[i].style.display = 'none';
+        }
+
+        this.errorList.classList.remove('hidden');
+
+        var foundErrors = this.errorList.querySelectorAll('.system');
+
+        for (var j = 0; j < foundErrors.length; j++) {
+            foundErrors[j].style.display = 'block';
+        }
+
         this.enableForm();
     };
 
     window.Mozilla.SendToDevice = SendToDevice;
-
-})(window.jQuery);
+})();

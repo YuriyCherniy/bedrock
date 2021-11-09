@@ -1,10 +1,12 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
-{% extends "base-protocol.html" %}
+{% extends "base-protocol-mozilla.html" %}
 
-{% block page_title %}{{ _('Transparency Report') }}{% endblock %}
+{% block page_title %}Transparency Report{% endblock %}
 
 {% block page_css %}
 {{ css_bundle('about-transparency') }}
@@ -17,12 +19,12 @@
 {% block content %}
 <main role="main">
   <header class="c-page-header">
-    <div class="mzp-l-content l-content-narrow">
+    <div class="mzp-l-content mzp-t-content-lg">
       {% block report_title %}{% endblock %}
     </div>
   </header>
 
-  <div class="mzp-l-content l-content-narrow">
+  <div class="mzp-l-content mzp-t-content-lg">
     {% block report_body %}{% endblock %}
   </div>
 

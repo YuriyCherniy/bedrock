@@ -1,4 +1,10 @@
-(function() {
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+(function () {
     'use strict';
 
     var strings;
@@ -9,8 +15,7 @@
      * Check for feature support
      */
     function supportsBaselineJS() {
-        return 'querySelectorAll' in document &&
-               'addEventListener' in window;
+        return 'querySelectorAll' in document && 'addEventListener' in window;
     }
 
     /**
@@ -31,7 +36,7 @@
         button.textContent = strings.dataset.choicesButton;
         button.setAttribute('id', 'choose');
         button.setAttribute('type', 'button');
-        button.className = 'mzp-c-button mzp-t-primary mzp-t-download mzp-t-small';
+        button.className = 'mzp-c-button mzp-t-primary mzp-t-download mzp-t-md';
 
         container.appendChild(copyContainer);
         container.appendChild(button);
@@ -39,14 +44,18 @@
         section.appendChild(container);
 
         // handle clicks on the data choices "Choose" button
-        $('#choose').on('click', function() {
-            // if the uitour did not load, just return
-            if (Mozilla.UITour === undefined) {
-                return;
-            }
+        document.getElementById('choose').addEventListener(
+            'click',
+            function () {
+                // if the uitour did not load, just return
+                if (Mozilla.UITour === undefined) {
+                    return;
+                }
 
-            Mozilla.UITour.openPreferences('privacy-reports');
-        });
+                Mozilla.UITour.openPreferences('privacy-reports');
+            },
+            false
+        );
     }
 
     // Don't execute if features aren't supported and client isn't desktop Firefox
@@ -59,10 +68,9 @@
         if (Mozilla.UITour === undefined) {
             return;
         } else {
-            Mozilla.UITour.ping(function() {
+            Mozilla.UITour.ping(function () {
                 addDataChoicesWidget(initialTopic);
             });
         }
     }
-
 })();

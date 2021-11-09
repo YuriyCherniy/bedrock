@@ -1,17 +1,16 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import codecs
 import logging
 import os.path
-from time import mktime
 from io import StringIO
+from time import mktime
 
 from django.conf import settings
 from django.core.cache import caches
 from django.utils.http import http_date
-
 
 log = logging.getLogger(__name__)
 
@@ -21,12 +20,12 @@ class ExternalFile:
         try:
             fileinfo = settings.EXTERNAL_FILES[file_id]
         except KeyError:
-            raise ValueError('No external file with the {0} ID.'.format(file_id))
+            raise ValueError("No external file with the {0} ID.".format(file_id))
 
-        self._cache = caches['externalfiles']
+        self._cache = caches["externalfiles"]
         self.file_id = file_id
-        self.name = fileinfo['name']
-        self.cache_key = 'externalfile:{}'.format(self.file_id)
+        self.name = fileinfo["name"]
+        self.cache_key = "externalfile:{}".format(self.file_id)
         self.file_path = os.path.join(settings.EXTERNAL_FILES_PATH, self.name)
 
     @property
@@ -75,11 +74,11 @@ class ExternalFile:
         :return: str or None
         :raises: ValueError
         """
-        with codecs.open(self.file_path, encoding='utf-8') as fp:
+        with codecs.open(self.file_path, encoding="utf-8") as fp:
             content = fp.read()
 
         if not content:
-            raise ValueError('%s is empty' % self.name)
+            raise ValueError("%s is empty" % self.name)
 
         return self.validate_content(content)
 
@@ -92,7 +91,7 @@ class ExternalFile:
     def update(self):
         from bedrock.externalfiles.models import ExternalFile as EFModel
 
-        log.info('Updating {0}.'.format(self.name))
+        log.info("Updating {0}.".format(self.name))
         content = self.validate_file()
         fo = self.file_object
         if fo:
@@ -101,7 +100,7 @@ class ExternalFile:
         else:
             EFModel.objects.create(name=self.file_id, content=content)
 
-        log.info('Successfully updated {0}.'.format(self.name))
+        log.info("Successfully updated {0}.".format(self.name))
         return True
 
     def clear_cache(self):

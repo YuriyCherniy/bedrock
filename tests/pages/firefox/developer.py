@@ -1,19 +1,19 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 from selenium.webdriver.common.by import By
 
-from pages.firefox.base import FirefoxBasePage
+from pages.base import BasePage
 from pages.regions.download_button import DownloadButton
 
 
-class DeveloperPage(FirefoxBasePage):
+class DeveloperPage(BasePage):
 
-    URL_TEMPLATE = '/{locale}/firefox/developer/'
+    _URL_TEMPLATE = "/{locale}/firefox/developer/"
 
-    _primary_download_locator = (By.ID, 'intro-download')
-    _secondary_download_locator = (By.ID, 'footer-download')
+    _primary_download_locator = (By.ID, "intro-download")
+    _secondary_download_locator = (By.ID, "footer-download")
 
     @property
     def primary_download_button(self):

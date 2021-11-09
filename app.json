@@ -11,6 +11,8 @@
     "CONTENT_CARDS_URL": "https://www-dev.allizom.org/media/",
     "CSP_DEFAULT_SRC": "*.allizom.org",
     "CSP_EXTRA_FRAME_SRC": "*.mozaws.net",
+    "CSP_REPORT_ENABLE": "True",
+    "CSP_REPORT_URI": "https://sentry.prod.mozaws.net/api/156/security/?sentry_key=b89cacf912c24702a2fa6e3dc4610ade",
     "DB_DOWNLOAD_IGNORE_GIT": "True",
     "DEBUG": "False",
     "DEV": "True",
@@ -18,12 +20,12 @@
     "LOG_LEVEL": "INFO",
     "PROD_DETAILS_STORAGE": "product_details.storage.PDDatabaseStorage",
     "RUN_SUPERVISOR": "True",
+    "SECURE_SSL_REDIRECT": "True",
     "SECRET_KEY": {
       "description": "A secret key for verifying the integrity of signed cookies, though we don't use them.",
       "generator": "secret"
     },
-    "SENTRY_DSN": {
-      "description": "Configure error reporting to Sentry"
-    }
+    "SENTRY_DSN": "https://b89cacf912c24702a2fa6e3dc4610ade@sentry.prod.mozaws.net/156",
+    "WEB_CONCURRENCY": "2"
   }
 }

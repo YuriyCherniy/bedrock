@@ -1,7 +1,9 @@
 settings_local.py
 settings/local.py
 */settings/local.py
-*.py[co]
+__pycache__/
+*.py[cod]
+*$py.class
 *.sw[po]
 .coverage
 .jshintrc
@@ -19,7 +21,6 @@ build
 tmp/*
 *~
 .#*
-*.less.css
 db.sql
 /locale
 /results
@@ -33,6 +34,7 @@ bedrock_db_info.json
 james.ini
 test-results.xml
 tests/unit/coverage
+python_coverage/
 /git-repos
 /bedrock/externalfiles/files_cache
 supervisord.log
@@ -47,10 +49,11 @@ tests/functional/assets
 root_files/sitemap*.xml
 root_files/*/sitemap.xml
 root_files/sitemap.json
+root_files/etags.json
 node_modules
-package-lock.json
 .vscode/
 static_build
 static_final
 static
+assets
 npm-debug.log

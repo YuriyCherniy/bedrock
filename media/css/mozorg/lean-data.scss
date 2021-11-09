@@ -1,29 +1,26 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
 
-@import '../../protocol/css/includes/lib';
-@import '../../protocol/css/components/call-out';
-@import '../../protocol/css/components/hero';
-@import '../../protocol/css/templates/card-layout';
+@import '~@mozilla-protocol/core/protocol/css/includes/lib';
+@import '~@mozilla-protocol/core/protocol/css/components/call-out';
+@import '~@mozilla-protocol/core/protocol/css/components/card';
+@import '~@mozilla-protocol/core/protocol/css/components/hero';
+@import '~@mozilla-protocol/core/protocol/css/components/split';
+@import '~@mozilla-protocol/core/protocol/css/components/section-heading';
+@import '~@mozilla-protocol/core/protocol/css/templates/card-layout';
+@import '~@mozilla-protocol/core/protocol/css/templates/multi-column';
 
-.t-lg {
-    max-width: $content-lg;
-}
 
 .c-section-title {
-    @include text-display-md;
+    @include text-title-md;
 }
 
 .c-subsection-title {
-    @include text-display-sm;
-}
-
-.u-center {
-    text-align: center;
+    @include text-title-sm;
 }
 
 .mzp-c-card .mzp-c-card-media-wrapper {
@@ -34,16 +31,7 @@ $image-path: '/media/protocol/img';
     margin-top: $spacing-lg;
 }
 
-.mzp-c-hero {
-    background: $color-gray-20;
-
-    .mzp-c-hero-desc {
-        font-weight: bold;
-    }
-}
-
 .principles-other {
-    background: $color-gray-20;
     margin-top: $layout-lg;
     padding: $spacing-lg 0;
 
@@ -53,14 +41,14 @@ $image-path: '/media/protocol/img';
         .mzp-c-card-block-link:hover,
         .mzp-c-card .mzp-c-card-block-link:active,
         .mzp-c-card .mzp-c-card-block-link:focus {
-            box-shadow: 0 0 0 4px $color-gray-30;
+            box-shadow: 0 0 0 4px $color-marketing-gray-30;
         }
     }
 }
 
 .c-highlight {
-    background: $color-gray-20;
-    border-radius: 4px;
+    background: $color-marketing-gray-20;
+    border-radius: $border-radius-sm;
     margin: $layout-md 0 $layout-lg;
     padding: $spacing-md;
 }
@@ -76,18 +64,10 @@ $image-path: '/media/protocol/img';
 }
 
 .mzp-c-call-out-compact.contact {
-    background-color: $color-gray-30;
+    background-color: $color-marketing-gray-30;
 }
 
 @media #{$mq-md} {
-    @supports (display: grid) {
-        .l-columns-two {
-            display: grid;
-            grid-gap: $spacing-xl;
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
     .mzp-c-hero {
         padding: 0;
         margin-bottom: $layout-lg;

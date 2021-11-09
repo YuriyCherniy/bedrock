@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 from django.db import models
 from django.db.utils import DatabaseError
 
 from jinja2 import Markup
-from raven.contrib.django.raven_compat.models import client as sentry_client
+from sentry_sdk import capture_exception
 
-from bedrock.pocketfeed.api import get_articles_data, complete_articles_data
+from bedrock.pocketfeed.api import complete_articles_data, get_articles_data
 
 
 class PocketArticleManager(models.Manager):
@@ -15,10 +19,10 @@ class PocketArticleManager(models.Manager):
         # request data from the API
         articles = get_articles_data(count=count)
 
-        if articles and len(articles['recommendations']) > 0:
+        if articles and len(articles["recommendations"]) > 0:
             # if API gave us data, insert/update new data
             # returns tuple: number updated, number deleted
-            return self.update_articles(articles['recommendations'])
+            return self.update_articles(articles["recommendations"])
 
         # no data returned. something wrong.
         return None, None
@@ -32,20 +36,20 @@ class PocketArticleManager(models.Manager):
         for article in articles:
             # apparently it's possible for an article to be
             # in the feed multiple times ¯\_(ツ)_/¯
-            if article['id'] in article_ids:
+            if article["id"] in article_ids:
                 continue
 
-            article_ids.append(article['id'])
+            article_ids.append(article["id"])
 
             try:
                 # look for an object in the db with the article's id
-                obj = self.get(pocket_id=article['id'])
+                obj = self.get(pocket_id=article["id"])
             except PocketArticle.DoesNotExist:
                 # this article from Pocket will be added to the db
                 articles_to_update.append((None, article))
             except PocketArticle.MultipleObjectsReturned:
                 # multiple articles with the same ID snuck in. Fix that here.
-                self.filter(pocket_id=article['id']).delete()
+                self.filter(pocket_id=article["id"]).delete()
                 articles_to_update.append((None, article))
             else:
                 # this existing 'obj' will be updated in the db with
@@ -59,7 +63,7 @@ class PocketArticleManager(models.Manager):
         for obj, article in articles_to_update:
             try:
                 if obj:
-                    if obj.time_shared != article['time_shared']:
+                    if obj.time_shared != article["time_shared"]:
                         for key, value in article.items():
                             setattr(obj, key, value)
                         obj.save()
@@ -68,7 +72,7 @@ class PocketArticleManager(models.Manager):
                     self.create(**article)
                     update_count += 1
             except DatabaseError:
-                sentry_client.captureException()
+                capture_exception()
                 raise
 
         # clean up after changes
@@ -92,8 +96,8 @@ class PocketArticle(models.Model):
     objects = PocketArticleManager()
 
     class Meta:
-        get_latest_by = 'time_shared'
-        ordering = ['-time_shared']
+        get_latest_by = "time_shared"
+        ordering = ["-time_shared"]
 
     def __str__(self):
         return self.title

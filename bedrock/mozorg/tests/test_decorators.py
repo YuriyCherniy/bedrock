@@ -1,6 +1,6 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import time
 from math import floor
@@ -8,8 +8,7 @@ from math import floor
 from django.test import RequestFactory
 from django.utils.http import parse_http_date
 
-from bedrock.mozorg.tests import TestCase
-from bedrock.mozorg.tests import views
+from bedrock.mozorg.tests import TestCase, views
 
 
 class ViewDecoratorTests(TestCase):
@@ -20,13 +19,13 @@ class ViewDecoratorTests(TestCase):
         """
         Should have appropriate Cache-Control and Expires headers.
         """
-        test_request = self.rf.get('/hi-there-dude/')
+        test_request = self.rf.get("/hi-there-dude/")
         resp = view(test_request)
         num_seconds = hours * 60 * 60
-        self.assertEqual(resp['cache-control'], 'max-age=%d' % num_seconds)
+        self.assertEqual(resp["cache-control"], "max-age=%d" % num_seconds)
 
         now_date = floor(time.time())
-        exp_date = parse_http_date(resp['expires'])
+        exp_date = parse_http_date(resp["expires"])
         self.assertAlmostEqual(now_date + num_seconds, exp_date, delta=2)
 
     def test_cache_headers_48_hours(self):

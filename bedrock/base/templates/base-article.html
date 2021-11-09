@@ -1,6 +1,12 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
 {% from "macros-protocol.html" import sidemenu_lists with context %}
 
-{% extends 'base-protocol.html' %}
+{% extends 'base-protocol-mozilla.html' %}
 
 {% block site_css %}
   {{ super() }}
@@ -8,6 +14,8 @@
 {% endblock %}
 
 {% block body_id %}{{ body_id }}{% endblock %}
+
+{% block body_class %}{{ body_class }}{% endblock %}
 
 {% block content %}
   {% block main_feature %}{% endblock %}

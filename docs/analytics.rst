@@ -1,6 +1,6 @@
 .. This Source Code Form is subject to the terms of the Mozilla Public
 .. License, v. 2.0. If a copy of the MPL was not distributed with this
-.. file, You can obtain one at http://mozilla.org/MPL/2.0/.
+.. file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 .. _analytics:
 
@@ -68,17 +68,21 @@ For all generic CTA links and <button> elements, add these data attributes (* in
 |    data-cta-position     | Location of CTA on the page (e.g. 'primary', 'secondary', 'header') |
 +--------------------------+---------------------------------------------------------------------+
 
-For all download buttons, add these data attributes:
+For all download buttons, add these data attributes (* indicates a required attribute). Note that ``data-download-name`` and ``data-download-version`` should be included for download buttons that serve multiple platforms. For mobile specific store badges, they are not strictly required.
 
-+--------------------------+--------------------------------+
-|    Data Attribute        |        Expected Value          |
-+==========================+================================+
-|    data-link-type        | 'Desktop', 'Android', or 'iOS' |
-+--------------------------+--------------------------------+
-|    data-download-os      | name or text of the link       |
-+--------------------------+--------------------------------+
-|    data-download-version |'standard', 'developer', 'beta' |
-+--------------------------+--------------------------------+
++---------------------------+-----------------------------------------------------------------------------------------------+
+|    Data Attribute         |        Expected Value                                                                         |
++===========================+===============================================================================================+
+|    data-link-type *       | 'download'                                                                                    |
++---------------------------+-----------------------------------------------------------------------------------------------+
+|    data-download-os *     | 'Desktop', 'Android', 'iOS'                                                                   |
++---------------------------+-----------------------------------------------------------------------------------------------+
+|    data-download-name     | 'Windows 32-bit', 'Windows 64-bit', 'macOS', 'Linux 32-bit', 'Linux 64-bit', 'iOS', 'Android' |
++---------------------------+-----------------------------------------------------------------------------------------------+
+|    data-download-version  | 'win', 'win64', 'osx', 'linux', 'linux64', 'ios', 'android'                                   |
++---------------------------+-----------------------------------------------------------------------------------------------+
+|    data-download-location | 'primary', 'secondary', 'nav', 'other'                                                        |
++---------------------------+-----------------------------------------------------------------------------------------------+
 
 For all links to accounts.firefox.com use these data attributes (* indicates a required attribute):
 

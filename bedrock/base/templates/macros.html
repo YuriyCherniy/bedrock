@@ -1,6 +1,8 @@
-{# This Source Code Form is subject to the terms of the Mozilla Public
- # License, v. 2.0. If a copy of the MPL was not distributed with this
- # file, You can obtain one at http://mozilla.org/MPL/2.0/. -#}
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
 
 {# side_nav_lists() takes a list of lists and makes nav menus
   The list has the link, a body_id, and a the text to display
@@ -43,19 +45,8 @@
   {{ 'https://www.twitter.com/intent/tweet?url=%s&text=%s'|format(url|urlencode, tweet_text|urlencode)|e }}
 {%- endmacro %}
 
-{% macro share_cta(cta_text, share_urls, share_text, id, class) %}
-<aside class="mozilla-share-cta{% if class %} {{ class }}{% endif %}" tabindex="0"{% if id %} id="{{ id }}"{% endif -%}>
-  <h3>{{ cta_text }}</h3>
-  <ul>
-    <li><a class="twitter" href="{{ 'https://www.twitter.com/intent/tweet?url=%s&text=%s'|format(share_urls.get('twitter')|urlencode, share_text|urlencode)|e }}" title="Twitter" data-link-type="social share" data-link-name="Twitter">Twitter</a></li>
-    <li><a class="facebook" href="{{ 'https://www.facebook.com/sharer/sharer.php?u=%s'|format(share_urls.get('facebook')|urlencode)|e }}" title="Facebook" data-link-type="social share" data-link-name="Facebook">Facebook</a></li>
-    <li><a class="g-plus" href="{{ 'https://plus.google.com/share?url=%s&hl=%s'|format(share_urls.get('googleplus')|urlencode, LANG)|e }}" title="Google+" data-link-type="social share" data-link-name="Google+">Google+</a></li>
-  </ul>
-</aside>
-{%- endmacro %}
-
 {% macro google_play_button(class_name='', extra_data_attributes={}, extra_img_attributes={}, href=settings.GOOGLE_PLAY_FIREFOX_LINK_UTMS, id='', product='Firefox', target='') -%}
-{% set optional_img_attributes = {'alt': _('Get it on Google Play'), 'width': '152', 'height': '45', 'l10n': True} %}
+{% set optional_img_attributes = {'alt': ftl('download-button-google-play'), 'width': '152', 'height': '45', 'l10n': True} %}
 {% do optional_img_attributes.update(extra_img_attributes) %}
 <a{% if class_name %} class="{{ class_name }}"{% endif %}{% if id %} id="{{ id }}"{% endif %}{% if target %} target="{{ target }}" rel="external noopener noreferrer"{% else %} rel="external"{% endif %} href="{{ href }}"{% if product in ['Firefox', 'Focus'] %} data-link-type="download" data-download-os="Android"{% endif %}{% if product == 'Firefox' %} data-mozillaonline-link="{{ settings.GOOGLE_PLAY_FIREFOX_LINK_MOZILLAONLINE }}"{% endif %}{% for attr, val in extra_data_attributes.items() %} data-{{ attr }}="{{ val }}"{% endfor %}>
   {{ high_res_img('img/firefox/android/btn-google-play.png', optional_img_attributes) }}
@@ -64,30 +55,23 @@
 
 
 {# Docs: https://bedrock.readthedocs.io/en/latest/send-to-device.html #}
-{% macro send_to_device(platform='all', product='firefox', message_set='default', id='send-to-device', class='horizontal', include_title=True, title_text=None, input_label=None, legal_note_email=None, legal_note_sms=None, spinner_color='#000') %}
-  <section id="{{ id }}" class="send-to-device {{ class }}" data-countries="{{ send_to_device_sms_countries(message_set) }}" data-spinner-color="{{ spinner_color }}">
+{% macro send_to_device(platform='all', product='firefox', message_set='default', id='send-to-device', class='horizontal', include_title=True, title_text=None, input_label=None, legal_note_email=None, spinner_color='#000', button_class=None) %}
+  <section id="{{ id }}" class="send-to-device {{ class }}" data-spinner-color="{{ spinner_color }}">
     <div class="form-container">
       {% if include_title %}
         <h2 class="form-heading">
         {% if title_text %}
           {{ title_text }}
         {% else %}
-          {{ _('Send Firefox to your smartphone or tablet') }}
+          {{ ftl('send-to-device-send-firefox') }}
         {% endif %}
         </h2>
       {% endif %}
-      <h2 class="thank-you hidden">{{ _('Your download link was sent.') }}</h2>
+      <h2 class="mzp-u-title-xs thank-you hidden">{{ ftl('send-to-device-your-download-link') }}</h2>
       <form class="send-to-device-form" action="{{ url('firefox.send-to-device-post') }}" method="post">
-        <ul class="error-list hidden">
-          <li class="sms">
-          {% if l10n_has_tag('sendto_updates_bug1395342') %}
-            {{ _('Sorry, we can’t send SMS messages to this phone number.') }}
-          {% else %}
-            {{ _('Sorry. This number isn’t valid. Please enter a U.S. phone number.') }}
-          {% endif %}
-          </li>
-          <li class="email">{{ _('Please enter an email address.') }}</li>
-          <li class="system">{{ _('An error occurred in our system. Please try again later.') }}</li>
+        <ul class="mzp-c-form-errors hidden">
+          <li class="email">{{ ftl('send-to-device-please-enter-an-email') }}</li>
+          <li class="system">{{ ftl('send-to-device-an-error-occured') }}</li>
         </ul>
         <div class="send-to-device-form-fields">
           <div class="platform-container">
@@ -96,47 +80,31 @@
             <input type="hidden" name="message-set" value="{{ message_set }}">
             <input type="hidden" name="product" value="{{ product }}">
           </div>
-          <div class="inline-field">
-            <label class="form-input-label" for="{{ id }}-input" data-alt="{% if l10n_has_tag('sendto_updates_bug1395342') %}{{ _('Enter your email or phone number') }}{% else %}{{ _('Enter your email or 10-digit phone number') }}{% endif %}">
+          <div class="mzp-c-field mzp-l-stretch">
+            <label class="mzp-c-field-label" for="{{ id }}-input">
               {% if input_label %}
                 {{ input_label }}
               {% else %}
-                {{ _('Enter your email') }}
+                {{ ftl('send-to-device-enter-your-email') }}
               {% endif %}
             </label>
-            <div class="form-input">
-              <input id="{{ id }}-input" class="send-to-device-input" name="phone-or-email" type="text" required>
-            </div>
-            <div class="form-submit">
-              <button type="submit" class="button mzp-c-button mzp-t-product">{{ _('Send') }}</button>
-            </div>
+            <input id="{{ id }}-input" class="mzp-c-field-control send-to-device-input" name="s2d-email" type="text" required>
           </div>
-          <p class="legal sms">
-            {% if legal_note_sms %}
-              {{ legal_note_sms }}
-            {% else %}
-              {% if l10n_has_tag('sendto_updates_bug1395342') %}
-                {{ _('SMS service available in select countries only. SMS &amp; data rates may apply.') }}
-              {% else %}
-                {{ _('SMS service available to U.S. phone numbers only. SMS &amp; data rates may apply.') }}
-              {% endif %}
-                {{ _('The intended recipient of the email or SMS must have consented.')}}
-            {% endif %}
-            <a href="{{ url('privacy.notices.websites') }}#campaigns" class="more">{{ _('Learn more')}}</a>
-          </p>
-          <p class="legal email">
+          <div class="mzp-c-button-container mzp-l-stretch">
+            <button type="submit" class="button mzp-c-button {% if button_class %} {{ button_class }} {% else %} mzp-t-product {% endif %}">{{ ftl('send-to-device-send') }}</button>
+          </div>
+          <p class="mzp-c-button-info email">
             {% if legal_note_email %}
               {{ legal_note_email }}
             {% else %}
-              {{ _('The intended recipient of the email must have consented.') }}
+              {{ ftl('send-to-device-intended-recipient-email') }}
             {% endif %}
-            <a href="{{ url('privacy.notices.websites') }}#campaigns" class="more">{{ _('Learn more')}}</a>
+            <a href="{{ url('privacy.notices.websites') }}#campaigns" class="more">{{ ftl('ui-learn-more') }}</a>
           </p>
         </div>
         <div class="thank-you hidden">
-          <p class="sms">{{ _('Check your device for the email or text message!') }}</p>
-          <p class="email">{{ _('Check your device for the email!') }}</p>
-          <a href="#" role="button" class="more send-another">{{ _('Send to another device') }}</a>
+          <p class="email">{{ ftl('send-to-device-check-your-device-email') }}</p>
+          <a href="#" role="button" class="more send-another">{{ ftl('send-to-device-send-to-another') }}</a>
         </div>
         <div class="loading-spinner"></div>
       </form>
@@ -144,112 +112,10 @@
   </section>
 {%- endmacro %}
 
-{# Docs: https://bedrock.readthedocs.io/en/latest/firefox-accounts.html#linking-to-accountsfirefoxcom #}
-{% macro fxa_link_fragment(entrypoint, entrypoint_experiment=None, entrypoint_variation=None, service_type='sync', action='signin', form_type='button', utm_campaign=None, utm_content=None, utm_term=None) -%}
-  {% set fxa_path = '' %}
-  {% set fxa_queries = [
-    'form_type=' ~ form_type,
-    'entrypoint=' ~ entrypoint,
-    'context=fx_desktop_v3',
-    'utm_source=' ~ entrypoint,
-    'utm_medium=referral'
-  ] %}
-
-  {% if action == 'signup' %}
-    {% set fxa_path = 'signup?' %}
-  {% elif action == 'signin' %}
-    {% set fxa_path = 'signin?' %}
-  {% else %}
-    {% do fxa_queries.insert(0, 'action=email') %}
-  {% endif %}
-
-  {# utm_campaign is optional #}
-  {% if utm_campaign %}
-    {% do fxa_queries.append('utm_campaign=' ~ utm_campaign) %}
-  {% endif %}
-
-  {# utm_content is optional #}
-  {% if utm_content %}
-    {% do fxa_queries.append('utm_content=' ~ utm_content) %}
-  {% endif %}
-
-  {# utm_term is optional #}
-  {% if utm_term %}
-    {% do fxa_queries.append('utm_term=' ~ utm_term) %}
-  {% endif %}
-
-  {# entrypoint_experiment is optional #}
-  {% if entrypoint_experiment %}
-    {% do fxa_queries.append('entrypoint_experiment=' ~ entrypoint_experiment) %}
-  {% endif %}
-
-  {# entrypoint_variation is optional #}
-  {% if entrypoint_variation %}
-    {% do fxa_queries.append('entrypoint_variation=' ~ entrypoint_variation) %}
-  {% endif %}
-
-  {# service_type is option for Firefox 71+ (issue #8198) #}
-  {% if service_type %}
-    {% do fxa_queries.insert(0, 'service=' ~ service_type) %}
-  {% endif %}
-
-  href="{{ settings.FXA_ENDPOINT }}{{ fxa_path }}{{ fxa_queries|join('&') }}" data-mozillaonline-link="{{ settings.FXA_ENDPOINT_MOZILLAONLINE }}{{ fxa_path }}{{ fxa_queries|join('&') }}"
-
-{%- endmacro %}
-
-{# Docs: https://bedrock.readthedocs.io/en/latest/firefox-accounts.html#linking-to-accountsfirefoxcom #}
-{% macro fxa_cta_link(entrypoint, button_text, entrypoint_experiment=None, entrypoint_variation=None, form_type='button', service_type='sync', action='signin', account_id=None, button_class=None, utm_campaign=None, utm_content=None, utm_term=None) %}
-  <a data-action="{{ settings.FXA_ENDPOINT }}" {{ fxa_link_fragment(entrypoint=entrypoint, entrypoint_experiment=entrypoint_experiment, entrypoint_variation=entrypoint_variation, form_type=form_type, service_type=service_type, action=action, utm_campaign=utm_campaign, utm_content=utm_content, utm_term=utm_term) }} class="js-fxa-cta-link{% if button_class %} {{ button_class }}{% endif %}" data-cta-text="Create account" data-cta-type="fxa-sync" data-cta-position="{{ button_location }}" {%if account_id %}id="{{ account_id }}"{% endif %}>
-    {{ button_text }}
-  </a>
-{%- endmacro %}
-
-{# Docs: https://bedrock.readthedocs.io/en/latest/firefox-accounts.html#linking-to-monitorfirefoxcom #}
-{% macro monitor_button(entrypoint, entrypoint_experiment=None, entrypoint_variation=None, form_type='button', utm_campaign=None, utm_content=None, utm_term=None, button_text=None, button_class='mzp-c-button mzp-t-product', cta_type=None, cta_position=None) -%}
-  {% set fxa_queries = [
-    'form_type=' ~ form_type,
-    'entrypoint=' ~ entrypoint,
-    'utm_source=' ~ entrypoint,
-    'utm_campaign=' ~ utm_campaign,
-    'utm_medium=referral'
-  ] %}
-
-  {# utm_content is optional #}
-  {% if utm_content %}
-    {% do fxa_queries.append('utm_content=' ~ utm_content) %}
-  {% endif %}
-
-  {# utm_term is optional #}
-  {% if utm_term %}
-    {% do fxa_queries.append('utm_term=' ~ utm_term) %}
-  {% endif %}
-
-  {# entrypoint_experiment is optional #}
-  {% if entrypoint_experiment %}
-    {% do fxa_queries.append('entrypoint_experiment=' ~ entrypoint_experiment) %}
-  {% endif %}
-
-  {# entrypoint_variation is optional #}
-  {% if entrypoint_variation %}
-    {% do fxa_queries.append('entrypoint_variation=' ~ entrypoint_variation) %}
-  {% endif %}
-
-  <a data-action="{{ settings.FXA_ENDPOINT }}" href="https://monitor.firefox.com/oauth/init?{{ fxa_queries|join('&') }}" class="js-fxa-cta-link js-fxa-product-button {% if button_class %}{{ button_class }}{% endif %}" data-cta-text="{% if button_text %}{{ button_text }}{% else %}Sign In to Monitor{% endif %}" data-cta-type="{% if cta_type %}{{ cta_type }}{% else %}fxa-monitor{% endif %}" data-cta-position="{% if cta_position %}{{ cta_position }}{% else %}primary{% endif %}">
-    {% if button_text %}
-      {{ button_text }}
-    {% else %}
-      {{ _('Sign In to Monitor') }}
-    {% endif %}
-  </a>
-{%- endmacro %}
-
 {# Docs: https://bedrock.readthedocs.io/en/latest/firefox-accounts.html#signup-form #}
-{% macro fxa_email_form(entrypoint, entrypoint_experiment, entrypoint_variation, utm_campaign=None, utm_content=None, utm_term=None, style=None, class_name='fxa-email-form', form_title=None, intro_text=none, button_text=None, button_class='button button-blue') -%}
-  {% set service  = 'sync' %}
-  <form action="{{ settings.FXA_ENDPOINT }}" data-mozillaonline-action="{{ settings.FXA_ENDPOINT_MOZILLAONLINE }}" id="fxa-email-form" class="{{ class_name }}">
+{% macro fxa_email_form(entrypoint, entrypoint_experiment, entrypoint_variation, context=None, utm_campaign=None, utm_content=None, utm_term=None, style=None, class_name='fxa-email-form', form_title=None, intro_text=none, button_text=None, button_class='mzp-c-button mzp-t-product') -%}
+  <form action="{{ settings.FXA_ENDPOINT }}" data-mozillaonline-action="{{ settings.FXA_ENDPOINT_MOZILLAONLINE }}" id="fxa-email-form" class="mzp-c-form {{ class_name }}">
     <input type="hidden" name="action" value="email" />
-    <input type="hidden" name="context" value="fx_desktop_v3" />
-    <input type="hidden" name="service" value="{{ service }}" />
     <input type="hidden" name="entrypoint" value="{{ entrypoint }}" id="fxa-email-form-entrypoint" />
     <input type="hidden" name="form_type" value="email" />
     {# device_id, flow_id and flow_begin_time will be populated via JS on page load #}
@@ -260,11 +126,11 @@
     <input type="hidden" name="utm_medium" value="referral" id="fxa-email-form-utm-medium" />
 
     {% if entrypoint_experiment %}
-    <input type="hidden" name="entrypoint_experiment" value="{{ entrypoint_experiment }}" id="fxa-email-form-entrypoint-experiment" />
+      <input type="hidden" name="entrypoint_experiment" value="{{ entrypoint_experiment }}" id="fxa-email-form-entrypoint-experiment" />
     {% endif %}
 
     {% if entrypoint_variation %}
-    <input type="hidden" name="entrypoint_variation" value="{{ entrypoint_variation }}" id="fxa-email-form-entrypoint-variation" />
+      <input type="hidden" name="entrypoint_variation" value="{{ entrypoint_variation }}" id="fxa-email-form-entrypoint-variation" />
     {% endif %}
 
     {# utm_campaign is used to identify specific marketing campaigns. (For example: trailhead or skyline) If there is one, the campaign name is prepended to the default value of `fxa-embedded-form`. #}
@@ -288,45 +154,45 @@
       <input type="hidden" name="style" value="{{ style }}" />
     {% endif %}
 
-    {% if form_title %}
-      <h2 class="fxa-email-form-title">{{ form_title }}</h2>
-    {% endif %}
+    <header class="mzp-c-form-header">
+      {% if form_title %}
+        <h2 class="mzp-c-form-title">{{ form_title }}</h2>
+      {% endif %}
 
-    <p class="fxa-email-form-intro">
-    {% if intro_text %}
-      {{ intro_text }}
-    {% else %}
-      {{ _('<strong>Enter your email</strong> to access Firefox Accounts.') }}
-    {% endif %}
-    </p>
+      <p class="fxa-email-form-intro">
+      {% if intro_text %}
+        {{ intro_text }}
+      {% else %}
+        {{ ftl('fxa-form-enter-your-email') }}
+      {% endif %}
+      </p>
+    </header>
 
     <div class="fxa-email-field-container">
-      <p class="field">
-        <label for="fxa-email-field">{{ _('Email address') }}</label>
-        <input type="email" name="email" id="fxa-email-field" class="fxa-email-field" placeholder="user@example.com" required>
-      </p>
+      <div class="mzp-c-field mzp-l-stretch">
+        <label for="mzp-c-field-label">{{ ftl('fxa-form-email-address') }}</label>
+        <input type="email" name="email" id="fxa-email-field" class="mzp-c-field-control" placeholder="user@example.com" required>
+        <p class="mzp-c-field-info">
+          {{ ftl('fxa-form-by-proceeding', url1='https://accounts.firefox.com/legal/terms', url2='https://accounts.firefox.com/legal/privacy') }}
+        </p>
+      </div>
 
-      <p class="agreement">
-        {% trans url1='https://accounts.firefox.com/legal/terms', url2='https://accounts.firefox.com/legal/privacy' %}
-          By proceeding, you agree to the <a href="{{ url1 }}">Terms of Service</a> and
-          <a href="{{ url2 }}">Privacy Notice</a>.
-        {% endtrans %}
-      </p>
-
-      <button
-        type="submit"
-        class="{{ button_class }}"
-        id="fxa-email-form-submit"
-        data-cta-type="fxa-sync"
-        data-cta-text="Register"
-        data-cta-position="primary"
-      >
-      {% if button_text %}
-        {{ button_text }}
-      {% else %}
-        {{ _('Continue') }}
-      {% endif %}
-      </button>
+      <div class="mzp-c-button-container mzp-l-stretch">
+        <button
+          type="submit"
+          class="{{ button_class }}"
+          id="fxa-email-form-submit"
+          data-cta-type="fxa-sync"
+          data-cta-text="Register"
+          data-cta-position="primary"
+        >
+        {% if button_text %}
+          {{ button_text }}
+        {% else %}
+          {{ ftl('fxa-form-continue') }}
+        {% endif %}
+        </button>
+      </div>
     </div>
 
   </form>

@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 /* For reference read the Jasmine and Sinon docs
  * Jasmine docs: http://pivotal.github.io/jasmine/
  * Sinon docs: http://sinonjs.org/docs/
@@ -5,89 +11,90 @@
 
 /* global sinon */
 
-describe('mozilla-lazy-load.js', function() {
-
+describe('mozilla-lazy-load.js', function () {
     'use strict';
 
-    beforeEach(function() {
+    beforeEach(function () {
         window.IntersectionObserver = sinon.stub();
     });
 
-    describe('Mozilla.LazyLoad.init', function() {
+    describe('Mozilla.LazyLoad.init', function () {
+        const selector = '.lazy-image-container img';
 
-        var selector = '.lazy-image-container img';
-
-        afterEach(function(){
-            Mozilla.LazyLoad.supportsInsersectionObserver = typeof IntersectionObserver !== 'undefined';
+        afterEach(function () {
+            Mozilla.LazyLoad.supportsInsersectionObserver =
+                typeof IntersectionObserver !== 'undefined';
         });
 
-        it('should observe images if IntersectionObserver is supported', function() {
+        it('should observe images if IntersectionObserver is supported', function () {
             Mozilla.LazyLoad.supportsInsersectionObserver = true;
             spyOn(Mozilla.LazyLoad, 'observe');
             Mozilla.LazyLoad.init();
             expect(Mozilla.LazyLoad.observe).toHaveBeenCalledWith(selector);
         });
 
-        it('should load all images if IntersectionObserver is not supported', function() {
+        it('should load all images if IntersectionObserver is not supported', function () {
             Mozilla.LazyLoad.supportsInsersectionObserver = false;
             spyOn(Mozilla.LazyLoad, 'loadAllFallback');
             Mozilla.LazyLoad.init();
-            expect(Mozilla.LazyLoad.loadAllFallback).toHaveBeenCalledWith(selector);
+            expect(Mozilla.LazyLoad.loadAllFallback).toHaveBeenCalledWith(
+                selector
+            );
         });
 
-        it('should use a custom selecter when provided', function() {
+        it('should use a custom selecter when provided', function () {
             var customSelector = '.custom-selector img';
             Mozilla.LazyLoad.supportsInsersectionObserver = true;
             spyOn(Mozilla.LazyLoad, 'observe');
             Mozilla.LazyLoad.init(customSelector);
-            expect(Mozilla.LazyLoad.observe).toHaveBeenCalledWith(customSelector);
+            expect(Mozilla.LazyLoad.observe).toHaveBeenCalledWith(
+                customSelector
+            );
         });
 
-        it('should throw an error if passed an invalid custom selector', function() {
-            expect(function() {
-                Mozilla.LazyLoad.init({foo: 'bar'});
+        it('should throw an error if passed an invalid custom selector', function () {
+            expect(() => {
+                Mozilla.LazyLoad.init({ foo: 'bar' });
             }).toThrowError();
         });
     });
 
-    describe('Mozilla.LazyLoad.registerObserver', function() {
-
-        it('should register an IntersectionObserver correctly', function() {
-            spyOn(window, 'IntersectionObserver');
-            var observer = Mozilla.LazyLoad.registerObserver();
-            expect(observer instanceof window.IntersectionObserver).toBeTruthy();
+    describe('Mozilla.LazyLoad.registerObserver', function () {
+        it('should register an IntersectionObserver correctly', function () {
+            const observer = Mozilla.LazyLoad.registerObserver();
+            expect(
+                observer instanceof window.IntersectionObserver
+            ).toBeTruthy();
         });
     });
 
-    describe('Mozilla.LazyLoad.observe', function() {
-
-        var $target;
-
-        beforeEach(function() {
-            var tpl = '<div class="lazy-image-container">' +
-                        '<img class="image1" src="/img/placeholder.png" data-src="/img/foo.png">' +
-                        '<img class="image2" src="/img/placeholder.png" data-src="/img/foo.png">' +
-                      '</div>';
-            $target = $(tpl);
-            $target.appendTo($('body'));
+    describe('Mozilla.LazyLoad.observe', function () {
+        beforeEach(function () {
+            const tpl = `<div class="lazy-image-container">
+                    <img class="image1" src="/img/placeholder.png" data-src="/img/foo.png">
+                    <img class="image2" src="/img/placeholder.png" data-src="/img/foo.png">
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', tpl);
         });
 
-        afterEach(function() {
-            $target.remove();
+        afterEach(function () {
+            const content = document.querySelector('.lazy-image-container');
+            content.parentNode.removeChild(content);
         });
 
-        it('should observe elements as expected', function() {
+        it('should observe elements as expected', function () {
             spyOn(Mozilla.LazyLoad, 'registerObserver').and.returnValue({
                 observe: sinon.spy()
             });
-            var observer = Mozilla.LazyLoad.observe('.lazy-image-container img');
+            const observer = Mozilla.LazyLoad.observe(
+                '.lazy-image-container img'
+            );
             expect(observer.observe.calledTwice).toBeTruthy();
         });
     });
 
-    describe('Mozilla.LazyLoad.observerCallback', function() {
-
-        var changes = [
+    describe('Mozilla.LazyLoad.observerCallback', function () {
+        const changes = [
             {
                 intersectionRatio: 0,
                 target: {
@@ -96,7 +103,7 @@ describe('mozilla-lazy-load.js', function() {
                         src: '/foo/image1.png',
                         srcset: '/foo/image1.png 2x'
                     },
-                    onload: function() {} // eslint-disable-line no-empty-function
+                    onload: function () {} // eslint-disable-line no-empty-function
                 }
             },
             {
@@ -107,7 +114,7 @@ describe('mozilla-lazy-load.js', function() {
                         src: '/foo/image2.png',
                         srcset: '/foo/image2.png 2x'
                     },
-                    onload: function() {} // eslint-disable-line no-empty-function
+                    onload: function () {} // eslint-disable-line no-empty-function
                 }
             },
             {
@@ -118,16 +125,16 @@ describe('mozilla-lazy-load.js', function() {
                         src: '/foo/image3.png',
                         srcset: '/foo/image3.png 2x'
                     },
-                    onload: function() {} // eslint-disable-line no-empty-function
+                    onload: function () {} // eslint-disable-line no-empty-function
                 }
             }
         ];
 
         var observer = {
-            unobserve: function() {} // eslint-disable-line no-empty-function
+            unobserve: function () {} // eslint-disable-line no-empty-function
         };
 
-        it('should lazy load images only when they intersect', function() {
+        it('should lazy load images only when they intersect', function () {
             spyOn(observer, 'unobserve');
             Mozilla.LazyLoad.observerCallback(changes, observer);
             expect(changes[0].target.src).toEqual('/foo/placeholder.png');
@@ -137,55 +144,57 @@ describe('mozilla-lazy-load.js', function() {
 
             expect(changes[1].target.src).toEqual('/foo/image2.png');
             expect(changes[1].target.srcset).toEqual('/foo/image2.png 2x');
-            expect(changes[1].target.onload).toEqual(Mozilla.LazyLoad.onImageLoad);
+            expect(changes[1].target.onload).toEqual(
+                Mozilla.LazyLoad.onImageLoad
+            );
             expect(observer.unobserve).toHaveBeenCalledWith(changes[1].target);
         });
     });
 
-    describe('Mozilla.LazyLoad.onImageLoad', function() {
-
-        var $img;
-
+    describe('Mozilla.LazyLoad.onImageLoad', function () {
         beforeEach(function () {
-            var img = '<img src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">';
-            $img = $(img);
-            $img.appendTo($('body'));
+            const img =
+                '<img class="test-image" src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">';
+            document.body.insertAdjacentHTML('beforeend', img);
         });
 
-        afterEach(function(){
-            $img.remove();
+        afterEach(function () {
+            const content = document.querySelector('.test-image');
+            content.parentNode.removeChild(content);
         });
 
-        it('should remove the data-src attribute', function() {
-            var event = {
-                target: $img[0]
+        it('should remove the data-src attribute', function () {
+            const img = document.querySelector('.test-image');
+            const event = {
+                target: img
             };
             Mozilla.LazyLoad.onImageLoad(event);
-            expect($img.attr('data-src')).toBe(undefined);
-            expect($img.attr('data-src-set')).toBe(undefined);
+            expect(img.getAttribute('data-src')).toBe(null);
+            expect(img.getAttribute('data-src-set')).toBe(null);
         });
     });
 
-    describe('Mozilla.LazyLoad.loadAllFallback', function() {
-
-        var $target;
-
+    describe('Mozilla.LazyLoad.loadAllFallback', function () {
         beforeEach(function () {
-            var tpl = '<div class="observer-list-test">' +
-                        '<img class="image1" src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">' +
-                        '<img class="image2" src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">' +
-                      '</div>';
-            $target = $(tpl);
-            $target.appendTo($('body'));
+            const tpl = `<div class="observer-list-test">
+                    <img class="image1" src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">
+                    <img class="image2" src="/img/placeholder.png" data-src="/img/foo.png" data-srcset="/img/foo.png 2x">
+                </div>`;
+            document.body.insertAdjacentHTML('beforeend', tpl);
         });
 
-        afterEach(function(){
-            $target.remove();
+        afterEach(function () {
+            const content = document.querySelector('.observer-list-test');
+            content.parentNode.removeChild(content);
         });
 
-        it('should register an IntersectionObserver correctly', function() {
-            var image1 = $target.find('.image1')[0];
-            var image2 = $target.find('.image2')[0];
+        it('should register an IntersectionObserver correctly', function () {
+            const image1 = document.querySelector(
+                '.observer-list-test .image1'
+            );
+            const image2 = document.querySelector(
+                '.observer-list-test .image2'
+            );
 
             Mozilla.LazyLoad.loadAllFallback('.observer-list-test img');
 

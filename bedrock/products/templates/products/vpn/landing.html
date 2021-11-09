@@ -1,0 +1,297 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
+{% from "products/vpn/includes/macros.html" import vpn_hero, vpn_conditional_cta, vpn_nav_cta, vpn_content_block, vpn_content_media with context %}
+
+{% extends "products/vpn/base.html" %}
+
+{% block page_title_full %}{{ ftl('vpn-landing-page-title') }}{% endblock %}
+{% block page_title_suffix %}{% endblock %}
+
+{% block page_desc %}{{ ftl('vpn-landing-page-desc', countries=available_countries) }}{% endblock %}
+
+{% block body_id %}mozilla-vpn-landing{% endblock %}
+
+{% set _utm_source = 'www.mozilla.org-vpn-product-page' %}
+{% set _utm_campaign = 'vpn-product-page' %}
+{% set _params = '?utm_source=' ~ _utm_source ~ '&utm_medium=referral&utm_campaign=' ~ _utm_campaign %}
+
+{% block page_css %}
+  {{ css_bundle('mozilla-vpn-landing') }}
+{% endblock %}
+
+{% block site_header %}
+  {% with
+    custom_nav_cta=vpn_nav_cta(
+      link_text=ftl('vpn-shared-subscribe-link'),
+      alt_link_text=ftl('vpn-shared-waitlist-link'),
+      download_link_text=ftl('vpn-shared-sign-in-link'),
+      utm_source=_utm_source,
+      utm_campaign=_utm_campaign,
+    )
+  %}
+    {% include 'includes/protocol/navigation/navigation.html' %}
+  {% endwith %}
+{% endblock %}
+
+{% block sub_navigation %}
+  {% include 'products/vpn/includes/subnav.html' %}
+{% endblock %}
+
+{% block content %}
+<main>
+  {% block hero %}
+    {% call vpn_hero(
+      heading=ftl('vpn-shared-product-name'),
+      subheading=ftl('vpn-landing-hero-sub-heading-v2', fallback='vpn-landing-hero-sub-heading'),
+      desc=ftl('vpn-landing-hero-desc')
+    ) %}
+      {{ vpn_conditional_cta(position='primary') }}
+    {% endcall %}
+  {% endblock %}
+
+  <div class="mzp-l-content mzp-t-content-xl">
+
+    {% call vpn_content_media(
+      heading=ftl('vpn-landing-privacy-heading'),
+      image_url='img/products/vpn/landing/vpn-cntwell-01.png',
+      class_name='vpn-content-media-right-half',
+      has_outline=True,
+      loading='eager'
+    ) %}
+      <p>{{ ftl('vpn-landing-privacy-desc') }}</p>
+    {% endcall %}
+
+    {# note: `id=#pricing` is used as an anchor link from android in-product subscription flows, so do not remove (issue 10039) #}
+    <div id="pricing" class="mzp-is-anchor-link">
+      {% if vpn_available %}
+        {% include 'products/vpn/includes/pricing-variable.html' %}
+      {% else %}
+        <div class="vpn-waitlist-feature-block hide-from-legacy-ie">
+          {% call vpn_content_block(
+            class_name='vpn-content-block-price t-highlight'
+          ) %}
+          <div class="l-columns-two">
+            <div class="l-column-first">
+              <a class="mzp-c-button mzp-t-xl" href="{{ url('products.vpn.invite') }}" data-cta-type="button" data-cta-text="Join the VPN Waitlist" data-cta-position="secondary">
+                {{ ftl('vpn-shared-waitlist-link') }}
+              </a>
+
+              <p class="availability-copy">
+                {{ ftl('vpn-shared-available-countries-v4', fallback='vpn-shared-available-countries-v3') }}
+              </p>
+            </div>
+            <div class="l-column-last">
+              <ul class="mzp-u-list-styled vpn-feature-list">
+                <li class="vpn-feature-list-item">{{ ftl('vpn-shared-features-devices', devices=connect_devices) }}</li>
+                <li class="vpn-feature-list-item">{{ ftl('vpn-shared-features-servers', servers=connect_servers, countries=connect_countries) }}</li>
+                <li class="vpn-feature-list-item">{{ ftl('vpn-shared-features-encrypt') }}</li>
+                <li class="vpn-feature-list-item">{{ ftl('vpn-shared-features-bandwidth') }}</li>
+                <li class="vpn-feature-list-item">{{ ftl('vpn-shared-features-activity') }}</li>
+              </ul>
+            </div>
+          </div>
+          {% endcall %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% include 'products/vpn/includes/featured-press.html' %}
+
+    {% call vpn_content_media(
+      heading=ftl('vpn-landing-fast-secure-heading'),
+      image_url='img/products/vpn/landing/vpn-cntwell-02.png',
+      class_name='vpn-content-media-left-half'
+    ) %}
+      <p>
+        {% if ftl_has_messages('vpn-landing-fast-secure-desc-v2') %}
+          {{ ftl('vpn-landing-fast-secure-desc-v2', wireguard='https://mullvad.net/help/why-wireguard/', attrs='target="_blank" rel="external noopener noreferrer"') }}
+        {% else %}
+          {{ ftl('vpn-landing-fast-secure-desc', mullvad='https://mullvad.net/help/no-logging-data-policy/', wireguard='https://mullvad.net/help/why-wireguard/', attrs='target="_blank" rel="external noopener noreferrer"') }}
+        {% endif %}
+      </p>
+    {% endcall %}
+
+    {% call vpn_content_media(
+      heading=ftl('vpn-landing-brand-trust-heading'),
+      image_url='img/products/vpn/landing/vpn-cntwell-03.png',
+      class_name='vpn-content-media-right-half',
+      has_outline=True
+    ) %}
+      <p>{{ ftl('vpn-landing-brand-trust-desc', url=url('mozorg.about.manifesto')) }}</p>
+    {% endcall %}
+
+    {% if vpn_available %}
+      {% call vpn_content_media(
+        heading=ftl('vpn-shared-features-server-countries', servers=connect_servers, countries=connect_countries),
+        image_url='img/products/vpn/landing/vpn-cntwell-05-v2.png',
+        class_name='vpn-content-media-left-half vpn-connect-to-countries-and-servers'
+      ) %}
+        <p>{{ ftl('vpn-shared-features-full-list-servers', url='https://mullvad.net/servers/', attrs='target="_blank" rel="external noopener noreferrer"') }}</p>
+
+        <a class="mzp-c-button mzp-t-xl" href="#pricing" data-cta-type="button" data-cta-text="Scroll to pricing" data-cta-position="secondary">
+          {{ ftl('vpn-shared-subscribe-link') }}
+        </a>
+
+        <p class="guarantee-copy">
+          <a href="#faq-refunds">{{ ftl('vpn-shared-money-back-guarantee') }}</a>
+        </p>
+      {% endcall %}
+    {% else %}
+      {% call vpn_content_media(
+        heading=ftl('vpn-shared-countries-coming-soon', countries=available_countries),
+        image_url='img/products/vpn/landing/vpn-cntwell-05-v2.png',
+        class_name='vpn-content-media-left-half vpn-more-countries-coming-soon hide-from-legacy-ie'
+      ) %}
+
+        <a class="mzp-c-button mzp-t-xl" href="{{ url('products.vpn.invite') }}" data-cta-type="button" data-cta-text="Join the VPN Waitlist" data-cta-position="secondary">
+          {{ ftl('vpn-shared-waitlist-link') }}
+        </a>
+
+        <p class="availability-copy">
+          {{ ftl('vpn-shared-available-countries-v4', fallback='vpn-shared-available-countries-v3') }}
+        </p>
+      {% endcall %}
+    {% endif %}
+  </div>
+
+  <section id="faq" class="vpn-faq mzp-l-content mzp-t-content-lg">
+    <h2 class="vpn-faq-section-heading">{{ ftl('vpn-landing-faq-heading') }}</h2>
+
+    <details id="faq-usecases" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-langing-faq-uses-question-heading') }}</h3>
+      </summary>
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-uses-question-desc', url=url('products.vpn.more.what-is-a-vpn')) }}</p>
+
+      <ol class="vpn-faq-item-detail mzp-u-list-styled">
+        <li>{{ ftl('vpn-landing-faq-uses-conceal-v2', url=url('products.vpn.more.ip-address'), fallback='vpn-landing-faq-uses-conceal') }}</li>
+        <li>{{ ftl('vpn-landing-faq-uses-encrypt') }}</li>
+      </ol>
+
+      <p class="vpn-faq-item-detail">
+        {{ ftl('vpn-landing-faq-uses-examples', url=url('products.vpn.more.when-to-use')) }}
+      </p>
+    </details>
+
+    <details id="faq-information" class="vpn-faq-item mzp-is-anchor-link">
+      <summary  class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-info-question-heading') }}</h3>
+      </summary>
+    {% if ftl_has_messages('vpn-landing-faq-info-question-desc-v2') %}
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-info-question-desc-v2', principles=url('privacy.principles'), notice=url('privacy.notices.mozilla-vpn')) }}</p>
+    {% else %}
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-info-question-desc', url=url('privacy.principles')) }}</p>
+    {% endif %}
+    </details>
+
+    <details id="faq-privacy" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-protected-question-heading') }}</h3>
+      </summary>
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-protected-question-desc', url='https://mullvad.net/help/why-wireguard/', attrs='target="_blank" rel="external noopener noreferrer"') }}</p>
+    </details>
+
+    <details id="faq-competitors" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-competition-question-heading') }}</h3>
+      </summary>
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-competition-question-desc-v2', fallback='vpn-landing-faq-competition-question-desc', url=url('mozorg.about.history')) }}</p>
+    </details>
+
+    <details id="faq-compatibility" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-compatibility-question-heading') }}</h3>
+      </summary>
+      <p class="vpn-faq-item-detail">
+        {% if ftl_has_messages('vpn-landing-faq-compatibility-question-desc-v2') %}
+          {{ ftl('vpn-landing-faq-compatibility-question-desc-v2', mobile=url('products.vpn.platforms.mobile'), desktop=url('products.vpn.platforms.desktop')) }}
+        {% else %}
+          {{ ftl('vpn-landing-faq-compatibility-question-desc') }}
+        {% endif %}
+      </p>
+
+      <ul class="vpn-faq-item-detail mzp-u-list-styled">
+        <li>
+          {{ ftl('vpn-landing-faq-compatibility-question-desc-windows-v3', fallback='vpn-landing-faq-compatibility-question-desc-windows-v2', url=url('products.vpn.platforms.windows')) }}
+        </li>
+        <li>
+          {% if ftl_has_messages('vpn-landing-faq-compatibility-question-desc-mac-v3') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-mac-v3', url=url('products.vpn.platforms.mac')) }}
+          {% elif ftl_has_messages('vpn-landing-faq-compatibility-question-desc-mac-v2') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-mac-v2', url=url('products.vpn.platforms.mac')) }}
+          {% else %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-mac') }}
+          {% endif %}
+        </li>
+        <li>
+          {% if ftl_has_messages('vpn-landing-faq-compatibility-question-desc-android-v3') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-android-v3', url=url('products.vpn.platforms.android')) }}
+          {% elif ftl_has_messages('vpn-landing-faq-compatibility-question-desc-android-v2') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-android-v2', url=url('products.vpn.platforms.android')) }}
+          {% else %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-android') }}
+          {% endif %}
+        </li>
+        <li>
+          {% if ftl_has_messages('vpn-landing-faq-compatibility-question-desc-ios-v3') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-ios-v3', url=url('products.vpn.platforms.ios')) }}
+          {% elif ftl_has_messages('vpn-landing-faq-compatibility-question-desc-ios-v2') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-ios-v2', url=url('products.vpn.platforms.ios')) }}
+          {% else %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-ios') }}
+          {% endif %}
+        </li>
+        <li>
+          {% if ftl_has_messages('vpn-landing-faq-compatibility-question-desc-linux-v3') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-linux-v3', url=url('products.vpn.platforms.linux')) }}
+          {% elif ftl_has_messages('vpn-landing-faq-compatibility-question-desc-linux-v2') %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-linux-v2', url=url('products.vpn.platforms.linux')) }}
+          {% else %}
+            {{ ftl('vpn-landing-faq-compatibility-question-desc-linux') }}
+          {% endif %}
+        </li>
+      </ul>
+    </details>
+
+    <details id="faq-refunds" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-refund-question-heading') }}</h3>
+      </summary>
+      {% if ftl_has_messages('vpn-landing-faq-refund-question-desc-v2', 'vpn-landing-faq-refund-question-additional-desc') %}
+        <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-refund-question-desc-v2') }}</p>
+        <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-refund-question-additional-desc') }}</p>
+      {% else %}
+        <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-refund-question-desc') }}</p>
+      {% endif %}
+    </details>
+
+    <details id="faq-subscriptions" class="vpn-faq-item mzp-is-anchor-link">
+      <summary class="vpn-faq-item-heading">
+        <h3>{{ ftl('vpn-landing-faq-manage-subscription-question-heading') }}</h3>
+      </summary>
+      <p class="vpn-faq-item-detail">{{ ftl('vpn-landing-faq-manage-subscription-question-desc', url='https://vpn.mozilla.org/r/vpn/subscription' + _params) }}</p>
+    </details>
+
+    <footer class="vpn-faq-footer">
+      <a class="vpn-faq-footer-link mzp-c-cta-link" href="https://support.mozilla.org/products/firefox-private-network-vpn{{ _params }}&utm_content=vpn-faq-see-more-link" data-cta-type="link" data-cta-text="FAQ See More">
+        {{ ftl('vpn-landing-faq-link') }}
+      </a>
+    </footer>
+  </section>
+
+  <footer class="vpn-footer mzp-l-content mzp-t-content-xl">
+    {% include 'products/vpn/includes/footer-subscribe.html' %}
+    {% include 'products/vpn/includes/footer-legal.html' %}
+  </footer>
+
+</main>
+
+{% endblock %}
+
+{% block js %}
+  {{ js_bundle('mozilla-vpn-landing') }}
+{% endblock %}
