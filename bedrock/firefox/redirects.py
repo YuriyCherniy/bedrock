@@ -545,4 +545,8 @@ redirectpatterns = (
     # issue 10292, 10590
     redirect(r"^firefox/(?P<version>[^/]+)/whatsnew/(india|africa|france|en|all|china)/?$", "/firefox/{version}/whatsnew/"),
     redirect(r"^firefox/whatsnew/(india|africa|france|en|all|china)/?$", "firefox.whatsnew"),
+    # issue 10703
+    redirect(r"firefox/lockwise/?", "https://support.mozilla.org/kb/end-of-support-firefox-lockwise"),
+    # issue 10879
+    redirect(r"^/exp/?$", "mozorg.home"),
 )

@@ -8,42 +8,50 @@ $image-path: '/media/protocol/img';
 @import '~@mozilla-protocol/core/protocol/css/includes/lib';
 @import 'includes/base';
 
-@keyframes swoosh {
-    0% {background: $color-blue-40;}
-    78% {background: $color-blue-40;}
-    79% {background: linear-gradient(125deg, $color-blue-40 5%);}
-    80% {background: linear-gradient(125deg, $color-green-40 0%, $color-blue-40 5%);}
-    81% {background: linear-gradient(125deg, $color-green-40 0%, $color-blue-40 10%);}
-    82% {background: linear-gradient(125deg, $color-green-40 5%, $color-blue-40 15%);}
-    83% {background: linear-gradient(125deg, $color-green-40 10%, $color-blue-40 20%);}
-    84% {background: linear-gradient(125deg, $color-green-40 15%, $color-blue-40 25%);}
-    85% {background: linear-gradient(125deg, $color-green-40 20%, $color-blue-40 30%);}
-    86% {background: linear-gradient(125deg, $color-green-40 25%, $color-blue-40 35%);}
-    87% {background: linear-gradient(125deg, $color-green-40 30%, $color-blue-40 40%);}
-    88% {background: linear-gradient(125deg, $color-green-40 35%, $color-blue-40 45%);}
-    89% {background: linear-gradient(125deg, $color-green-40 40%, $color-blue-40 50%);}
-    90% {background: linear-gradient(125deg, $color-green-40 45%, $color-blue-40 55%);}
-    91% {background: linear-gradient(125deg, $color-green-40 50%, $color-blue-40 60%);}
-    92% {background: linear-gradient(125deg, $color-green-40 55%, $color-blue-40 65%);}
-    93% {background: linear-gradient(125deg, $color-green-40 60%, $color-blue-40 70%);}
-    94% {background: linear-gradient(125deg, $color-green-40 65%, $color-blue-40 75%);}
-    95% {background: linear-gradient(125deg, $color-green-40 70%, $color-blue-40 80%);}
-    96% {background: linear-gradient(125deg, $color-green-40 75%, $color-blue-40 85%);}
-    97% {background: linear-gradient(125deg, $color-green-40 80%, $color-blue-40 90%);}
-    98% {background: linear-gradient(125deg, $color-green-40 85%, $color-blue-40 95%);}
-    99% {background: linear-gradient(125deg, $color-green-40 90%, $color-blue-40 100%);}
-    100% {background: linear-gradient(125deg, $color-green-40 95%, $color-blue-40 100%);}
-    100% {background-color: $color-green-40;}
+.c-banner {
+    background: #c4c6fa linear-gradient(#c4c6fa, #f0deeb) top center no-repeat;
+    @include at2x('/media/img/banners/fundraising/dear-internet-bg-sm.png');
+    @include background-size(cover);
+    color: $color-black;
+
+    // this is needed here and below, as the high-res media query
+    // created by the at2x mixin needs overriding as well.
+    // see https://github.com/mozilla/protocol/issues/751
+    @media #{$mq-high-res} {
+        @include background-size(cover);
+    }
+
+    @media #{$mq-lg} {
+        @include at2x('/media/img/banners/fundraising/dear-internet-bg-lg-simple.png');
+        @include background-size(cover);
+
+        @media #{$mq-high-res} {
+            @include background-size(cover);
+        }
+    }
+
+    // left-to-right locales get the globe graphic on larger viewports.
+    html[dir='ltr'] & {
+        @media #{$mq-lg} and (max-width: 2000px) {
+            @include at2x('/media/img/banners/fundraising/dear-internet-bg-lg.png');
+            @include background-size(cover);
+            min-height: 320px;
+
+            @media #{$mq-high-res} {
+                @include background-size(cover);
+            }
+        }
+    }
 }
 
 .c-banner-title {
+    font-weight: normal;
     line-height: 1.25em;
+}
 
-    span {
-        animation-duration: 3s;
-        animation-name: swoosh;
-        background-color: $color-green-40;
-        color: $color-black;
+.c-banner-content {
+    p {
+        @include text-body-lg;
     }
 }
 
@@ -51,8 +59,9 @@ $image-path: '/media/protocol/img';
     margin-bottom: $spacing-lg;
 
     label {
-        color: $color-white;
+        @include text-body-lg;
         display: inline-block;
+        font-weight: normal;
 
         &:first-child {
             @include bidi((
@@ -63,27 +72,28 @@ $image-path: '/media/protocol/img';
     }
 }
 
-.c-fundraiser-options {
+.c-fundraiser-donation-options {
     margin-bottom: $spacing-sm;
 
     .mzp-c-button.mzp-t-secondary {
-        background-color: transparent;
-
-        &:focus,
-        &:hover {
-            background-color: rgba(255, 255, 255, .15);
-        }
+        @include text-body-lg;
+        font-weight: normal;
+        padding: 6px $spacing-xl;
+        text-align: center;
+        width: 100%;
     }
 
     label {
-        @include bidi(((margin, $spacing-sm $spacing-sm 0 0, 0 0 $spacing-sm $spacing-sm),));
+        @include bidi((
+            (margin-right, $spacing-md, 0),
+            (margin-left, 0, $spacing-md)
+        ));
         display: inline-block;
         position: relative;
 
-        &:first-child {
+        &:last-child {
             @include bidi((
-                (margin-left, 0, $spacing-sm),
-                (margin-right, $spacing-sm, 0)
+                (margin-right, 0, margin-left, 0),
             ));
         }
     }
@@ -94,17 +104,61 @@ $image-path: '/media/protocol/img';
         position: absolute;
         top: 0;
 
-        &:checked + .mzp-c-button.mzp-t-secondary {
-            background-color: rgba(255, 255, 255, .25);
-            font-weight: bold;
+        &:checked + .mzp-c-button.mzp-t-product.mzp-t-secondary {
+            background-color: $color-white;
+
+            &:hover,
+            &:active,
+            &:focus {
+                background-color: $color-blue-60;
+            }
         }
     }
 
-    @media #{$mq-md} {
-        @include bidi((
-            (margin-right, $spacing-md, 0),
-            (margin-left, 0, $spacing-md)
-        ));
-        display: inline-block;
+    @media #{$mq-xl} {
+        .mzp-c-button.mzp-t-secondary {
+            width: auto;
+        }
     }
+}
+
+.c-fundraiser-submit .mzp-c-button {
+    @include text-body-lg;
+    margin: 0;
+}
+
+@supports (display: grid) {
+    .c-fundraiser-donation-options {
+        display: grid;
+        grid-column-gap: $spacing-lg;
+        grid-template: repeat(2, 1fr) / repeat(2, 1fr);
+
+        label {
+            @include bidi((
+                (margin-right, 0, 0),
+                (margin-left, 0, 0)
+            ));
+        }
+
+        @media #{$mq-xl} {
+            grid-template: 1fr / repeat(4, 1fr);
+        }
+    }
+
+    .c-fundraiser-donation-choice {
+        @media #{$mq-xl} {
+            display: grid;
+            grid-column-gap: $spacing-xl;
+            grid-template-columns: max-content 1fr;
+        }
+    }
+
+    .c-fundraiser-submit .mzp-c-button {
+        width: 100%;
+    }
+}
+
+// Close button
+.c-banner-close {
+    background-image: url('#{$image-path}/icons/close.svg');
 }

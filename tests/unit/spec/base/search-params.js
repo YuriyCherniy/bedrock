@@ -5,15 +5,13 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 /* global _SearchParams */
 
 describe('search-params.js', function () {
-    'use strict';
-
     describe('_SearchParams', function () {
         it('should return a proper value', function () {
             const params = new _SearchParams('scene=2&source=getfirefox');

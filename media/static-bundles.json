@@ -216,12 +216,6 @@
     },
     {
       "files": [
-        "css/mozorg/home/home-mr1-promo.scss"
-      ],
-      "name": "home-mr1-promo"
-    },
-    {
-      "files": [
         "css/mozorg/home/home-mr2-promo.scss"
       ],
       "name": "home-mr2-promo"
@@ -240,27 +234,27 @@
     },
     {
       "files": [
-        "css/mozorg/home/home-2018.scss"
+        "css/mozorg/home/home-eu.scss"
       ],
-      "name": "home-2018"
+      "name": "home-eu"
     },
     {
       "files": [
-        "css/mozorg/home/home-en.scss"
+        "css/mozorg/home/home-contentful.scss"
       ],
-      "name": "home-en"
-    },
-    {
-      "files": [
-        "css/mozorg/home/home-contentful-en.scss"
-      ],
-      "name": "home-contentful-en"
+      "name": "home-contentful"
     },
     {
       "files": [
         "css/base/banners/fundraiser.scss"
       ],
       "name": "fundraising-banner"
+    },
+    {
+      "files": [
+        "css/base/banners/vpn-promo.scss"
+      ],
+      "name": "vpn-promo-banner"
     },
     {
       "files": [
@@ -300,9 +294,9 @@
     },
     {
       "files": [
-        "css/foundation/annual-report-2019.scss"
+        "css/foundation/annual-report-2019-2020.scss"
       ],
-      "name": "annual_report_2019"
+      "name": "annual_report_2019_2020"
     },
     {
       "files": [
@@ -374,51 +368,46 @@
     },
     {
       "files": [
-        "css/firefox/lockwise/lockwise.scss"
-      ],
-      "name": "lockwise"
-    },
-    {
-      "files": [
         "css/firefox/flashback/flashback.scss"
       ],
       "name": "flashback"
     },
     {
       "files": [
-        "css/firefox/whatsnew/whatsnew-91-en.scss"
-      ],
-      "name": "firefox_whatsnew_91"
-    },
-    {
-      "files": [
-        "css/firefox/whatsnew/whatsnew-91-de.scss"
-      ],
-      "name": "firefox_whatsnew_91_de"
-    },
-    {
-      "files": [
-        "css/firefox/whatsnew/whatsnew-92-en.scss"
-      ],
-      "name": "firefox_whatsnew_92_en"
-    },
-    {
-      "files": [
-        "css/firefox/whatsnew/whatsnew-92-de.scss"
-      ],
-      "name": "firefox_whatsnew_92_de"
-    },
-    {
-      "files": [
-        "css/firefox/whatsnew/whatsnew-92-fr.scss"
-      ],
-      "name": "firefox_whatsnew_92_fr"
-    },
-    {
-      "files": [
         "css/firefox/whatsnew/whatsnew-93.scss"
       ],
       "name": "firefox_whatsnew_93"
+    },
+    {
+      "files": [
+        "css/firefox/whatsnew/whatsnew-95-de.scss"
+      ],
+      "name": "firefox_whatsnew_95_de"
+    },
+    {
+      "files": [
+        "css/firefox/whatsnew/whatsnew-95-en.scss"
+      ],
+      "name": "firefox_whatsnew_95_en"
+    },
+    {
+      "files": [
+        "css/firefox/whatsnew/whatsnew-96-eu.scss"
+      ],
+      "name": "firefox_whatsnew_96_eu"
+    },
+    {
+      "files": [
+        "css/protocol/components/send-to-device.scss",
+        "css/firefox/whatsnew/whatsnew-96-en-mobile.scss"
+      ],
+      "name": "firefox_whatsnew_96_en_mobile"
+    },
+    {
+      "files": [
+        "css/firefox/whatsnew/whatsnew-96-en-rally.scss"
+      ],
+      "name": "firefox_whatsnew_96_en_rally"
     },
     {
       "files": [
@@ -525,14 +514,12 @@
     },
     {
       "files": [
-        "css/firefox/home/master.scss",
-        "css/base/mozilla-lazy-image.scss"
+        "css/firefox/home/master.scss"
       ],
       "name": "firefox-master"
     },
     {
       "files": [
-        "css/base/mozilla-lazy-image.scss",
         "css/firefox/browsers-products.scss"
       ],
       "name": "firefox-browsers-products"
@@ -754,6 +741,24 @@
     },
     {
       "files": [
+        "css/firefox/welcome11.scss"
+      ],
+      "name": "firefox_welcome_page11"
+    },
+    {
+      "files": [
+        "css/firefox/welcome12.scss"
+      ],
+      "name": "firefox_welcome_page12"
+    },
+    {
+      "files": [
+        "css/firefox/welcome13.scss"
+      ],
+      "name": "firefox_welcome_page13"
+    },
+    {
+      "files": [
         "css/firefox/unfck.scss"
       ],
       "name": "firefox-unfck"
@@ -778,8 +783,7 @@
     },
     {
       "files": [
-        "css/firefox/more.scss",
-        "css/base/mozilla-lazy-image.scss"
+        "css/firefox/more.scss"
       ],
       "name": "more"
     },
@@ -938,7 +942,6 @@
     },
     {
       "files": [
-        "css/base/mozilla-lazy-image.scss",
         "css/contentful/firefox/t-card-layout.scss"
       ],
       "name": "firefox-t-card-layout"
@@ -958,6 +961,77 @@
         "css/products/vpn/vpn-info.scss"
       ],
       "name": "mozilla-vpn-info"
+    },
+    {
+      "files": [
+        "css/products/vpn/resource-center.scss"
+      ],
+      "name": "vpn-resource-center"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/platforms.scss"
+      ],
+      "name": "pocket-platforms"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/about.scss"
+      ],
+      "name": "pocket-about"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/pocket-features.scss"
+      ],
+      "name": "pocket-features"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/add.scss"
+      ],
+      "name": "pocket-add"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/contact-info.scss"
+      ],
+      "name": "pocket-contact-info"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/new-tab-learn-more.scss"
+      ],
+      "name": "pocket-new-tab"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/jobs.scss"
+      ],
+      "name": "pocket-jobs"
+    },
+    {
+      "files": [
+        "css/externalpages/pocket/style.scss",
+        "css/externalpages/pocket/components/privacy-tos.scss"
+      ],
+      "name": "pocket-privacy-tos"
+    },
+    {
+      "files": [
+        "css/careers/protocol.min.scss",
+        "css/careers/protocol-extra.min.scss",
+        "css/careers/careers.scss",
+        "css/careers/internships.scss"
+      ],
+      "name": "careers"
     }
   ],
   "js": [
@@ -991,13 +1065,6 @@
     },
     {
       "files": [
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js"
-      ],
-      "name": "firefox_welcome_page"
-    },
-    {
-      "files": [
         "protocol/js/protocol-modal.js",
         "js/base/send-to-device.js",
         "js/firefox/welcome/welcome4.js"
@@ -1028,56 +1095,23 @@
     {
       "files": [
         "js/firefox/whatsnew/up-to-date.js",
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js"
+        "js/base/mozilla-fxa.js",
+        "js/base/mozilla-fxa-init.js"
       ],
-      "name": "firefox_whatsnew_91"
-    },
-    {
-      "files": [
-        "js/firefox/whatsnew/up-to-date.js",
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js"
-      ],
-      "name": "firefox_whatsnew_91_de"
-    },
-    {
-      "files": [
-        "js/firefox/whatsnew/up-to-date.js"
-      ],
-      "name": "firefox_whatsnew_93"
+      "name": "firefox_whatsnew_96_eu"
     },
     {
       "files": [
         "js/libs/mozilla-traffic-cop.js",
-        "js/firefox/whatsnew/whatsnew93-experiment-en.js"
+        "js/firefox/whatsnew/whatsnew-96-en-experiment.js"
       ],
-      "name": "firefox_whatsnew_93_experiment_en"
-    },
-    {
-      "files": [
-        "js/libs/mozilla-traffic-cop.js",
-        "js/firefox/whatsnew/whatsnew93-experiment-fr-de.js"
-      ],
-      "name": "firefox_whatsnew_93_experiment_fr_de"
-    },
-    {
-      "files": [
-        "js/firefox/whatsnew/whatsnew93-cycle.js"
-      ],
-      "name": "firefox_whatsnew_93_cycle"
+      "name": "firefox_whatsnew_96_en_experiment"
     },
     {
       "files": [
         "protocol/js/protocol-newsletter.js"
       ],
       "name": "legal"
-    },
-    {
-      "files": [
-        "js/firefox/lockwise/lockwise.js"
-      ],
-      "name": "lockwise"
     },
     {
       "files": [
@@ -1111,9 +1145,9 @@
     {
       "files": [
         "js/firefox/new/common/thanks.js",
-        "js/firefox/new/common/thanks-amo-exp.js"
+        "js/firefox/new/common/thanks-direct.js"
       ],
-      "name": "firefox_new_thanks_amo_exp"
+      "name": "firefox_new_thanks_direct"
     },
     {
       "files": [
@@ -1165,10 +1199,8 @@
       "files": [
         "protocol/js/protocol-modal.js",
         "protocol/js/protocol-newsletter.js",
-        "js/base/mozilla-lazy-load.js",
         "js/newsletter/form-protocol.js",
-        "js/mozorg/home/youtube.js",
-        "js/mozorg/home/home.js"
+        "js/mozorg/home/youtube.js"
       ],
       "name": "home"
     },
@@ -1184,9 +1216,7 @@
     {
       "files": [
         "protocol/js/protocol-modal.js",
-        "js/base/mozilla-lazy-load.js",
-        "js/firefox/features/tips/tips-youtube.js",
-        "js/firefox/features/tips/tips.js"
+        "js/firefox/features/tips/tips-youtube.js"
       ],
       "name": "firefox_tips"
     },
@@ -1199,6 +1229,13 @@
     },
     {
       "files": [
+        "js/base/banners/mozilla-banner.js",
+        "js/base/banners/vpn-promo-banner-init.js"
+      ],
+      "name": "vpn-promo-banner"
+    },
+    {
+      "files": [
         "protocol/js/protocol-sidemenu.js",
         "js/base/mozilla-article.js",
         "js/privacy/privacy-protocol.js"
@@ -1208,9 +1245,7 @@
     {
       "files": [
         "protocol/js/protocol-newsletter.js",
-        "js/newsletter/form-protocol.js",
-        "js/base/mozilla-lazy-load.js",
-        "js/mozorg/about.js"
+        "js/newsletter/form-protocol.js"
       ],
       "name": "about"
     },
@@ -1269,9 +1304,6 @@
     },
     {
       "files": [
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js",
-        "js/base/mozilla-lazy-load.js",
         "protocol/js/protocol-sticky-promo.js",
         "js/firefox/sticky-promo.js",
         "js/firefox/home/master.js"
@@ -1289,8 +1321,6 @@
       "files": [
         "js/base/mozilla-fxa.js",
         "js/base/mozilla-fxa-init.js",
-        "js/base/mozilla-fxa-form.js",
-        "js/base/mozilla-fxa-form-init.js",
         "protocol/js/protocol-sticky-promo.js",
         "js/firefox/sticky-promo.js",
         "js/firefox/browsers-products.js"
@@ -1334,18 +1364,21 @@
       "files": [
         "js/base/mozilla-fxa.js",
         "js/base/mozilla-fxa-init.js",
-        "js/base/mozilla-fxa-form.js",
-        "js/base/mozilla-fxa-product-button.js",
-        "js/firefox/accounts-2019.js"
+        "js/firefox/accounts-2019.es6.js"
       ],
       "name": "firefox_accounts_2019"
     },
     {
       "files": [
-        "js/base/mozilla-fxa-form.js",
-        "js/base/mozilla-fxa-form-init.js"
+        "js/base/fxa-form-init.es6.js"
       ],
-      "name": "firefox_firstrun_quantum"
+      "name": "fxa_form"
+    },
+    {
+      "files": [
+        "js/base/fxa-product-button-init.es6.js"
+      ],
+      "name": "fxa_product_button"
     },
     {
       "files": [
@@ -1372,17 +1405,9 @@
     },
     {
       "files": [
-        "js/firefox/whatsnew/up-to-date.js"
-      ],
-      "name": "firefox_nightly_whatsnew"
-    },
-    {
-      "files": [
         "js/firefox/whatsnew/up-to-date.js",
         "js/base/mozilla-fxa.js",
         "js/base/mozilla-fxa-init.js",
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js",
         "js/base/send-to-device.js",
         "js/firefox/whatsnew/whatsnew-account.js"
       ],
@@ -1390,8 +1415,6 @@
     },
     {
       "files": [
-        "js/base/mozilla-fxa-form.js",
-        "js/base/mozilla-fxa-form-init.js",
         "js/firefox/privacy/products.js"
       ],
       "name": "firefox-privacy-products"
@@ -1413,9 +1436,7 @@
     {
       "files": [
         "protocol/js/protocol-newsletter.js",
-        "js/base/mozilla-lazy-load.js",
-        "js/newsletter/form-protocol.js",
-        "js/mozorg/moss.js"
+        "js/newsletter/form-protocol.js"
       ],
       "name": "moss"
     },
@@ -1443,18 +1464,22 @@
         "protocol/js/protocol-details.js",
         "js/base/protocol/protocol-footer.js",
         "js/base/protocol/protocol-sub-navigation.js",
-        "js/base/mozilla-fxa-link.js",
-        "js/base/mozilla-fxa-link-init.js",
         "js/base/base-page-init.js"
       ],
       "name": "ui"
     },
     {
       "files": [
+        "js/base/fxa-link.es6.js",
+        "js/base/fxa-utm.es6.js",
+        "js/base/fxa-bundle-init.es6.js"
+      ],
+      "name": "fxa"
+    },
+    {
+      "files": [
         "js/base/core-datalayer.js",
-        "js/base/core-datalayer-init.js",
-        "js/base/fxa-utm-referral.js",
-        "js/base/fxa-utm-referral-init.js"
+        "js/base/core-datalayer-init.js"
       ],
       "name": "data"
     },
@@ -1470,10 +1495,9 @@
     {
       "files": [
         "protocol/js/protocol-modal.js",
-        "js/base/mozilla-lazy-load.js",
-        "js/foundation/annual-report-2019.es6.js"
+        "js/foundation/annual-report-2019-2020.es6.js"
       ],
-      "name": "annual_report_2019"
+      "name": "annual_report_2019_2020"
     },
     {
       "files": [
@@ -1490,12 +1514,18 @@
     },
     {
       "files": [
-        "js/base/mozilla-lazy-load.js",
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js",
-        "js/firefox/pocket.js"
+        "js/externalpages/pocket/mobile-nav.es6.js",
+        "js/externalpages/pocket/mobile-nav-init.es6.js"
       ],
-      "name": "product_pocket"
+      "name": "pocket-nav"
+    },
+    {
+      "files": [
+        "js/externalpages/pocket/base.js",
+        "js/base/mozilla-cookie-helper.js",
+        "js/externalpages/pocket/snowplow.es6.js"
+      ],
+      "name": "pocket-site"
     },
     {
       "files": [
@@ -1512,7 +1542,6 @@
     },
     {
       "files": [
-        "js/base/mozilla-lazy-load.js",
         "js/newsletter/confirm.js"
       ],
       "name": "newsletter-confirm"
@@ -1546,27 +1575,12 @@
     },
     {
       "files": [
-        "js/base/mozilla-lazy-load.js",
-        "js/firefox/more.js"
-      ],
-      "name": "more"
-    },
-    {
-      "files": [
         "js/firefox/browsers/chromebook.js"
       ],
       "name": "chromebook"
     },
     {
       "files": [
-        "js/base/mozilla-fxa-product-button.js",
-        "js/base/mozilla-fxa-product-button-init.js"
-      ],
-      "name": "sync"
-    },
-    {
-      "files": [
-        "js/base/mozilla-fxa-product-button.js",
         "js/products/vpn/landing.js"
       ],
       "name": "mozilla-vpn-landing"
@@ -1585,10 +1599,21 @@
     },
     {
       "files": [
-        "js/base/mozilla-lazy-load.js",
-        "js/contentful/lazyload-init.js"
+        "js/products/vpn/resource-center-article.es6.js"
       ],
-      "name": "c-card"
+      "name": "vpn-resource-center-article"
+    },
+    {
+      "files": [
+        "js/careers/base.js"
+      ],
+      "name": "careers-base"
+    },
+    {
+      "files": [
+        "js/careers/listings/listings.es6.js"
+      ],
+      "name": "careers-listings"
     }
   ]
 }

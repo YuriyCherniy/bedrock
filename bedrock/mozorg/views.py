@@ -10,6 +10,7 @@ from django.views.decorators.http import require_safe
 from django.views.generic import TemplateView
 
 from commonware.decorators import xframe_allow
+from sentry_sdk import capture_exception
 
 from bedrock.base.waffle import switch
 from bedrock.contentcards.models import get_page_content_cards
@@ -112,35 +113,39 @@ def home_view(request):
     locale = l10n_utils.get_locale(request)
     donate_params = settings.DONATE_PARAMS.get(locale, settings.DONATE_PARAMS["en-US"])
 
+    # make sure we POST to a know locale, to avoid 404 errors.
+    donate_locale = locale if locale in settings.DONATE_PARAMS else "en-US"
+
     # presets are stored as a string but, for the home banner
     # we need it as a list.
     donate_params["preset_list"] = donate_params["presets"].split(",")
     ctx = {
+        "donate_locale": donate_locale,
         "donate_params": donate_params,
         "pocket_articles": PocketArticle.objects.all()[:4],
-        "ftl_files": ["mozorg/home", "mozorg/home-mr1-promo", "mozorg/home-mr2-promo"],
+        "ftl_files": ["mozorg/home", "mozorg/home-mr2-promo"],
         "add_active_locales": ["de", "fr"],
     }
 
     if locale.startswith("en-"):
         if switch("contentful-homepage-en"):
             try:
-                template_name = "mozorg/contentful-homepage.html"
+                template_name = "mozorg/home/home-contentful.html"
                 # TODO: use a better system to get the pages than the ID
-                ctx.update(ContentfulEntry.objects.get_page_by_id("58YIvwDmzSDjtvpSqstDcL"))
-            except Exception:
-                # if anything goes wrong, use the old page
-                template_name = "mozorg/home/home-en.html"
-                ctx["page_content_cards"] = get_page_content_cards("home-en", "en-US")
+                ctx.update(ContentfulEntry.objects.get_page_by_id(content_id=settings.CONTENTFUL_HOMEPAGE_LOOKUP["en-US"]))
+            except Exception as ex:
+                capture_exception(ex)
+                # if anything goes wrong, use the rest-of-world home page
+                template_name = "mozorg/home/home.html"
         else:
-            template_name = "mozorg/home/home-en.html"
-            ctx["page_content_cards"] = get_page_content_cards("home-en", "en-US")
+            template_name = "mozorg/home/home.html"
     elif locale == "de":
         if switch("contentful-homepage-de"):
             try:
-                template_name = "mozorg/contentful-homepage.html"
-                ctx.update(ContentfulEntry.objects.get_page_by_id("4k3CxqZGjxXOjR1I0dhyto"))
-            except Exception:
+                template_name = "mozorg/home/home-contentful.html"
+                ctx.update(ContentfulEntry.objects.get_page_by_id(content_id=settings.CONTENTFUL_HOMEPAGE_LOOKUP["de"]))
+            except Exception as ex:
+                capture_exception(ex)
                 # if anything goes wrong, use the old page
                 template_name = "mozorg/home/home-de.html"
                 ctx["page_content_cards"] = get_page_content_cards("home-de", "de")
@@ -169,7 +174,9 @@ class ContentfulPreviewView(L10nTemplateView):
         page_type = context["page_type"]
         theme = context["info"]["theme"]
         if page_type == "pageHome":
-            template = "mozorg/contentful-homepage.html"
+            template = "mozorg/home/home-contentful.html"
+        elif page_type == "pagePageResourceCenter":
+            template = "products/vpn/resource-center/article.html"
         elif theme == "firefox":
             template = "firefox/contentful-all.html"
         else:

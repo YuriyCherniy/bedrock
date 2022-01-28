@@ -5,13 +5,11 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 describe('dnt-helper.js', function () {
-    'use strict';
-
     describe('Mozilla.dntEnabled', function () {
         it('should return true for Fx41 on Mac with DNT set to true', function () {
             const dnt = 1;
@@ -24,6 +22,21 @@ describe('dnt-helper.js', function () {
             const dnt = 0;
             const ua =
                 'Mozilla/5.0 (Windows NT 6.1; rv:41.0) Gecko/20100101 Firefox/41.0';
+            expect(Mozilla.dntEnabled(dnt, ua)).toBe(false);
+        });
+
+        // sanity check for Firefox v100 UA string (issue 9575)
+        it('should return true for Fx100 with DNT set to true', function () {
+            const dnt = 1;
+            const ua =
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0';
+            expect(Mozilla.dntEnabled(dnt, ua)).toBe(true);
+        });
+
+        it('should return false for Fx100 with DNT set to true', function () {
+            const dnt = 0;
+            const ua =
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:100.0) Gecko/20100101 Firefox/100.0';
             expect(Mozilla.dntEnabled(dnt, ua)).toBe(false);
         });
 

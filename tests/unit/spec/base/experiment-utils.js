@@ -5,13 +5,11 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 describe('experiment-utils.es6.js', function () {
-    'use strict';
-
     describe('isApprovedToRun', function () {
         it('should return true if experimental params are not found in the page URL', function () {
             const isApprovedToRun =

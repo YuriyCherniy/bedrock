@@ -1,10 +1,9 @@
-# coding: utf-8
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
+from unittest.mock import patch
+
 from babel.core import Locale, UnknownLocaleError
-from mock import patch
 
 from bedrock.mozorg.tests import TestCase
 from lib.l10n_utils.templatetags import helpers
@@ -21,20 +20,6 @@ def test_get_locale_hsb():
     # bug 1130285
     assert helpers.get_locale("dsb").language == "de"
     assert helpers.get_locale("hsb").language == "de"
-
-
-@patch.object(helpers, "lang_file_has_tag")
-class TestL10nHasTag(TestCase):
-    def test_uses_langfile(self, lfht_mock):
-        """If langfile param specified should only check that file."""
-        helpers.l10n_has_tag({"langfile": "dude", "LANG": "fr"}, "abide", langfile="uli")
-        lfht_mock.assert_called_with("uli", "fr", "abide")
-
-    @patch.object(helpers, "template_has_tag")
-    def test_checks_template_by_default(self, tht_mock, lfht_mock):
-        helpers.l10n_has_tag({"langfile": "dude", "template": "home.html", "LANG": "de"}, "abide")
-        tht_mock.assert_called_with("home.html", "de", "abide")
-        self.assertFalse(lfht_mock.called)
 
 
 class TestCurrentLocale(TestCase):

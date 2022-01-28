@@ -9,7 +9,8 @@ class SimpleDictCache(LocMemCache):
     """A local memory cache that doesn't pickle values.
 
     Only for use with simple immutable data structures that can be
-    inserted into a dict.
+    inserted into a dict. If you put something mutable in here, then
+    mutate it elsewhere, the cached data will also be changed.
     """
 
     def add(self, key, value, timeout=DEFAULT_TIMEOUT, version=None):
@@ -48,7 +49,7 @@ class SimpleDictCache(LocMemCache):
     def incr(self, key, delta=1, version=None):
         value = self.get(key, version=version)
         if value is None:
-            raise ValueError("Key '%s' not found" % key)
+            raise ValueError(f"Key '{key}' not found")
         new_value = value + delta
         key = self.make_key(key, version=version)
         with self._lock:

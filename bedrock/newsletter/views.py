@@ -230,7 +230,7 @@ def confirm(request, token):
     try:
         result = basket.confirm(token)
     except basket.BasketException as e:
-        log.exception("Exception confirming token %s" % token)
+        log.exception(f"Exception confirming token {token}")
         if e.code == basket.errors.BASKET_UNKNOWN_TOKEN:
             token_error = True
         elif e.code == basket.errors.BASKET_USAGE_ERROR:
@@ -253,7 +253,7 @@ def confirm(request, token):
         qs = request.META.get("QUERY_STRING", "")
         if qs:
             qparams.append(qs)
-        return HttpResponseRedirect("%s?%s" % (reverse("newsletter.existing.token", kwargs={"token": token}), "&".join(qparams)))
+        return HttpResponseRedirect("{}?{}".format(reverse("newsletter.existing.token", kwargs={"token": token}), "&".join(qparams)))
     else:
         return l10n_utils.render(
             request, "newsletter/confirm.html", {"success": success, "generic_error": generic_error, "token_error": token_error}, ftl_files=FTL_FILES
@@ -340,7 +340,9 @@ def existing(request, token=None):
         if (
             data.get("show", False)
             or newsletter in user["newsletters"]
-            or (user["has_fxa"] and newsletter in settings.FXA_NEWSLETTERS and any(locale.startswith(l) for l in settings.FXA_NEWSLETTERS_LOCALES))
+            or (
+                user["has_fxa"] and newsletter in settings.FXA_NEWSLETTERS and any(locale.startswith(loc) for loc in settings.FXA_NEWSLETTERS_LOCALES)
+            )
         ):
             langs = data["languages"]
             nstrings = NEWSLETTER_STRINGS.get(newsletter)
@@ -400,13 +402,11 @@ def existing(request, token=None):
             if formset.is_valid():
                 formset_is_valid = True
                 # What newsletters do they say they want to be subscribed to?
-                newsletters = set(
-                    [
-                        subform.cleaned_data["newsletter"]
-                        for subform in formset
-                        if (subform.cleaned_data["subscribed_radio"] or subform.cleaned_data["subscribed_check"])
-                    ]
-                )
+                newsletters = {
+                    subform.cleaned_data["newsletter"]
+                    for subform in formset
+                    if (subform.cleaned_data["subscribed_radio"] or subform.cleaned_data["subscribed_check"])
+                }
                 form_kwargs["newsletters"] = newsletters
 
         form = ManageSubscriptionsForm(locale, data=request.POST, initial=user, **form_kwargs)
@@ -419,14 +419,14 @@ def existing(request, token=None):
             # Also pass their updated list of newsletters they want to be
             # subscribed to, for basket to implement.
             kwargs = {}
-            if settings.BASKET_API_KEY:
-                kwargs["api_key"] = settings.BASKET_API_KEY
             for k in ["lang", "format", "country"]:
                 if user[k] != data[k]:
                     kwargs[k] = data[k]
             if not remove_all:
                 kwargs["newsletters"] = ",".join(newsletters)
             if kwargs:
+                if settings.BASKET_API_KEY:
+                    kwargs["api_key"] = settings.BASKET_API_KEY
                 # always send lang so basket doesn't try to guess
                 kwargs["lang"] = data["lang"]
                 try:
@@ -445,7 +445,7 @@ def existing(request, token=None):
                     messages.add_message(request, messages.ERROR, general_error)
                     return l10n_utils.render(request, "newsletter/existing.html", ftl_files=FTL_FILES)
                 # We need to pass their token to the next view
-                url = reverse("newsletter.updated") + "?unsub=%s&token=%s" % (UNSUB_UNSUBSCRIBED_ALL, token)
+                url = reverse("newsletter.updated") + f"?unsub={UNSUB_UNSUBSCRIBED_ALL}&token={token}"
                 return redirect(url)
 
             # We're going to redirect, so the only way to tell the next
@@ -453,7 +453,7 @@ def existing(request, token=None):
             # template is to modify the URL
             url = reverse("newsletter.updated")
             if unsub_parm:
-                url += "?unsub=%s" % unsub_parm
+                url += f"?unsub={unsub_parm}"
             return redirect(url)
 
         # FALL THROUGH so page displays errors
@@ -540,7 +540,7 @@ def updated(request):
         # paste together the English versions of the reasons they submitted,
         # so we can read them.  (Well, except for the free-form reason.)
         for i, reason in enumerate(REASONS):
-            if _post_or_get(request, "reason%d" % i):
+            if _post_or_get(request, f"reason{i}"):
                 reasons.append(str(reason))
         if _post_or_get(request, "reason-text-p"):
             reasons.append(_post_or_get(request, "reason-text", ""))
@@ -617,8 +617,8 @@ def newsletter_subscribe(request):
             kwargs = {"format": data["fmt"]}
             # add optional data
             kwargs.update(
-                dict(
-                    (k, data[k])
+                {
+                    k: data[k]
                     for k in [
                         "country",
                         "lang",
@@ -627,13 +627,13 @@ def newsletter_subscribe(request):
                         "last_name",
                     ]
                     if data[k]
-                )
+                }
             )
 
             # NOTE this is not a typo; Referrer is misspelled in the HTTP spec
             # https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.36
-            if not kwargs.get("source_url") and request.META.get("HTTP_REFERER"):
-                kwargs["source_url"] = request.META["HTTP_REFERER"]
+            if not kwargs.get("source_url") and request.headers.get("Referer"):
+                kwargs["source_url"] = request.headers["Referer"]
 
             try:
                 basket.subscribe(data["email"], data["newsletters"], **kwargs)
@@ -641,7 +641,7 @@ def newsletter_subscribe(request):
                 if e.code == basket.errors.BASKET_INVALID_EMAIL:
                     errors.append(str(invalid_email_address))
                 else:
-                    log.exception("Error subscribing %s to newsletter %s" % (data["email"], data["newsletters"]))
+                    log.exception(f"Error subscribing {data['email']} to newsletter {data['newsletters']}")
                     errors.append(str(general_error))
 
         else:

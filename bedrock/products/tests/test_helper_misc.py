@@ -172,7 +172,7 @@ class TestVPNSubscribeLink(TestCase):
         )
         expected = (
             '<a href="https://accounts.firefox.com/subscriptions/products/prod_FvnsFHIfezy3ZI?plan=price_1Iw85dJNcmPzuWtRyhMDdtM7'
-            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&utm_source=www.mozilla.org-vpn-product-page"
+            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&service=e6eb0d1e856335fc&utm_source=www.mozilla.org-vpn-product-page"
             '&utm_medium=referral&utm_campaign=vpn-product-page&data_cta_position=primary" data-action="https://accounts.firefox.com/" '
             'class="js-vpn-cta-link js-fxa-product-button mzp-c-button" data-cta-text="Get Mozilla VPN monthly" data-cta-type="fxa-vpn" '
             'data-cta-position="primary">Get Mozilla VPN</a>'
@@ -190,7 +190,7 @@ class TestVPNSubscribeLink(TestCase):
         )
         expected = (
             '<a href="https://accounts.firefox.com/subscriptions/products/prod_FvnsFHIfezy3ZI?plan=price_1Iw87cJNcmPzuWtRefuyqsOd'
-            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&utm_source=www.mozilla.org-vpn-product-page"
+            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&service=e6eb0d1e856335fc&utm_source=www.mozilla.org-vpn-product-page"
             '&utm_medium=referral&utm_campaign=vpn-product-page&data_cta_position=primary" data-action="https://accounts.firefox.com/" '
             'class="js-vpn-cta-link js-fxa-product-button mzp-c-button" data-cta-text="Get Mozilla VPN monthly" data-cta-type="fxa-vpn" '
             'data-cta-position="primary">Get Mozilla VPN</a>'
@@ -208,7 +208,7 @@ class TestVPNSubscribeLink(TestCase):
         )
         expected = (
             '<a href="https://accounts.firefox.com/subscriptions/products/prod_FvnsFHIfezy3ZI?plan=price_1Iw7qSJNcmPzuWtRMUZpOwLm'
-            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&utm_source=www.mozilla.org-vpn-product-page"
+            "&entrypoint=www.mozilla.org-vpn-product-page&form_type=button&service=e6eb0d1e856335fc&utm_source=www.mozilla.org-vpn-product-page"
             '&utm_medium=referral&utm_campaign=vpn-product-page&data_cta_position=primary" data-action="https://accounts.firefox.com/" '
             'class="js-vpn-cta-link js-fxa-product-button mzp-c-button" data-cta-text="Get Mozilla VPN monthly" data-cta-type="fxa-vpn" '
             'data-cta-position="primary">Get Mozilla VPN</a>'
@@ -689,7 +689,7 @@ class TestVPNDownloadLink(TestCase):
         )
         expected = (
             '<a href="https://vpn.mozilla.org/vpn/download?entrypoint=www.mozilla.org-vpn-product-page'
-            "&form_type=button&utm_source=www.mozilla.org-vpn-product-page&utm_medium=referral"
+            "&form_type=button&service=e6eb0d1e856335fc&utm_source=www.mozilla.org-vpn-product-page&utm_medium=referral"
             '&utm_campaign=vpn-product-page&data_cta_position=navigation" data-action="https://accounts.firefox.com/" '
             'class="js-vpn-cta-link js-fxa-product-button mzp-c-cta-link" data-cta-text="VPN Sign In" '
             'data-cta-type="fxa-vpn" data-cta-position="navigation">Already a Subscriber?</a>'
@@ -704,7 +704,7 @@ class TestVPNMonthlyPrice(TestCase):
     def _render(self, plan, country_code, lang):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ vpn_monthly_price('{0}', '{1}', '{2}') }}}}".format(plan, country_code, lang), {"request": req})
+        return render(f"{{{{ vpn_monthly_price('{plan}', '{country_code}', '{lang}') }}}}", {"request": req})
 
     def test_vpn_monthly_price_usd(self):
         """Should return expected markup"""
@@ -871,12 +871,12 @@ class TestVPNProductReferralLink(TestCase):
             referral_id="navigation",
             page_anchor="#pricing",
             link_text="Get Mozilla VPN",
-            class_name="mzp-t-secondary mzp-t-md",
+            class_name="mzp-t-product mzp-t-secondary mzp-t-md",
             optional_attributes={"data-cta-text": "Get Mozilla VPN", "data-cta-type": "button"},
         )
         expected = (
-            '<a href="/en-US/products/vpn/#pricing" class="mzp-c-button mzp-t-product '
-            'js-fxa-product-referral-link mzp-t-secondary mzp-t-md" data-referral-id="navigation" '
+            '<a href="/en-US/products/vpn/#pricing" class="mzp-c-button js-fxa-product-referral-link '
+            'mzp-t-product mzp-t-secondary mzp-t-md" data-referral-id="navigation" '
             'data-cta-text="Get Mozilla VPN" data-cta-type="button">Get Mozilla VPN</a>'
         )
         self.assertEqual(markup, expected)

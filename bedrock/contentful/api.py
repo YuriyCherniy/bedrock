@@ -2,25 +2,47 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+from copy import deepcopy
 from functools import partialmethod
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.conf import settings
 from django.utils.functional import cached_property
 
-import contentful as api
+import contentful as contentful_api
 from crum import get_current_request, set_current_request
 from rich_text_renderer import RichTextRenderer
 from rich_text_renderer.base_node_renderer import BaseNodeRenderer
 from rich_text_renderer.block_renderers import BaseBlockRenderer
 from rich_text_renderer.text_renderers import BaseInlineRenderer
 
+from bedrock.contentful.constants import (
+    COMPOSE_MAIN_PAGE_TYPE,
+    CONTENT_TYPE_PAGE_GENERAL,
+    CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+)
 from lib.l10n_utils import get_locale, render_to_string
 
-# Bedrock to Contentful locale map
-LOCALE_MAP = {
+# Some of Bedrock and Contentful's locale codes slightly differ, so we translate between them.
+# This is not the controlling list of which locales we read from Contentful - that's determined
+# by what Contentful has configured/enabled and we try to pull in all of what's offered.
+BEDROCK_TO_CONTENTFUL_LOCALE_MAP = {
     "de": "de-DE",
+    "fr": "fr-FR",
+    "zh-TW": "zh-Hant-TW",  # NB: we should move to zh-Hant-TW in Bedrock - https://github.com/mozilla/bedrock/issues/10891
+    "nl": "nl-NL",
+    "id": "id-ID",
+    "it": "it-IT",
+    "ja": "ja-JP",
+    "ko": "ko-KR",
+    "ms": "ms-MY",
+    "pl": "pl-PL",
+    "ru": "ru-RU",
+    "tr": "tr-TR",
+    "vi": "vi-VN",
 }
+CONTENTFUL_TO_BEDROCK_LOCALE_MAP = {v: k for k, v in BEDROCK_TO_CONTENTFUL_LOCALE_MAP.items()}
+
 ASPECT_RATIOS = {
     "1:1": "1-1",
     "3:2": "3-2",
@@ -57,13 +79,13 @@ LAYOUT_CLASS = {
 }
 THEME_CLASS = {
     "Light": "",
-    "Light (alternative)": "mzp-t-background-alt",
+    "Light (alternative)": "mzp-t-background-secondary",
     "Dark": "mzp-t-dark",
-    "Dark (alternative)": "mzp-t-dark mzp-t-background-alt",
+    "Dark (alternative)": "mzp-t-dark mzp-t-background-secondary",
 }
 COLUMN_CLASS = {
     "1": "",
-    "2": "mzp-l-columns mzp-t-columns-two ",
+    "2": "mzp-l-columns mzp-t-columns-two",
     "3": "mzp-l-columns mzp-t-columns-three",
     "4": "mzp-l-columns mzp-t-columns-four",
 }
@@ -72,13 +94,14 @@ COLUMN_CLASS = {
 def get_client(raw_mode=False):
     client = None
     if settings.CONTENTFUL_SPACE_ID and settings.CONTENTFUL_SPACE_KEY:
-        client = api.Client(
+        client = contentful_api.Client(
             settings.CONTENTFUL_SPACE_ID,
             settings.CONTENTFUL_SPACE_KEY,
             environment=settings.CONTENTFUL_ENVIRONMENT,
             api_url=settings.CONTENTFUL_SPACE_API,
             raw_mode=raw_mode,
             content_type_cache=False,
+            timeout_s=settings.CONTENTFUL_API_TIMEOUT,
         )
 
     return client
@@ -86,10 +109,7 @@ def get_client(raw_mode=False):
 
 def contentful_locale(locale):
     """Returns the Contentful locale for the Bedrock locale"""
-    if locale.startswith("es-"):
-        return "es"
-
-    return LOCALE_MAP.get(locale, locale)
+    return BEDROCK_TO_CONTENTFUL_LOCALE_MAP.get(locale, locale)
 
 
 def _get_height(width, aspect):
@@ -148,7 +168,9 @@ def _get_column_class(columns):
 
 def _make_logo(entry):
     fields = entry.fields()
-    product = fields["product_icon"]
+    product = fields.get("product_icon")
+    if not product:
+        return ""
 
     data = {
         "product_name": product,
@@ -161,7 +183,9 @@ def _make_logo(entry):
 
 def _make_wordmark(entry):
     fields = entry.fields()
-    product = fields["product_icon"]
+    product = fields.get("product_icon")
+    if not product:
+        return ""
 
     data = {
         "product_name": product,
@@ -182,11 +206,10 @@ def _make_cta_button(entry):
         "mzp-t-secondary" if fields.get("theme") == "Secondary" else "",
         f'mzp-t-{WIDTHS.get(fields.get("size"), "")}' if fields.get("size") else "",
     ]
-
     data = {
         "action": action,
         "label": fields.get("label"),
-        "button_class": " ".join(button_class),
+        "button_class": " ".join([_class for _class in button_class if _class]),
         # TODO
         "location": "",  # eg primary, secondary
         "cta_text": fields.get("label"),  # TODO needs to use English in all locales
@@ -249,6 +272,8 @@ class LinkRenderer(BaseBlockRenderer):
         data_cta = ""
 
         # add referral info to links to other mozilla properties
+        # TODO: can we make this just if url.netloc == "mozilla.org" or are we expecting
+        # subdomains, because we set the utm_source to www.mozilla.org
         if "mozilla.org" in url.netloc and url.netloc != "www.mozilla.org":
             # don't add if there's already utms
             if "utm_" not in url.query:
@@ -269,7 +294,7 @@ class LinkRenderer(BaseBlockRenderer):
             cta_text = _make_plain_text(node)
             data_cta = f' data-cta-type="link" data-cta-text="{cta_text}"'
 
-        return '<a href="{0}{1}"{2}{3}>{4}</a>'.format(urlunparse(url), ref, data_cta, rel, self._render_content(node))
+        return f'<a href="{urlunparse(url)}{ref}"{data_cta}{rel}>{self._render_content(node)}</a>'
 
 
 def _render_list(tag, content):
@@ -289,7 +314,7 @@ class OlRenderer(BaseBlockRenderer):
 class LiRenderer(BaseBlockRenderer):
     def render(self, node):
         if _only_child(node, "text"):
-            # The outter text node gets rendered as a paragraph... don't do that if there's only one p in the li
+            # The outer text node gets rendered as a paragraph... don't do that if there's only one p in the li
             return f"<li>{self._render_content(node['content'][0])}</li>"
         else:
             return f"<li>{self._render_content(node)}</li>"
@@ -297,13 +322,8 @@ class LiRenderer(BaseBlockRenderer):
 
 class PRenderer(BaseBlockRenderer):
     def render(self, node):
-        # contains only one node which is a link
-        if _only_child(node, "hyperlink"):
-            # add cta-link class
-            # TODO, class shoudl be added to <a>?
-            return f'<p class="mzp-c-cta-link">{self._render_content(node)}</p>'
         # contains only an empty text node
-        elif len(node["content"]) == 1 and node["content"][0]["nodeType"] == "text" and node["content"][0]["value"] == "":
+        if len(node["content"]) == 1 and node["content"][0]["nodeType"] == "text" and node["content"][0]["value"] == "":
             # just say no to empty p tags
             return ""
         else:
@@ -335,7 +355,7 @@ class AssetBlockRenderer(BaseBlockRenderer):
         return self.IMAGE_HTML.format(
             src=_get_image_url(asset, 688),
             src_highres=_get_image_url(asset, 1376),
-            alt=asset.title,
+            alt=asset.description,
         )
 
 
@@ -441,57 +461,159 @@ class ContentfulPage:
             self.page_id,
             {
                 "include": 10,
+                "locale": self.locale,
+                # ie, get ONLY the page for the specificed locale, as long as
+                # the locale doesn't have a fallback configured in Contentful
             },
         )
 
     def render_rich_text(self, node):
         return self._renderer.render(node) if node else ""
 
-    def get_info_data(self, entry_obj):
-        # TODO, need to enable connectors
-        fields = entry_obj.fields()
-        folder = fields.get("folder", "")
-        in_firefox = "firefox-" if "firefox" in folder else ""
-        slug = fields.get("slug", "home")
-        campaign = f"{in_firefox}{slug}"
-        page_type = entry_obj.content_type.id
-        if page_type == "pageHome":
-            lang = fields["name"]
-        else:
-            lang = entry_obj.sys["locale"]
-
-        data = {
-            "title": fields.get("preview_title", ""),
-            "blurb": fields.get("preview_blurb", ""),
-            "slug": slug,
-            "lang": lang,
-            "theme": "firefox" if "firefox" in folder else "mozilla",
-            # eg www.mozilla.org-firefox-accounts or www.mozilla.org-firefox-sync
-            "utm_source": f"www.mozilla.org-{campaign}",
-            "utm_campaign": campaign,  # eg firefox-sync
-        }
-
+    def _get_preview_image_from_fields(self, fields):
         if "preview_image" in fields:
             # TODO request proper size image
-            preview_image_url = fields["preview_image"].fields().get("file").get("url")
-            data["image"] = "https:" + preview_image_url
+            preview_image_url = fields["preview_image"].fields().get("file", {}).get("url", {})
+            if preview_image_url:
+                return f"https:{preview_image_url}"
+
+    def _get_info_data__slug_title_blurb(self, entry_fields, seo_fields):
+
+        if self.page.content_type.id == COMPOSE_MAIN_PAGE_TYPE:
+            # This means we're dealing with a Compose-structured setup,
+            # and the slug lives not on the Entry, nor the SEO object
+            # but just on the top-level Compose `page`
+            slug = self.page.fields().get("slug")
+        else:
+            # Non-Compose pages
+            slug = entry_fields.get("slug", "home")  # TODO: check if we can use a better fallback
+
+        title = getattr(self.page, "title", "")
+        title = entry_fields.get("preview_title", title)
+        blurb = entry_fields.get("preview_blurb", "")
+
+        if seo_fields:
+            # Defer to SEO fields for blurb if appropriate.
+            blurb = seo_fields.get("description", "")
+
+        return {
+            "slug": slug,
+            "title": title,
+            "blurb": blurb,
+        }
+
+    def _get_info_data__category_tags_classification(self, entry_fields, page_type):
+
+        data = {}
+
+        # TODO: Check with plans for Contentful use - we may
+        # be able to relax this check and use it for page types
+        # once we're in all-Compose mode
+        if page_type == CONTENT_TYPE_PAGE_RESOURCE_CENTER:
+            if "category" in entry_fields:
+                data["category"] = entry_fields["category"]
+            if "tags" in entry_fields:
+                data["tags"] = entry_fields["tags"]
+            if "product" in entry_fields:
+                # NB: this is a re-mapping with an eye on flexibility - pages may not always have
+                # a 'product' key, but they might have something regarding overall classification
+                data["classification"] = entry_fields["product"]
+        return data
+
+    def _get_info_data__theme_campaign(self, entry_fields, slug):
+        _folder = entry_fields.get("folder", "")
+        _in_firefox = "firefox-" if "firefox" in _folder else ""
+        campaign = f"{_in_firefox}{slug}"
+        theme = "firefox" if "firefox" in _folder else "mozilla"
+        return {
+            "theme": theme,
+            "campaign": campaign,
+        }
+
+    def _get_info_data__locale(self, page_type, entry_fields, entry_obj):
+        # TODO: update this once we have a robust locale field available (ideally
+        # via Compose's parent `page`), because double-purposing the "name" field
+        # is a bit too brittle.
+        if page_type == "pageHome":
+            locale = entry_fields["name"]
+        else:
+            locale = entry_obj.sys["locale"]
+        return {"locale": locale}
+
+    def get_info_data(self, entry_obj, seo_obj=None):
+        # TODO, need to enable connectors
+        entry_fields = entry_obj.fields()
+        if seo_obj:
+            seo_fields = seo_obj.fields()
+        else:
+            seo_fields = None
+
+        page_type = entry_obj.content_type.id
+
+        data = {}
+
+        data.update(self._get_info_data__slug_title_blurb(entry_fields, seo_fields))
+        data.update(self._get_info_data__theme_campaign(entry_fields, data["slug"]))
+        data.update(self._get_info_data__locale(page_type, entry_fields, entry_obj))
+        campaign = data.pop("campaign")
+        data.update(
+            {
+                # eg www.mozilla.org-firefox-accounts or www.mozilla.org-firefox-sync
+                "utm_source": f"www.mozilla.org-{campaign}",
+                "utm_campaign": campaign,  # eg firefox-sync
+            }
+        )
+
+        _preview_image = self._get_preview_image_from_fields(entry_fields)
+        if _preview_image:
+            data["image"] = _preview_image
+
+        if seo_fields:
+            _preview_image = self._get_preview_image_from_fields(seo_fields)
+
+            _seo_fields = deepcopy(seo_fields)  # NB: don't mutate the source dict
+            if _preview_image:
+                _seo_fields["image"] = _preview_image
+
+            # We don't need the preview_image key if we've had it in the past, and
+            # if reading it fails then we don't want it sticking around, either
+            _seo_fields.pop("preview_image", None)
+            data.update({"seo": _seo_fields})
+
+        data.update(
+            self._get_info_data__category_tags_classification(
+                entry_fields,
+                page_type,
+            )
+        )
 
         return data
 
-    def get_entry_by_id(self, entry_id):
-        return self.client.entry(entry_id, {"locale": self.locale})
-
     def get_content(self):
-        # check if it is a page or a connector
+        # Check if it is a page or a connector, or a Compose page type
+
         entry_type = self.page.content_type.id
-        if entry_type.startswith("page"):
+        seo_obj = None
+        if entry_type == COMPOSE_MAIN_PAGE_TYPE:
+            # Contentful Compose page, linking to content and SEO models
+            entry_obj = self.page.content  # The page with the actual content
+            seo_obj = self.page.seo  # The SEO model
+            # Note that the slug lives on self.page, not the seo_obj.
+        elif entry_type.startswith("page"):
             entry_obj = self.page
         elif entry_type == "connectHomepage":
+            # Legacy - TODO: remove me once we're no longer using Connect: Homepage
             entry_obj = self.page.fields()["entry"]
         else:
             raise ValueError(f"{entry_type} is not a recognized page type")
 
-        self.request.page_info = self.get_info_data(entry_obj)
+        if not entry_obj:
+            raise Exception(f"No 'Entry' detected for {self.page.content_type.id}")
+
+        self.request.page_info = self.get_info_data(
+            entry_obj,
+            seo_obj,
+        )
         page_type = entry_obj.content_type.id
         page_css = set()
         page_js = set()
@@ -519,7 +641,7 @@ class ContentfulPage:
 
                     page_js.update(js)
 
-        if page_type == "pageGeneral":
+        if page_type == CONTENT_TYPE_PAGE_GENERAL:
             # look through all entries and find content ones
             for key, value in fields.items():
                 if key == "component_hero":
@@ -528,9 +650,12 @@ class ContentfulPage:
                     entries.append(self.get_text_data(value))
                 elif key == "component_callout":
                     proc(value)
-        elif page_type == "pageVersatile":
-            content = fields.get("content")
-        elif page_type == "pageHome":
+        elif page_type == CONTENT_TYPE_PAGE_RESOURCE_CENTER:
+            # TODO: can we actually make this generic? Poss not: main_content is a custom field name
+            _content = fields.get("main_content", {})
+            entries.append(self.get_text_data(_content))
+        else:
+            # This covers pageVersatile, pageHome, etc
             content = fields.get("content")
 
         if content:
@@ -633,7 +758,6 @@ class ContentfulPage:
             "image": split_image_url,
             "mobile_class": get_mobile_class(),
         }
-
         return data
 
     def get_callout_data(self, entry_obj):

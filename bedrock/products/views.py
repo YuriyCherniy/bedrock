@@ -2,15 +2,25 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 from html import escape
+from urllib.parse import quote_plus, unquote_plus
 
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
+from django.urls import reverse
 from django.views.decorators.http import require_POST, require_safe
 
 import basket
 import basket.errors
+from sentry_sdk import capture_exception
 
 from bedrock.base.geo import get_country_from_request
+from bedrock.contentful.constants import (
+    ARTICLE_CATEGORY_LABEL,
+    CONTENT_CLASSIFICATION_VPN,
+    CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+)
+from bedrock.contentful.models import ContentfulEntry
+from bedrock.contentful.utils import get_active_locales as get_active_contentful_locales
 from bedrock.newsletter.views import general_error, invalid_email_address
 from bedrock.products.forms import VPNWaitlistForm
 from lib import l10n_utils
@@ -67,8 +77,8 @@ def vpn_invite_waitlist(request):
 
         # NOTE this is not a typo; Referrer is misspelled in the HTTP spec
         # https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.36
-        if not kwargs.get("source_url") and request.META.get("HTTP_REFERER"):
-            kwargs["source_url"] = request.META["HTTP_REFERER"]
+        if not kwargs.get("source_url") and request.headers.get("Referer"):
+            kwargs["source_url"] = request.headers["Referer"]
 
         try:
             basket.subscribe(**kwargs)
@@ -96,3 +106,143 @@ def vpn_invite_waitlist(request):
         resp = {"success": True}
 
     return JsonResponse(resp)
+
+
+def _build_category_list(entry_list):
+
+    # Template is expecting this format:
+    # category_list = [
+    #   {"name": "Cat1", "url": "/full/path/to/category"}, ...
+    # ]
+    categories_seen = set()
+    category_list = []
+    root_url = reverse("products.vpn.resource-center.landing")
+    for entry in entry_list:
+        category = entry.category
+        if category and category not in categories_seen:
+            category_list.append(
+                {
+                    "name": category,
+                    "url": f"{root_url}?{ARTICLE_CATEGORY_LABEL}={quote_plus(category)}",
+                }
+            )
+            categories_seen.add(category)
+
+    category_list = sorted(category_list, key=lambda x: x["name"])
+    return category_list
+
+
+def _filter_articles(articles_list, category):
+
+    if not category:
+        return articles_list
+
+    return [article for article in articles_list if article.category == category]
+
+
+def resource_center_landing_view(request):
+
+    ARTICLE_GROUP_SIZE = 6
+    template_name = "products/vpn/resource-center/landing.html"
+    active_locales = get_active_contentful_locales(
+        classification=CONTENT_CLASSIFICATION_VPN,
+        content_type=CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+    )
+    requested_locale = l10n_utils.get_locale(request)
+
+    if requested_locale not in active_locales:
+        return l10n_utils.redirect_to_best_locale(
+            request,
+            translations=active_locales,
+        )
+
+    resource_articles = ContentfulEntry.objects.get_entries_by_type(
+        locale=requested_locale,
+        classification=CONTENT_CLASSIFICATION_VPN,
+        content_type=CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+    )
+    category_list = _build_category_list(resource_articles)
+    selected_category = unquote_plus(request.GET.get(ARTICLE_CATEGORY_LABEL, ""))
+
+    filtered_articles = _filter_articles(
+        resource_articles,
+        category=selected_category,
+    )
+
+    # The resource_articles are ContentfulEntry objects at the moment, but
+    # we really only need their JSON data from here on
+    filtered_article_data = [x.data for x in filtered_articles]
+
+    first_article_group, second_article_group = (
+        filtered_article_data[:ARTICLE_GROUP_SIZE],
+        filtered_article_data[ARTICLE_GROUP_SIZE:],
+    )
+
+    ctx = {
+        "active_locales": active_locales,
+        "category_list": category_list,
+        "first_article_group": first_article_group,
+        "second_article_group": second_article_group,
+        "selected_category": escape(selected_category),
+    }
+    return l10n_utils.render(
+        request,
+        template_name,
+        ctx,
+        ftl_files=["products/vpn/resource-center", "products/vpn/shared"],
+    )
+
+
+def resource_center_article_view(request, slug):
+    """Individual detail pages for the VPN Resource Center"""
+
+    template_name = "products/vpn/resource-center/article.html"
+
+    requested_locale = l10n_utils.get_locale(request)
+    active_locales_for_this_article = get_active_contentful_locales(
+        classification=CONTENT_CLASSIFICATION_VPN,
+        content_type=CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+        slug=slug,
+    )
+    if not active_locales_for_this_article:
+        raise Http404()
+
+    if requested_locale not in active_locales_for_this_article:
+        # Calling render() early will redirect the user to the most
+        # appropriate default/alternative locale for their browser
+        return l10n_utils.redirect_to_best_locale(
+            request,
+            translations=active_locales_for_this_article,
+        )
+
+    ctx = {}
+    try:
+        article = ContentfulEntry.objects.get_entry_by_slug(
+            slug=slug,
+            locale=requested_locale,
+            classification=CONTENT_CLASSIFICATION_VPN,
+            content_type=CONTENT_TYPE_PAGE_RESOURCE_CENTER,
+        )
+        ctx.update(article.data)
+    except ContentfulEntry.DoesNotExist as ex:
+        # We shouldn't get this far, given active_locales_for_this_article,
+        # so log it loudly before 404ing.
+        capture_exception(ex)
+        raise Http404()
+
+    ctx.update(
+        {
+            "active_locales": active_locales_for_this_article,
+            "related_articles": [x.data for x in article.get_related_entries()],
+        }
+    )
+
+    return l10n_utils.render(
+        request,
+        template_name,
+        ctx,
+        ftl_files=[
+            "products/vpn/resource-center",
+            "products/vpn/shared",
+        ],
+    )

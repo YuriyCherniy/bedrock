@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -18,6 +17,9 @@ from everett.manager import ListOf
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from bedrock.base.config_manager import config
+from bedrock.contentful.constants import (
+    DEFAULT_CONTENT_TYPES as CONTENTFUL_DEFAULT_CONTENT_TYPES,
+)
 
 # ROOT path of the project. A pathlib.Path object.
 DATA_PATH = config("DATA_PATH", default="data")
@@ -34,9 +36,16 @@ def data_path(*args):
     return abspath(str(DATA_PATH.joinpath(*args)))
 
 
-# Is this a dev instance?
+# Is this a development-mode deployment where we might have
+# extra behaviour/helpers/URLs enabled? (eg, local dev or demo)
+# (Don't infer that this specifically means our Dev _deployment_
+# - it doesn't. You can use APP_NAME, below, to get that)
 DEV = config("DEV", parser=bool, default="false")
+
+# Is this particular deployment running in _production-like_ mode?
+# (This will include the Dev and Staging deployments, for instance)
 PROD = config("PROD", parser=bool, default="false")
+
 DEBUG = config("DEBUG", parser=bool, default="false")
 DATABASES = {
     "default": {
@@ -54,7 +63,7 @@ CACHES = {
             "MAX_ENTRIES": 5000,
             "CULL_FREQUENCY": 4,  # 1/4 entries deleted if max reached
         },
-    }
+    },
 }
 
 # in case django-pylibmc is in use
@@ -221,14 +230,9 @@ PROD_LANGUAGES = (
     "zu",
 )
 
-LOCALES_PATH = DATA_PATH / "locale"
-default_locales_repo = "www.mozilla.org" if DEV else "bedrock-l10n"
-default_locales_repo = "https://github.com/mozilla-l10n/{}".format(default_locales_repo)
-LOCALES_REPO = config("LOCALES_REPO", default=default_locales_repo)
 GITHUB_REPO = "https://github.com/mozilla/bedrock"
 
 # Global L10n files.
-DOTLANG_FILES = ["main"]
 FLUENT_DEFAULT_FILES = [
     "banners/firefox-app-store",
     "banners/fundraising",
@@ -265,8 +269,6 @@ FLUENT_PATHS = [
     # remote FTL files from l10n team
     FLUENT_REPO_PATH,
 ]
-FLUENT_MIGRATIONS = "lib.fluent_migrations"
-FLUENT_MIGRATIONS_PATH = ROOT_PATH / "lib" / "fluent_migrations"
 
 # templates to exclude from having an "edit this page" link in the footer
 # these are typically ones for which most of the content is in the DB
@@ -442,6 +444,7 @@ NOINDEX_URLS = [
     r"^foundation/annualreport/$" r"^firefox/notes/$" r"^teach/$" r"^about/legal/impressum/$",
     r"^security/announce/",
     r"^exp/",
+    r"^external/",
 ]
 
 # Pages we do want indexed but don't show up in automated URL discovery
@@ -483,9 +486,8 @@ if DEBUG:
 
 
 def set_whitenoise_headers(headers, path, url):
-    if "/fonts/" in url or "/caldata/" in url:
-        cache_control = "public, max-age={}".format(604800)  # one week
-        headers["Cache-Control"] = cache_control
+    if "/fonts/" in url:
+        headers["Cache-Control"] = "public, max-age=604800"  # one week
 
     if url.startswith("/.well-known/matrix/"):
         headers["Content-Type"] = "application/json"
@@ -499,22 +501,6 @@ PROJECT_MODULE = "bedrock"
 
 ROOT_URLCONF = "bedrock.urls"
 
-# Tells the extract script what files to look for L10n in and what function
-# handles the extraction.
-PUENTE = {
-    "BASE_DIR": ROOT,
-    "PROJECT": "Bedrock",
-    "MSGID_BUGS_ADDRESS": "https://bugzilla.mozilla.org/enter_bug.cgi?product=www.mozilla.org&component=L10N",
-    "DOMAIN_METHODS": {
-        "django": [
-            ("bedrock/**.py", "lib.l10n_utils.extract.extract_python"),
-            ("bedrock/**/templates/**.html", "lib.l10n_utils.extract.extract_jinja2"),
-            ("bedrock/**/templates/**.js", "lib.l10n_utils.extract.extract_jinja2"),
-            ("bedrock/**/templates/**.jsonp", "lib.l10n_utils.extract.extract_jinja2"),
-        ],
-    },
-}
-
 
 def get_app_name(hostname):
     """
@@ -522,7 +508,8 @@ def get_app_name(hostname):
 
     The hostname in our deployments will be in the form `bedrock-{version}-{type}-{random-ID}`
     where {version} is "dev", "stage", or "prod", and {type} is the process type
-    (e.g. "web" or "clock"). Everywhere else it won't be in this form and will return None.
+    (e.g. "web" or "clock"). Everywhere else the hostname won't be in this form and
+    this helper will just return a default string.
     """
     if hostname.startswith("bedrock-"):
         app_mode = hostname.split("-")[1]
@@ -570,12 +557,9 @@ INSTALLED_APPS = (
     # Third-party apps, patches, fixes
     "commonware.response.cookies",
     # L10n
-    "puente",  # for ./manage.py extract
     "product_details",
     # third-party apps
     "django_jinja_markdown",
-    "pagedown",
-    "localflavor",
     "django_jinja",
     "watchman",
     # Local apps
@@ -590,6 +574,7 @@ INSTALLED_APPS = (
     "bedrock.privacy",
     "bedrock.products",
     "bedrock.externalfiles",
+    "bedrock.externalpages",
     "bedrock.security",
     "bedrock.releasenotes",
     "bedrock.contentcards",
@@ -599,12 +584,12 @@ INSTALLED_APPS = (
     "bedrock.sitemaps",
     "bedrock.pocketfeed",
     "bedrock.exp",
+    "bedrock.careers",
     # last so that redirects here will be last
     "bedrock.redirects",
     # libs
     "django_extensions",
     "lib.l10n_utils",
-    "captcha",
 )
 
 # Must match the list at CloudFlare if the
@@ -622,10 +607,9 @@ VARY_NOCACHE_EXEMPT_URL_PREFIXES = (
 
 # Sessions
 #
-# By default, be at least somewhat secure with our session cookies.
-SESSION_COOKIE_HTTPONLY = not DEBUG
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+# NB: There are no sessions in Bedrock - it's currently stateless.
+# Django's messages framework is configured to use cookie storage,
+# not session storage - see MESSAGE_STORAGE below
 
 # legacy setting. backward compat.
 DISABLE_SSL = config("DISABLE_SSL", default="true", parser=bool)
@@ -642,6 +626,8 @@ SECURE_REDIRECT_EXEMPT = [
 if config("USE_SECURE_PROXY_HEADER", default=str(SECURE_SSL_REDIRECT), parser=bool):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+STRFTIME_FORMAT_INTERNAL_USE = "%Y-%m-%d %H:%M:%S"
+
 # watchman
 WATCHMAN_DISABLE_APM = True
 WATCHMAN_CHECKS = (
@@ -649,12 +635,9 @@ WATCHMAN_CHECKS = (
     "watchman.checks.databases",
 )
 
-LOCALE_PATHS = (str(LOCALES_PATH),)
-
 TEMPLATES = [
     {
         "BACKEND": "django_jinja.backend.Jinja2",
-        "DIRS": LOCALE_PATHS,
         "APP_DIRS": True,
         "OPTIONS": {
             "match_extension": None,
@@ -687,8 +670,6 @@ TEMPLATES = [
                 "django_jinja.builtins.extensions.StaticFilesExtension",
                 "django_jinja.builtins.extensions.DjangoFiltersExtension",
                 "lib.l10n_utils.template.i18n",
-                "lib.l10n_utils.template.l10n_blocks",
-                "lib.l10n_utils.template.lang_blocks",
                 "django_jinja_markdown.extensions.MarkdownExtension",
             ],
         },
@@ -704,7 +685,14 @@ WP_BLOGS = {
     #     uncomment and change this to get more
     #     'num_posts': 20,
     # },
+    "careers": {
+        "url": "https://blog.mozilla.org/careers/",
+        "name": "Life@Mozilla",
+        "num_posts": 20,
+    },
 }
+
+GREENHOUSE_BOARD = config("GREENHOUSE_BOARD", default="mozilla")
 
 # used to connect to @MozillaHQ Pocket account
 POCKET_API_URL = config("POCKET_API_URL", default="https://getpocket.com/v3/firefox/profile-recs")
@@ -889,6 +877,7 @@ DONATE_PARAMS = {
     "el": {"currency": "eur", "symbol": "€", "presets": "50,30,20,10", "default": "30"},
     "en-CA": {"currency": "cad", "symbol": "$", "presets": "65,30,15,4", "default": "30"},
     "en-GB": {"currency": "gbp", "symbol": "£", "presets": "40,25,15,8", "default": "25"},
+    "es-ES": {"currency": "eur", "symbol": "€", "presets": "50,30,20,10", "default": "30"},
     "es-MX": {"currency": "mxn", "symbol": "$", "presets": "400,200,100,60", "default": "200"},
     "et": {"currency": "eur", "symbol": "€", "presets": "50,30,20,10", "default": "30"},
     "fr": {"currency": "eur", "symbol": "€", "presets": "50,30,20,10", "default": "30"},
@@ -920,29 +909,32 @@ DONATE_PARAMS = {
 
 # Official Firefox Twitter accounts
 FIREFOX_TWITTER_ACCOUNTS = {
-    "de": "https://twitter.com/firefox_DE",
     "en-US": "https://twitter.com/firefox",
     "es-ES": "https://twitter.com/firefox_es",
-    "fr": "https://twitter.com/firefox_FR",
     "pt-BR": "https://twitter.com/firefoxbrasil",
 }
 
+# Official Mozilla Twitter accounts
+MOZILLA_TWITTER_ACCOUNTS = {
+    "en-US": "https://twitter.com/mozilla",
+    "de": "https://twitter.com/mozilla_germany",
+    "fr": "https://twitter.com/mozilla_france",
+}
+
 # Official Firefox Instagram accounts
-FIREFOX_INSTAGRAM_ACCOUNTS = {
+MOZILLA_INSTAGRAM_ACCOUNTS = {
+    "en-US": "https://www.instagram.com/mozilla/",
     "de": "https://www.instagram.com/unfcktheinternet/",
-    "en-US": "https://www.instagram.com/firefox/",
 }
 
 # Firefox Accounts product links
 # ***This URL *MUST* end in a traling slash!***
 FXA_ENDPOINT = config("FXA_ENDPOINT", default="https://accounts.stage.mozaws.net/" if DEV else "https://accounts.firefox.com/")
 
-FXA_ENDPOINT_MOZILLAONLINE = config("FXA_ENDPOINT_MOZILLAONLINE", default="https://accounts.firefox.com.cn/")
-
 # Google Play and Apple App Store settings
-from .appstores import GOOGLE_PLAY_FIREFOX_LINK_MOZILLAONLINE  # noqa
-from .appstores import GOOGLE_PLAY_FIREFOX_LINK_UTMS  # noqa
-from .appstores import (
+from .appstores import GOOGLE_PLAY_FIREFOX_LINK_MOZILLAONLINE  # noqa: E402, F401
+from .appstores import GOOGLE_PLAY_FIREFOX_LINK_UTMS  # noqa: E402, F401
+from .appstores import (  # noqa: E402, F401
     ADJUST_FIREFOX_URL,
     ADJUST_FOCUS_URL,
     ADJUST_KLAR_URL,
@@ -994,6 +986,11 @@ SEND_TO_DEVICE_MESSAGE_SETS = {
             "all": "download-firefox-mobile-whatsnew",
         }
     },
+    "fx-whatsnew-96": {
+        "email": {
+            "all": "download-firefox-mobile-whatsnew-96",
+        }
+    },
     "fx-focus": {
         "email": {
             "all": "download-focus-mobile-whatsnew",
@@ -1035,13 +1032,30 @@ CONTENTFUL_SPACE_ID = config("CONTENTFUL_SPACE_ID", raise_error=False)
 CONTENTFUL_SPACE_KEY = config("CONTENTFUL_SPACE_KEY", raise_error=False)
 CONTENTFUL_ENVIRONMENT = config("CONTENTFUL_ENVIRONMENT", default="master")
 CONTENTFUL_SPACE_API = ("preview" if DEV else "cdn") + ".contentful.com"
-CONTENTFUL_CONTENT_TYPES = config("CONTENTFUL_CONTENT_TYPES", default="connectHomepage", parser=ListOf(str))
+CONTENTFUL_API_TIMEOUT = config("CONTENTFUL_API_TIMEOUT", default="5", parser=int)
+CONTENTFUL_CONTENT_TYPES = config(
+    "CONTENTFUL_CONTENT_TYPES",
+    default=CONTENTFUL_DEFAULT_CONTENT_TYPES,
+    parser=ListOf(str),
+)
 
 CONTENTFUL_NOTIFICATION_QUEUE_URL = config("CONTENTFUL_NOTIFICATION_QUEUE_URL", default="", raise_error=False)
 CONTENTFUL_NOTIFICATION_QUEUE_REGION = config("CONTENTFUL_NOTIFICATION_QUEUE_REGION", default="", raise_error=False)
 CONTENTFUL_NOTIFICATION_QUEUE_ACCESS_KEY_ID = config("CONTENTFUL_NOTIFICATION_QUEUE_ACCESS_KEY_ID", default="", raise_error=False)
 CONTENTFUL_NOTIFICATION_QUEUE_SECRET_ACCESS_KEY = config("CONTENTFUL_NOTIFICATION_QUEUE_SECRET_ACCESS_KEY", default="", raise_error=False)
 CONTENTFUL_NOTIFICATION_QUEUE_WAIT_TIME = config("CONTENTFUL_NOTIFICATION_QUEUE_WAIT_TIME", default="10", parser=int, raise_error=False)
+
+CONTENTFUL_HOMEPAGE_LOOKUP = {
+    # TEMPORARY lookup table for which Contentful `connectHomepage` page ID to get for which locale
+    "en-US": "58YIvwDmzSDjtvpSqstDcL",
+    "de": "4k3CxqZGjxXOjR1I0dhyto",
+}
+
+CONTENTFUL_LOCALE_ACTIVATION_PERCENTAGE = config(
+    "CONTENTFUL_LOCALE_ACTIVATION_PERCENTAGE",
+    default="1" if DEV is True else "60",
+    parser=float,
+)
 
 RELEASE_NOTES_PATH = config("RELEASE_NOTES_PATH", default=data_path("release_notes"))
 RELEASE_NOTES_REPO = config("RELEASE_NOTES_REPO", default="https://github.com/mozilla/release-notes.git")
@@ -1074,8 +1088,21 @@ LOGGING = {
     "formatters": {
         "verbose": {"format": "%(levelname)s %(asctime)s %(module)s %(message)s"},
     },
-    "handlers": {"console": {"class": "logging.StreamHandler", "stream": sys.stdout, "formatter": "verbose"}},
+    "handlers": {
+        "null": {
+            "class": "logging.NullHandler",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "verbose",
+        },
+    },
     "loggers": {
+        "django.security.DisallowedHost": {  # NB: this exception changes base in Django 4
+            "handlers": ["null"],
+            "propagate": False,
+        },
         "django.db.backends": {
             "level": "ERROR",
             "handlers": ["console"],
@@ -1106,7 +1133,7 @@ def get_default_gateway_linux():
 
                 return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
         return "localhost"
-    except IOError:
+    except OSError:
         return "localhost"
 
 
@@ -1114,8 +1141,11 @@ FIREFOX_MOBILE_SYSREQ_URL = "https://support.mozilla.org/kb/will-firefox-work-my
 
 MOZILLA_LOCATION_SERVICES_KEY = "a9b98c12-d9d5-4015-a2db-63536c26dc14"
 
-DEAD_MANS_SNITCH_URL = config("DEAD_MANS_SNITCH_URL", default="")
+DEAD_MANS_SNITCH_URL = config("DEAD_MANS_SNITCH_URL", default="")  # see cron.py
+# There is also a DB_UPDATE_SCRIPT_DMS_URL defined in env vars, which is called directly from
+# the bash script bin/run-db-update.sh
 
+# Sentry config for Backend and Frontend
 SENTRY_DSN = config("SENTRY_DSN", default="")
 if SENTRY_DSN:
     sentry_sdk.init(
@@ -1124,6 +1154,13 @@ if SENTRY_DSN:
         server_name=".".join(x for x in [APP_NAME, CLUSTER_NAME] if x),
         integrations=[DjangoIntegration()],
     )
+
+# Frontend uses the same DSN as backend by default, but we'll
+# specify a separate one for FE use in Production only
+SENTRY_FRONTEND_DSN = config(
+    "SENTRY_FRONTEND_DSN",
+    default=SENTRY_DSN,
+)
 
 # Django-CSP
 CSP_DEFAULT_SRC = ["'self'", "*.mozilla.net", "*.mozilla.org", "*.mozilla.com"]
@@ -1143,6 +1180,7 @@ CSP_IMG_SRC = CSP_DEFAULT_SRC + [
     "cdn-3.convertexperiments.com",
     "logs.convertexperiments.com",
     "images.ctfassets.net",
+    "cdn.cookielaw.org",
 ]
 CSP_SCRIPT_SRC = CSP_DEFAULT_SRC + [
     # TODO fix things so that we don't need this
@@ -1160,6 +1198,8 @@ CSP_SCRIPT_SRC = CSP_DEFAULT_SRC + [
     "data.track.convertexperiments.com",
     "1003350.track.convertexperiments.com",
     "1003343.track.convertexperiments.com",
+    "cdn.cookielaw.org",
+    "assets.getpocket.com",  # allow Pocket Snowplow analytics
 ]
 CSP_STYLE_SRC = CSP_DEFAULT_SRC + [
     # TODO fix things so that we don't need this
@@ -1183,9 +1223,13 @@ CSP_CONNECT_SRC = CSP_DEFAULT_SRC + [
     "1003350.metrics.convertexperiments.com",
     "1003343.metrics.convertexperiments.com",
     "sentry.prod.mozaws.net",
+    "cdn.cookielaw.org",
+    "privacyportal.onetrust.com",
     FXA_ENDPOINT,
-    FXA_ENDPOINT_MOZILLAONLINE,
+    "getpocket.com",  # Pocket Snowplow
 ]
+if DEV:
+    CSP_CONNECT_SRC.append("com-getpocket-prod1.mini.snplow.net")
 CSP_REPORT_ONLY = config("CSP_REPORT_ONLY", default="false", parser=bool)
 CSP_REPORT_URI = config("CSP_REPORT_URI", default="") or None
 
@@ -1196,6 +1240,8 @@ if CSP_EXTRA_FRAME_SRC:
 # support older browsers (mainly Safari)
 CSP_FRAME_SRC = CSP_CHILD_SRC
 
+# FONT CSP to use fonts from getpocket.com
+CSP_FONT_SRC = ["'self'", "assets.getpocket.com"]
 # Bug 1331069 - Double Click tracking pixel for download page.
 AVAILABLE_TRACKING_PIXELS = {
     "doubleclick": (
@@ -1522,3 +1568,6 @@ VPN_AVAILABLE_COUNTRIES = 15
 VPN_CONNECT_SERVERS = 400
 VPN_CONNECT_COUNTRIES = 30
 VPN_CONNECT_DEVICES = 5
+
+# VPN client ID for referral parameter tracking (issue 10811)
+VPN_CLIENT_ID = "e6eb0d1e856335fc"

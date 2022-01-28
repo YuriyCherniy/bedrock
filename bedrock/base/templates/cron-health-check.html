@@ -70,6 +70,10 @@
         <td>Hostname</td>
         <td>{{ server_info.name }}</td>
       </tr>
+      <tr>
+        <td>Request Country</td>
+        <td>{{ country_code }}</td>
+      </tr>
       {% if server_info.git_sha %}
       <tr>
         <td>Bedrock Git SHA</td>
@@ -91,7 +95,9 @@
       {% if server_info.db_last_update %}
       <tr>
         <td>DB Last Updated</td>
-        <td>{{ server_info.db_last_update }}</td>
+        <td title={{server_info.db_last_updated_timestamp}}>
+          {{ server_info.db_last_update }}
+        </td>
       </tr>
       {% endif %}
       {% if server_info.db_file_name %}
@@ -100,6 +106,16 @@
         <td><a href="{{ server_info.db_file_url }}">{{ server_info.db_file_name }}</a></td>
       </tr>
       {% endif %}
+      <tr>
+        <td>Latest Contentful sync</td>
+        <td{% if contentful_info.latest_sync %} title="{{contentful_info.latest_sync|datetime(settings.STRFTIME_FORMAT_INTERNAL_USE)}}"{% endif %}>
+          {% if contentful_info.time_since_latest_sync %}
+            {{ contentful_info.time_since_latest_sync }}
+          {% else %}
+            No data!
+          {% endif %}
+        </td>
+      </tr>
     </tbody>
   </table>
 
@@ -114,20 +130,19 @@
     </thead>
     <tbody>
       <tr>
-        <td><a href="{{ l10n_repo.repo_url }}">L10n .lang Files</a></td>
-        <td><a href="{{ l10n_repo.repo_url }}/commit/{{ l10n_repo.latest_ref }}">{{ l10n_repo.latest_ref[:10] }}</a></td>
-        <td>{{ l10n_repo.last_updated }}</td>
-      </tr>
-      <tr>
         <td><a href="{{ fluent_repo.repo_url }}">L10n Fluent Files</a></td>
         <td><a href="{{ fluent_repo.repo_url }}/commit/{{ fluent_repo.latest_ref }}">{{ fluent_repo.latest_ref[:10] }}</a></td>
-        <td>{{ fluent_repo.last_updated }}</td>
+        <td{% if fluent_repo.last_updated_timestamp %} title="{{fluent_repo.last_updated_timestamp|datetime(settings.STRFTIME_FORMAT_INTERNAL_USE)}}"{% endif %}>
+          {{ fluent_repo.last_updated }}
+        </td>
       </tr>
       {% for repo in git_repos %}
       <tr>
         <td><a href="{{ repo.repo_url }}">{{ repo.repo_name }}</a></td>
         <td><a href="{{ repo.commit_url }}">{{ repo.latest_ref[:10] }}</a></td>
-        <td>{{ repo.last_updated }}</td>
+        <td{% if repo.last_updated_timestamp %} title="{{repo.last_updated_timestamp|datetime(settings.STRFTIME_FORMAT_INTERNAL_USE)}}"{% endif %}>
+          {{ repo.last_updated }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>

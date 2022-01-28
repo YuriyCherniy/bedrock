@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import os
+from unittest.mock import Mock, call, patch
 
 from django.core.cache import caches
 from django.http import HttpResponse
@@ -11,7 +11,6 @@ from django.test.utils import override_settings
 
 from django_jinja.backend import Jinja2
 from jinja2 import Markup
-from mock import Mock, call, patch
 from pyquery import PyQuery as pq
 
 from bedrock.base.urlresolvers import reverse
@@ -300,16 +299,16 @@ class TestWhatsNew(TestCase):
     def test_context_variables_whatsnew_nightly(self, render_mock):
         """Should pass the correct context variables for nightly channel"""
         req = self.rf.get("/en-US/firefox/whatsnew/")
-        self.view(req, version="72.0a1")
+        self.view(req, version="100.0a1")
         template = render_mock.call_args[0][1]
         ctx = render_mock.call_args[0][2]
         assert template == ["firefox/nightly/whatsnew.html"]
-        assert ctx["version"] == "72.0a1"
-        assert ctx["analytics_version"] == "72nightly"
-        assert ctx["entrypoint"] == "mozilla.org-whatsnew72nightly"
-        assert ctx["campaign"] == "whatsnew72nightly"
+        assert ctx["version"] == "100.0a1"
+        assert ctx["analytics_version"] == "100nightly"
+        assert ctx["entrypoint"] == "mozilla.org-whatsnew100nightly"
+        assert ctx["campaign"] == "whatsnew100nightly"
         assert ctx["utm_params"] == (
-            "utm_source=mozilla.org-whatsnew72nightly&utm_medium=referral&utm_campaign=whatsnew72nightly&entrypoint=mozilla.org-whatsnew72nightly"
+            "utm_source=mozilla.org-whatsnew100nightly&utm_medium=referral&utm_campaign=whatsnew100nightly&entrypoint=mozilla.org-whatsnew100nightly"
         )
 
     # end context variable tests
@@ -321,6 +320,14 @@ class TestWhatsNew(TestCase):
         """Should show nightly whatsnew template"""
         req = self.rf.get("/en-US/firefox/whatsnew/")
         self.view(req, version="68.0a1")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/nightly/whatsnew.html"]
+
+    @override_settings(DEV=True)
+    def test_fx_nightly_100_0_a1_whatsnew(self, render_mock):
+        """Should show nightly whatsnew template"""
+        req = self.rf.get("/en-US/firefox/whatsnew/")
+        self.view(req, version="100.0a1")
         template = render_mock.call_args[0][1]
         assert template == ["firefox/nightly/whatsnew.html"]
 
@@ -350,6 +357,15 @@ class TestWhatsNew(TestCase):
         """Should show regular dev browser whatsnew template"""
         req = self.rf.get("/en-US/firefox/whatsnew/")
         self.view(req, version="68.0a2")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/developer/whatsnew.html"]
+
+    @override_settings(DEV=True)
+    @patch.dict(os.environ, SWITCH_DEV_WHATSNEW_68="False")
+    def test_fx_dev_browser_100_0_a2_whatsnew_off(self, render_mock):
+        """Should show regular dev browser whatsnew template"""
+        req = self.rf.get("/en-US/firefox/whatsnew/")
+        self.view(req, version="100.0a2")
         template = render_mock.call_args[0][1]
         assert template == ["firefox/developer/whatsnew.html"]
 
@@ -390,99 +406,23 @@ class TestWhatsNew(TestCase):
         template = render_mock.call_args[0][1]
         assert template == ["firefox/whatsnew/index.html"]
 
-    # begin 91.0 whatsnew tests
-
-    def test_fx_91_0_0_en(self, render_mock):
-        """Should use whatsnew-fx91-en template for 91.0 in English"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "en-US"
-        self.view(req, version="91.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx91-en.html"]
-
-    def test_fx_91_0_0_de(self, render_mock):
-        """Should use whatsnew-fx91-de template for 91.0 in German"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "de"
-        self.view(req, version="91.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx91-de.html"]
-
-    def test_fx_91_0_0_locale(self, render_mock):
-        """Should use standard whatsnew template for 91.0 in other locales"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "pl"
-        self.view(req, version="91.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/index-account.html"]
-
-    # end 91.0 whatsnew tests
-
-    # begin 92.0 whatsnew tests
-
-    def test_fx_92_0_0_de(self, render_mock):
-        """Should use whatsnew-fx92-de template for 92.0 in German"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "de"
-        self.view(req, version="92.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx92-de.html"]
-
-    def test_fx_92_0_0_fr(self, render_mock):
-        """Should use whatsnew-fx92-fr template for 92.0 in French"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "fr"
-        self.view(req, version="92.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx92-fr.html"]
-
-    @patch.dict(os.environ, SWITCH_FIREFOX_WHATSNEW_92_VPN_PRICING="False")
-    def test_fx_92_0_0_en(self, render_mock):
-        """Should use whatsnew-fx92-en template for 92.0 in English when VPN switch is OFF"""
-        req = self.rf.get("/firefox/whatsnew/en/")
-        req.locale = "en-US"
-        self.view(req, version="92.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx92-en.html"]
-
-    def test_fx_92_0_0_locale(self, render_mock):
-        """Should use standard whatsnew template for 92.0 in other locales"""
-        req = self.rf.get("/firefox/whatsnew/")
-        req.locale = "pl"
-        self.view(req, version="92.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/index-account.html"]
-
-    @override_settings(DEV=False)
-    def test_fx_92_0_0_china(self, render_mock):
-        """Should use standard whatsnew template for 92.0 in China"""
-        req = self.rf.get("/firefox/whatsnew/", HTTP_CF_IPCOUNTRY="cn")
-        req.locale = "en-US"
-        self.view(req, version="92.0")
-        template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/index-account.html"]
-
-    # end 92.0 whatsnew tests
-
     # begin 93.0 whatsnew tests
 
-    @patch.dict(os.environ, SWITCH_FIREFOX_WHATSNEW_93_EXPERIMENT_FR_DE="False")
     def test_fx_93_0_0_de(self, render_mock):
-        """Should use whatsnew-fx93-v3-de template for 93.0 in German when switch is OFF"""
+        """Should use whatsnew-fx93-de template for 93.0 in German"""
         req = self.rf.get("/firefox/whatsnew/")
         req.locale = "de"
         self.view(req, version="93.0")
         template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx93-v3-de.html"]
+        assert template == ["firefox/whatsnew/whatsnew-fx93-de.html"]
 
-    @patch.dict(os.environ, SWITCH_FIREFOX_WHATSNEW_93_EXPERIMENT_EN="False")
     def test_fx_93_0_0_en(self, render_mock):
-        """Should use whatsnew-fx93-v3-en template for 93.0 in English when switch is OFF"""
+        """Should use whatsnew-fx93-en template for 93.0 in English"""
         req = self.rf.get("/firefox/whatsnew/")
         req.locale = "en-US"
         self.view(req, version="93.0")
         template = render_mock.call_args[0][1]
-        assert template == ["firefox/whatsnew/whatsnew-fx93-v3-en.html"]
+        assert template == ["firefox/whatsnew/whatsnew-fx93-en.html"]
 
     def test_fx_93_0_0_nl(self, render_mock):
         """Should use whatsnew-fx93-nl template for 93.0 in Dutch"""
@@ -563,6 +503,54 @@ class TestWhatsNew(TestCase):
         assert template == ["firefox/whatsnew/index-account.html"]
 
     # end 93.0 whatsnew tests
+
+    # begin 95.0 whatsnew tests
+
+    def test_fx_95_0_0_de(self, render_mock):
+        """Should use whatsnew-fx95-de template for 95.0 in German"""
+        req = self.rf.get("/firefox/whatsnew/")
+        req.locale = "de"
+        self.view(req, version="95.0")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/whatsnew/whatsnew-fx95-de.html"]
+
+    def test_fx_95_0_0_en(self, render_mock):
+        """Should use whatsnew-fx95-de template for 95.0 in English - US"""
+        req = self.rf.get("/firefox/whatsnew/")
+        req.locale = "en-US"
+        self.view(req, version="95.0")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/whatsnew/whatsnew-fx95-en.html"]
+
+    # end 95.0 whatsnew tests
+
+    # begin 96.0 whatsnew tests
+
+    def test_fx_96_0_0_de(self, render_mock):
+        """Should use whatsnew-fx96-de template for 96.0 in German"""
+        req = self.rf.get("/firefox/whatsnew/")
+        req.locale = "de"
+        self.view(req, version="96.0")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/whatsnew/whatsnew-fx96-de.html"]
+
+    def test_fx_96_0_0_fr(self, render_mock):
+        """Should use whatsnew-fx96-fr template for 96.0 in French"""
+        req = self.rf.get("/firefox/whatsnew/")
+        req.locale = "fr"
+        self.view(req, version="96.0")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/whatsnew/whatsnew-fx96-fr.html"]
+
+    def test_fx_96_0_0_en(self, render_mock):
+        """Should use whatsnew-fx96-en-s2d template for 96.0 in English - US"""
+        req = self.rf.get("/firefox/whatsnew/")
+        req.locale = "en-US"
+        self.view(req, version="96.0")
+        template = render_mock.call_args[0][1]
+        assert template == ["firefox/whatsnew/whatsnew-fx96-en-s2d.html"]
+
+    # end 96.0 whatsnew tests
 
 
 @patch("bedrock.firefox.views.l10n_utils.render", return_value=HttpResponse())

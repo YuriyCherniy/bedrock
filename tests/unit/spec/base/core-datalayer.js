@@ -5,15 +5,13 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 /* global sinon */
 
 describe('core-datalayer.js', function () {
-    'use strict';
-
     describe('pageHasDownload', function () {
         it('will return "true" when download button is present on page.', function () {
             const downloadMarkup =

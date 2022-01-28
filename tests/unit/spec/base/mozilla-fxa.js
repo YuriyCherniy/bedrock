@@ -5,13 +5,11 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 describe('mozilla-fxa.js', function () {
-    'use strict';
-
     describe('FxaState.applyStateToBody', function () {
         beforeEach(function () {
             document.body.classList.add('js', 'state-fxa-default');

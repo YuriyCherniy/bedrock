@@ -4,10 +4,8 @@
 
 $brand-theme: 'mozilla';
 $type-scale: 'standard';
-
 $font-path: '/media/fonts';
 $image-path: '/media/protocol/img';
-
 
 // These are general styles for elements/components that occur on every page.
 // Individual pages may include additional component styles as needed.
@@ -39,7 +37,6 @@ $image-path: '/media/protocol/img';
 @import 'components/menu-item';
 @import 'components/sub-navigation';
 
-
 // Temporary styling until the newsletter component is updated in Protocol
 // https://github.com/mozilla/protocol/issues/578
 .mzp-c-newsletter-subtitle {
@@ -51,7 +48,15 @@ $image-path: '/media/protocol/img';
 }
 
 // style classes automatically added by python to match Protocol form error styles
-.errorlist,
+.errorlist {
+    @include white-links;
+    background-color: $form-red;
+    border-radius: $field-border-radius;
+    color: $color-white;
+    padding: $spacing-sm;
+    margin-bottom: $spacing-xl;
+}
+
 .error-msg {
     @include light-links;
     background-color: $form-red;

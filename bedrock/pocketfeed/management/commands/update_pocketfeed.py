@@ -6,8 +6,10 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from bedrock.pocketfeed.models import PocketArticle
+from bedrock.utils.management.decorators import alert_sentry_on_exception
 
 
+@alert_sentry_on_exception
 class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False, help="If no error occurs, swallow all output."),
@@ -21,10 +23,10 @@ class Command(BaseCommand):
 
             if not options["quiet"]:
                 if updated:
-                    print("Refreshed %s articles from Pocket" % updated)
+                    print(f"Refreshed {updated} articles from Pocket")
 
                     if deleted:
-                        print("Deleted %s old articles" % deleted)
+                        print(f"Deleted {deleted} old articles")
                 else:
                     print("Pocket feed is already up to date")
         else:

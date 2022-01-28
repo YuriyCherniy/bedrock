@@ -3,12 +3,13 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import json
 import uuid
+from unittest.mock import ANY, DEFAULT, patch
 
 from django.http import HttpResponse
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 
 import basket
-from mock import ANY, DEFAULT, patch
 from pyquery import PyQuery as pq
 
 from bedrock.base.urlresolvers import reverse
@@ -49,6 +50,7 @@ class TestViews(TestCase):
 
 # Always mock basket.request to be sure we never actually call basket
 # during tests.
+@override_settings(BASKET_API_KEY="basket_key")
 @patch("basket.base.request")
 class TestExistingNewsletterView(TestCase):
     def setUp(self):
@@ -83,14 +85,14 @@ class TestExistingNewsletterView(TestCase):
             "form-3-subscribed_check": "false",
             "submit": "Save Preferences",
         }
-        super(TestExistingNewsletterView, self).setUp()
+        super().setUp()
 
     @patch("bedrock.newsletter.utils.get_newsletters")
     def test_will_show_confirm_copy(self, get_newsletters, mock_basket_request):
         # After successful confirm, ensure proper context var is set to display
         # confirmation-specific copy.
         get_newsletters.return_value = newsletters
-        url = "%s?confirm=1" % reverse("newsletter.existing.token", args=(self.token,))
+        url = f"{reverse('newsletter.existing.token', args=(self.token,))}?confirm=1"
         # noinspection PyUnresolvedReferences
         with patch.multiple("basket", request=DEFAULT) as basket_patches:
             with patch("lib.l10n_utils.render") as render:
@@ -136,9 +138,9 @@ class TestExistingNewsletterView(TestCase):
         request, template_name, context = render.call_args[0]
         forms = context["formset"].initial_forms
 
-        shown = set([form.initial["newsletter"] for form in forms])
-        inactive = set([newsletter for newsletter, data in newsletters.items() if not data.get("active", False)])
-        to_show = set([newsletter for newsletter, data in newsletters.items() if data.get("show", False)]) - inactive
+        shown = {form.initial["newsletter"] for form in forms}
+        inactive = {newsletter for newsletter, data in newsletters.items() if not data.get("active", False)}
+        to_show = {newsletter for newsletter, data in newsletters.items() if data.get("show", False)} - inactive
         subscribed = set(self.user["newsletters"])
 
         # All subscribed newsletters except inactive ones are shown
@@ -224,9 +226,9 @@ class TestExistingNewsletterView(TestCase):
         # Should have called update_user with subscription list
         self.assertEqual(1, basket_patches["update_user"].call_count)
         kwargs = basket_patches["update_user"].call_args[1]
-        self.assertEqual(set(kwargs), set(["newsletters", "lang"]))
+        self.assertEqual(set(kwargs), {"api_key", "newsletters", "lang"})
         self.assertEqual(kwargs["lang"], "en")
-        self.assertEqual(set(kwargs["newsletters"].split(",")), set(["mozilla-and-you", "firefox-tips"]))
+        self.assertEqual(set(kwargs["newsletters"].split(",")), {"mozilla-and-you", "firefox-tips"})
         # Should not have called unsubscribe
         self.assertEqual(0, basket_patches["unsubscribe"].call_count)
         # Should not have called subscribe
@@ -248,7 +250,7 @@ class TestExistingNewsletterView(TestCase):
         # Should have called update_user with list of newsletters
         self.assertEqual(1, basket_patches["update_user"].call_count)
         kwargs = basket_patches["update_user"].call_args[1]
-        self.assertEqual({"newsletters": "", "lang": "pt"}, kwargs)
+        self.assertEqual({"api_key": "basket_key", "newsletters": "", "lang": "pt"}, kwargs)
         # Should not have called subscribe
         self.assertEqual(0, basket_patches["subscribe"].call_count)
         # Should not have called unsubscribe
@@ -276,8 +278,7 @@ class TestExistingNewsletterView(TestCase):
         self.assertEqual((self.token, self.user["email"]), args)
         self.assertTrue(kwargs["optout"])
         # Should redirect to the 'updated' view with unsub=1 and token
-        url = reverse("newsletter.updated") + "?unsub=1"
-        url += "&token=%s" % self.token
+        url = f"{reverse('newsletter.updated')}?unsub=1&token={self.token}"
         assert rsp["Location"] == url
 
     @patch("bedrock.newsletter.utils.get_newsletters")
@@ -303,7 +304,7 @@ class TestExistingNewsletterView(TestCase):
         self.assertEqual(1, basket_patches["update_user"].call_count)
         # with the new lang and country and the newsletter list
         kwargs = basket_patches["update_user"].call_args[1]
-        self.assertEqual({"lang": "en", "country": "us", "newsletters": "mozilla-and-you"}, kwargs)
+        self.assertEqual({"api_key": "basket_key", "lang": "en", "country": "us", "newsletters": "mozilla-and-you"}, kwargs)
         # No messages should be emitted
         self.assertEqual(0, add_msg.call_count, msg=repr(add_msg.call_args_list))
         # Should redirect to the 'updated' view
@@ -363,7 +364,7 @@ class TestConfirmView(TestCase):
             confirm.return_value = {"status": "ok"}
             rsp = self.client.get(self.url)
             self.assertEqual(302, rsp.status_code)
-            self.assertTrue(rsp["Location"].endswith("%s?confirm=1" % reverse("newsletter.existing.token", kwargs={"token": self.token})))
+            self.assertTrue(rsp["Location"].endswith(f"{reverse('newsletter.existing.token', kwargs={'token': self.token})}?confirm=1"))
 
     def test_normal_with_query_params(self):
         """Confirm works with a valid token"""
@@ -373,8 +374,8 @@ class TestConfirmView(TestCase):
             self.assertEqual(302, rsp.status_code)
             self.assertTrue(
                 rsp["Location"].endswith(
-                    "%s?confirm=1&utm_tracking=oh+definitely+yes&"
-                    "utm_source=malibu" % reverse("newsletter.existing.token", kwargs={"token": self.token})
+                    f"{reverse('newsletter.existing.token', kwargs={'token': self.token})}"
+                    "?confirm=1&utm_tracking=oh+definitely+yes&utm_source=malibu"
                 )
             )
 

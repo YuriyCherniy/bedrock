@@ -188,7 +188,7 @@ def platform_img(ctx, url, optional_attributes=None):
         img_attrs["data-high-res"] = "true"
 
     img_attrs.update(optional_attributes)
-    attrs = " ".join('%s="%s"' % (attr, val) for attr, val in img_attrs.items())
+    attrs = " ".join(f'{attr}="{val}"' for attr, val in img_attrs.items())
 
     # Don't download any image until the javascript sets it based on
     # data-src so we can do platform detection. If no js, show the
@@ -217,56 +217,13 @@ def high_res_img(ctx, url, optional_attributes=None):
 
     if optional_attributes:
         class_name = optional_attributes.pop("class", "")
-        attrs = " " + " ".join('%s="%s"' % (attr, val) for attr, val in optional_attributes.items())
+        attrs = " " + " ".join(f'{attr}="{val}"' for attr, val in optional_attributes.items())
     else:
         class_name = ""
         attrs = ""
 
     # Use native srcset attribute for high res images
-    markup = ('<img class="{class_name}" src="{url}" ' 'srcset="{url_high_res} 1.5x"' "{attrs}>").format(
-        url=url, url_high_res=url_high_res, attrs=attrs, class_name=class_name
-    )
-
-    return jinja2.Markup(markup)
-
-
-@library.global_function
-@jinja2.contextfunction
-def lazy_img(ctx, image_url, placeholder_url, include_highres_image=False, optional_attributes=None, highres_image_url=None):
-    placeholder = static(placeholder_url)
-
-    external_img = re.match(r"^https?://", image_url, flags=re.I)
-
-    if include_highres_image and not external_img:
-        image_high_res = static(convert_to_high_res(image_url))
-        srcset = f'data-srcset="{image_high_res} 2x"'
-    else:
-        srcset = ""
-
-    # image could be external
-    if not external_img:
-        image_url = static(image_url)
-
-    if highres_image_url:
-        srcset = f'data-srcset="{highres_image_url} 2x"'
-
-    if optional_attributes:
-        class_name = optional_attributes.pop("class", "lazy-image")
-        alt_text = optional_attributes.pop("alt", "")
-        attrs = " ".join('%s="%s"' % (attr, val) for attr, val in optional_attributes.items())
-    else:
-        class_name = "lazy-image"
-        alt_text = ""
-        attrs = ""
-
-    markup = (
-        f'<div class="lazy-image-container">'
-        f'<img class="{class_name}" src="{placeholder}" data-src="{image_url}" {srcset} alt="{alt_text}" {attrs}>'
-        f"<noscript>"
-        f'<img class="{class_name}" src="{image_url}" {srcset} alt="{alt_text}" {attrs}>'
-        f"</noscript>"
-        f"</div>"
-    )
+    markup = f'<img class="{class_name}" src="{url}" srcset="{url_high_res} 1.5x"{attrs}>'
 
     return jinja2.Markup(markup)
 
@@ -447,7 +404,40 @@ def firefox_twitter_url(ctx):
 
 @library.global_function
 @jinja2.contextfunction
-def firefox_instagram_url(ctx):
+def mozilla_twitter_url(ctx):
+    """Output a link to Twitter taking locales into account.
+
+    Uses the locale from the current request. Checks to see if we have
+    a Twitter account that match this locale, returns the localized account
+    url or falls back to the US account url if not.
+
+    Examples
+    ========
+
+    In Template
+    -----------
+
+        {{ mozilla_twitter_url() }}
+
+    For en-US this would output:
+
+        https://twitter.com/mozilla
+
+    For DE this would output:
+
+        https://twitter.com/mozilla_germany
+
+    """
+    locale = getattr(ctx["request"], "locale", "en-US")
+    if locale not in settings.MOZILLA_TWITTER_ACCOUNTS:
+        locale = "en-US"
+
+    return settings.MOZILLA_TWITTER_ACCOUNTS[locale]
+
+
+@library.global_function
+@jinja2.contextfunction
+def mozilla_instagram_url(ctx):
     """Output a link to Instagram taking locales into account.
 
     Uses the locale from the current request. Checks to see if we have
@@ -460,11 +450,11 @@ def firefox_instagram_url(ctx):
     In Template
     -----------
 
-        {{ firefox_instagram_url() }}
+        {{ mozilla_instagram_url() }}
 
     For en-US this would output:
 
-        https://www.instagram.com/firefox/
+        https://www.instagram.com/mozilla/
 
     For DE this would output:
 
@@ -472,10 +462,10 @@ def firefox_instagram_url(ctx):
 
     """
     locale = getattr(ctx["request"], "locale", "en-US")
-    if locale not in settings.FIREFOX_INSTAGRAM_ACCOUNTS:
+    if locale not in settings.MOZILLA_INSTAGRAM_ACCOUNTS:
         locale = "en-US"
 
-    return settings.FIREFOX_INSTAGRAM_ACCOUNTS[locale]
+    return settings.MOZILLA_INSTAGRAM_ACCOUNTS[locale]
 
 
 @library.filter
@@ -617,7 +607,7 @@ def f(s, *args, **kwargs):
     >>> {{ "{0} arguments and {x} arguments"|f('positional', x='keyword') }}
     "positional arguments and keyword arguments"
     """
-    s = six.text_type(s)
+    s = str(s)
     return s.format(*args, **kwargs)
 
 
@@ -811,7 +801,7 @@ def _fxa_product_url(product_url, entrypoint, optional_parameters=None):
     url = f"{product_url}{separator}entrypoint={entrypoint}&form_type=button&utm_source={entrypoint}&utm_medium=referral"
 
     if optional_parameters:
-        params = "&".join("%s=%s" % (param, val) for param, val in optional_parameters.items())
+        params = "&".join(f"{param}={val}" for param, val in optional_parameters.items())
         url += f"&{params}"
 
     return url
@@ -832,7 +822,7 @@ def _fxa_product_button(
     attrs = ""
 
     if optional_attributes:
-        attrs += " ".join('%s="%s"' % (attr, val) for attr, val in optional_attributes.items())
+        attrs += " ".join(f'{attr}="{val}"' for attr, val in optional_attributes.items())
 
     if include_metrics:
         css_class += " js-fxa-product-button"
@@ -894,11 +884,32 @@ def monitor_fxa_button(
 
 @library.global_function
 @jinja2.contextfunction
+def relay_fxa_button(
+    ctx, entrypoint, button_text, class_name=None, is_button_class=True, include_metrics=True, optional_parameters=None, optional_attributes=None
+):
+    """
+    Render a relay.firefox.com link with required params for FxA authentication.
+
+    Examples
+    ========
+
+    In Template
+    -----------
+
+        {{ monitor_fxa_button(entrypoint='mozilla.org-firefox-accounts', button_text='Sign In to Relay') }}
+    """
+    product_url = "https://relay.firefox.com/accounts/fxa/login/?process=login"
+    return _fxa_product_button(
+        product_url, entrypoint, button_text, class_name, is_button_class, include_metrics, optional_parameters, optional_attributes
+    )
+
+
+@library.global_function
+@jinja2.contextfunction
 def fxa_link_fragment(ctx, entrypoint, action="signup", optional_parameters=None):
     """
-    Returns `href` and `data-mozillaonline-link` attributes as a string fragment.
-    This is useful for inline links that appear inside a string of localized copy,
-    such as a paragraph.
+    Returns `href` attribute as a string fragment. This is useful for inline links
+    that appear inside a string of localized copy, such as a paragraph.
 
     Examples
     ========
@@ -915,9 +926,8 @@ def fxa_link_fragment(ctx, entrypoint, action="signup", optional_parameters=None
         action = "?action=email"
 
     fxa_url = _fxa_product_url(f"{settings.FXA_ENDPOINT}{action}", entrypoint, optional_parameters)
-    mozillaonline_url = _fxa_product_url(f"{settings.FXA_ENDPOINT_MOZILLAONLINE}{action}", entrypoint, optional_parameters)
 
-    markup = f'href="{fxa_url}" data-mozillaonline-link="{mozillaonline_url}" ' f'data-mozillaonline-action="{settings.FXA_ENDPOINT_MOZILLAONLINE}"'
+    markup = f'href="{fxa_url}"'
 
     return jinja2.Markup(markup)
 
@@ -951,15 +961,8 @@ def fxa_button(
         action = "?action=email"
 
     product_url = f"{settings.FXA_ENDPOINT}{action}"
-    mozillaonline_product_url = f"{settings.FXA_ENDPOINT_MOZILLAONLINE}{action}"
-
-    mozillaonline_attribute = {
-        "data-mozillaonline-link": _fxa_product_url(mozillaonline_product_url, entrypoint, optional_parameters),
-        "data-mozillaonline-action": settings.FXA_ENDPOINT_MOZILLAONLINE,
-    }
 
     optional_attributes = optional_attributes or {}
-    optional_attributes.update(mozillaonline_attribute)
 
     return _fxa_product_button(
         product_url, entrypoint, button_text, class_name, is_button_class, include_metrics, optional_parameters, optional_attributes

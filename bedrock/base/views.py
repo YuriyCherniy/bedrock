@@ -10,12 +10,14 @@ from time import time
 
 from django.conf import settings
 from django.shortcuts import render
+from django.utils.timezone import now as tz_now
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
 import timeago
 
 from bedrock.base.geo import get_country_from_request
+from bedrock.contentful.models import ContentfulEntry
 from bedrock.utils import git
 from lib import l10n_utils
 
@@ -50,27 +52,21 @@ DB_INFO_FILE = getenv("AWS_DB_JSON_DATA_FILE", f"{settings.DATA_PATH}/bedrock_db
 GIT_SHA = getenv("GIT_SHA")
 BUCKET_NAME = getenv("AWS_DB_S3_BUCKET", "bedrock-db-dev")
 REGION_NAME = os.getenv("AWS_DB_REGION", "us-west-2")
-S3_BASE_URL = "https://s3-{}.amazonaws.com/{}".format(
-    REGION_NAME,
-    BUCKET_NAME,
-)
+S3_BASE_URL = f"https://s3-{REGION_NAME}.amazonaws.com/{BUCKET_NAME}"
 
 
 def get_l10n_repo_info():
-    repo = git.GitRepo(settings.LOCALES_PATH, settings.LOCALES_REPO)
     fluent_repo = git.GitRepo(settings.FLUENT_REPO_PATH, settings.FLUENT_REPO_URL)
-    return (
-        {
-            "latest_ref": repo.current_hash,
-            "last_updated": repo.last_updated,
-            "repo_url": repo.clean_remote_url,
-        },
-        {
-            "latest_ref": fluent_repo.current_hash,
-            "last_updated": fluent_repo.last_updated,
-            "repo_url": fluent_repo.clean_remote_url,
-        },
-    )
+    data = {
+        "latest_ref": fluent_repo.current_hash,
+        "last_updated": fluent_repo.last_updated,
+        "repo_url": fluent_repo.clean_remote_url,
+    }
+    try:
+        data["last_updated_timestamp"] = datetime.fromtimestamp(fluent_repo.current_commit_timestamp)
+    except AttributeError:
+        pass
+    return data
 
 
 def get_db_file_url(filename):
@@ -85,17 +81,37 @@ def get_extra_server_info():
         "git_sha": GIT_SHA,
     }
     try:
-        with open(DB_INFO_FILE, "r") as fp:
+        with open(DB_INFO_FILE) as fp:
             db_info = json.load(fp)
-    except (IOError, ValueError):
+    except (OSError, ValueError):
         pass
     else:
-        db_info["last_update"] = timeago.format(datetime.fromtimestamp(db_info["updated"]))
+        last_updated_timestamp = datetime.fromtimestamp(db_info["updated"])
+        db_info["last_updated_timestamp"] = last_updated_timestamp
+        db_info["last_update"] = timeago.format(last_updated_timestamp)
         db_info["file_url"] = get_db_file_url(db_info["file_name"])
         for key, value in db_info.items():
-            server_info["db_%s" % key] = value
+            server_info[f"db_{key}"] = value
 
     return server_info
+
+
+def get_contentful_sync_info():
+    data = {}
+    latest = ContentfulEntry.objects.order_by("last_modified").last()
+    if latest:
+        latest_sync = latest.last_modified
+        time_since_latest_sync = timeago.format(
+            latest_sync,
+            now=tz_now(),
+        )
+        data.update(
+            {
+                "latest_sync": latest_sync,
+                "time_since_latest_sync": time_since_latest_sync,
+            }
+        )
+    return data
 
 
 @require_safe
@@ -127,18 +143,22 @@ def cron_health_check(request):
         if repo.repo_name in unique_repos:
             continue
         unique_repos[repo.repo_name] = repo
+        setattr(
+            unique_repos[repo.repo_name],
+            "last_updated_timestamp",
+            datetime.fromtimestamp(repo.latest_ref_timestamp),
+        )
 
-    l10n_repo, fluent_repo = get_l10n_repo_info()
     return render(
         request,
         "cron-health-check.html",
         {
             "results": results,
             "server_info": get_extra_server_info(),
+            "contentful_info": get_contentful_sync_info(),
             "success": check_pass,
             "git_repos": unique_repos.values(),
-            "l10n_repo": l10n_repo,
-            "fluent_repo": fluent_repo,
+            "fluent_repo": get_l10n_repo_info(),
         },
         status=200 if check_pass else 500,
     )

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -26,7 +28,7 @@ def _sha256_sum(filename):
 
 def get_db_checksum(filename=None):
     filename = filename or DB_FILE
-    cache_key = "db_sum_%s" % filename
+    cache_key = f"db_sum_{filename}"
     db_sum = CACHE.get(cache_key)
     if not db_sum:
         db_sum = _sha256_sum(filename)
@@ -52,9 +54,9 @@ def get_git_sha():
 
 def get_prev_db_data():
     try:
-        with open(JSON_DATA_FILE, "r") as fp:
+        with open(JSON_DATA_FILE) as fp:
             return json.load(fp)
-    except IOError:
+    except OSError:
         # file does not exist
         return None
 

@@ -114,7 +114,7 @@
 
 {# Docs: https://bedrock.readthedocs.io/en/latest/firefox-accounts.html#signup-form #}
 {% macro fxa_email_form(entrypoint, entrypoint_experiment, entrypoint_variation, context=None, utm_campaign=None, utm_content=None, utm_term=None, style=None, class_name='fxa-email-form', form_title=None, intro_text=none, button_text=None, button_class='mzp-c-button mzp-t-product') -%}
-  <form action="{{ settings.FXA_ENDPOINT }}" data-mozillaonline-action="{{ settings.FXA_ENDPOINT_MOZILLAONLINE }}" id="fxa-email-form" class="mzp-c-form {{ class_name }}">
+  <form action="{{ settings.FXA_ENDPOINT }}" id="fxa-email-form" class="mzp-c-form {{ class_name }}">
     <input type="hidden" name="action" value="email" />
     <input type="hidden" name="entrypoint" value="{{ entrypoint }}" id="fxa-email-form-entrypoint" />
     <input type="hidden" name="form_type" value="email" />
@@ -196,4 +196,41 @@
     </div>
 
   </form>
+{%- endmacro %}
+
+{# Docs: https://bedrock.readthedocs.io/en/latest/coding.html#image #}
+{% macro image(
+  url,
+  alt="",
+  class=None,
+  width=None,
+  height=None,
+  loading=None,
+  include_highres=False,
+  include_l10n=False
+) -%}
+  {% if include_highres %}
+    {% set unclean = {
+      'alt': alt,
+      'class': class,
+      'width': width,
+      'height': height,
+      'loading': loading,
+      'l10n': include_l10n
+    } %}
+    {% set optional_attributes = dict() %}
+    {% for key, value in unclean.items() %}
+      {% if value is not none and value is not false %}{{ optional_attributes.update({ key: value }) }}{% endif %}
+    {% endfor %}
+    {{ high_res_img(url, optional_attributes) }}
+  {% else %}
+    {% if url.startswith('https')  %}
+      {% set src = url %}
+    {% elif include_l10n %}
+      {% set src = l10n_img(url) %}
+    {% else %}
+      {% set src = static(url) %}
+    {% endif %}
+    <img src="{{ src }}" alt="{{ alt }}" {% if class %}class="{{ class }}" {% endif %}{% if loading %}loading="{{ loading }}" {% endif %}{% if width %}width="{{ width }}" {% endif %}{% if height %}height="{{ height }}" {% endif %}/>
+  {% endif %}
 {%- endmacro %}

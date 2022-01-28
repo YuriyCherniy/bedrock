@@ -24,13 +24,11 @@ Contents
 
    install
    l10n
-   fluent-conversion
    coding
    contribute
    pipeline
    testing
    redirects
-   javascript-libs
    newsletters
    contentful
    content-cards

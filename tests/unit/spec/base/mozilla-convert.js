@@ -5,13 +5,11 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
 describe('mozilla-convert.js', function () {
-    'use strict';
-
     describe('getCurrentExperiment', function () {
         it('should return the current experiment name and variation', function () {
             const data = {

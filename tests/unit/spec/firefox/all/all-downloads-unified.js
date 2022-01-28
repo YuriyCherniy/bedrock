@@ -5,7 +5,7 @@
  */
 
 /* For reference read the Jasmine and Sinon docs
- * Jasmine docs: http://pivotal.github.io/jasmine/
+ * Jasmine docs: https://jasmine.github.io/
  * Sinon docs: http://sinonjs.org/docs/
  */
 
@@ -14,8 +14,6 @@
 /* global sinon */
 
 describe('all-downloads-unified.js', function () {
-    'use strict';
-
     describe('getSelectOption', function () {
         const select = `<select id="select-product" class="c-selection-input">
                 <option value="desktop_developer">Firefox Developer Edition</option>

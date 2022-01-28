@@ -2,22 +2,22 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-import re
 from os.path import relpath, splitext
+from typing import List
 
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.http.request import HttpRequest
 from django.shortcuts import render as django_render
 from django.template import TemplateDoesNotExist, loader
 from django.utils.translation.trans_real import parse_accept_lang_header
 from django.views.generic import TemplateView
 
-from bedrock.base.urlresolvers import split_path
+from product_details import product_details
 
-from .dotlang import get_translations_native_names
+from bedrock.base.urlresolvers import _get_language_map, split_path
+
 from .fluent import fluent_l10n, get_active_locales as ftl_active_locales
-from .gettext import translations_for_template
-from .utils import get_l10n_path
 
 
 def template_source_url(template):
@@ -30,7 +30,7 @@ def template_source_url(template):
         return None
 
     relative_path = relpath(absolute_path, settings.ROOT)
-    return "%s/tree/master/%s" % (settings.GITHUB_REPO, relative_path)
+    return f"{settings.GITHUB_REPO}/tree/master/{relative_path}"
 
 
 def render_to_string(template_name, context=None, request=None, using=None, ftl_files=None):
@@ -49,6 +49,15 @@ def render_to_string(template_name, context=None, request=None, using=None, ftl_
         else:
             context["fluent_l10n"] = fluent_l10n([locale, "en"], settings.FLUENT_DEFAULT_FILES)
     return loader.render_to_string(template_name, context, request, using)
+
+
+def redirect_to_best_locale(request: HttpRequest, translations: List[str]) -> HttpResponseRedirect:
+    # Note that translations is list of locale strings (eg ["en-GB", "ru", "fr"])
+    lang = get_best_translation(translations, get_accept_languages(request))
+    response = HttpResponseRedirect("/" + "/".join([lang, split_path(request.get_full_path())[1]]))
+    # Add the Vary header to avoid wrong redirects due to a cache
+    response["Vary"] = "Accept-Language"
+    return response
 
 
 def render(request, template, context=None, ftl_files=None, activation_files=None, **kwargs):
@@ -94,7 +103,6 @@ def render(request, template, context=None, ftl_files=None, activation_files=Non
     # Every template gets its own .lang file, so figure out what it is
     # and pass it in the context
     context["template"] = template
-    context["langfile"] = get_l10n_path(template)
     context["template_source_url"] = template_source_url(template)
 
     # if `locales` is given use it as the full list of active translations
@@ -102,20 +110,16 @@ def render(request, template, context=None, ftl_files=None, activation_files=Non
         translations = context["active_locales"]
         del context["active_locales"]
     else:
+        translations = [settings.LANGUAGE_CODE]
         if activation_files:
             translations = set()
             for af in activation_files:
-                if af.endswith(".html"):
-                    translations.update(translations_for_template(af))
-                else:
-                    translations.update(ftl_active_locales(af))
+                translations.update(ftl_active_locales(af))
 
             translations = sorted(translations)
 
         elif l10n:
             translations = l10n.active_locales
-        else:
-            translations = translations_for_template(template)
 
         # if `add_active_locales` is given then add it to the translations for the template
         if "add_active_locales" in context:
@@ -129,27 +133,16 @@ def render(request, template, context=None, ftl_files=None, activation_files=Non
         # Redirect to one of the user's accept languages or the site's default
         # language (en-US) if the current locale not active
         if request.locale not in translations:
-            lang = get_best_translation(translations, get_accept_languages(request))
-            response = HttpResponseRedirect("/" + "/".join([lang, split_path(request.get_full_path())[1]]))
-            # Add the Vary header to avoid wrong redirects due to a cache
-            response["Vary"] = "Accept-Language"
-            return response
+            return redirect_to_best_locale(request, translations)
 
-        # Render try #1: Look for l10n template in locale/{{ LANG }}/templates/
-        l10n_tmpl = "%s/templates/%s" % (request.locale, template)
-        try:
-            return django_render(request, l10n_tmpl, context, **kwargs)
-        except TemplateDoesNotExist:
-            pass
-
-        # Render try #2: Look for locale-specific template in app/templates/
-        locale_tmpl = ".{}".format(request.locale).join(splitext(template))
+        # Look for locale-specific template in app/templates/
+        locale_tmpl = f".{request.locale}".join(splitext(template))
         try:
             return django_render(request, locale_tmpl, context, **kwargs)
         except TemplateDoesNotExist:
             pass
 
-    # Render try #3: Render originally requested/default template
+    # Render originally requested/default template
     return django_render(request, template, context, **kwargs)
 
 
@@ -159,54 +152,52 @@ def get_locale(request):
 
 def get_accept_languages(request):
     """
-    Parse the user's Accept-Language HTTP header and return a list of languages
+    Parse the user's Accept-Language HTTP header and return a list of languages in ranked order.
     """
-    languages = []
-    pattern = re.compile(r"^([A-Za-z]{2,3})(?:-([A-Za-z]{2})(?:-[A-Za-z0-9]+)?)?$")
-
-    parsed = parse_accept_lang_header(request.META.get("HTTP_ACCEPT_LANGUAGE", ""))
-
-    for lang, priority in parsed:
-        m = pattern.match(lang)
-
-        if not m:
-            continue
-
-        lang = m.group(1).lower()
-
-        # Check if the shorter code is supported. This covers obsolete long
-        # codes like fr-FR (should match fr) or ja-JP (should match ja)
-        if m.group(2) and lang not in settings.PROD_LANGUAGES:
-            lang += "-" + m.group(2).upper()
-
-        if lang not in languages:
-            languages.append(lang)
-
-    return languages
+    ranked = parse_accept_lang_header(request.headers.get("Accept-Language", ""))
+    return [lang for lang, rank in ranked]
 
 
 def get_best_translation(translations, accept_languages):
-    # Look for the user's Accept-Language HTTP header to find another
-    # locale we can offer
+    """
+    Return the best translation available comparing the accept languages against available translations.
+
+    This attempts to find a matching translation for each accept language. It
+    compares each accept language in full, and also the root. For example,
+    "en-CA" looks for "en-CA" as well as "en", which maps to "en-US".
+
+    If none found, it returns the first language code for the first available translation.
+
+    """
+    lang_map = _get_language_map()
+    valid_lang_map = {k: v for k, v in lang_map.items() if v in translations}
     for lang in accept_languages:
-        if lang in translations:
-            return lang
+        lang.lower()
+        if lang in valid_lang_map:
+            return valid_lang_map[lang]
+        pre = lang.split("-")[0]
+        if pre in valid_lang_map:
+            return valid_lang_map[pre]
 
-    # Check for the fallback locales if the previous look-up doesn't
-    # work. This is useful especially in the Spanish locale where es-ES
-    # should be offered as the fallback of es, es-AR, es-CL and es-MX
-    for lang in accept_languages:
-        lang = settings.FALLBACK_LOCALES.get(lang)
-        if lang in translations:
-            return lang
+    return lang_map[translations[0].lower()]
 
-    # If all the attempts failed, just use en-US, the default locale of
-    # the site
-    if settings.LANGUAGE_CODE in translations:
-        return settings.LANGUAGE_CODE
 
-    # fall back to just the first locale in the list
-    return translations[0]
+def get_translations_native_names(locales):
+    """
+    Return a dict of locale codes and native language name strings.
+
+    Returned dict is suitable for use in view contexts and is filtered to only codes in PROD_LANGUAGES.
+
+    :param locales: list of locale codes
+    :return: dict, like {'en-US': 'English (US)', 'fr': 'Français'}
+    """
+    translations = {}
+    for locale in locales:
+        if locale in settings.PROD_LANGUAGES:
+            language = product_details.languages.get(locale)
+            translations[locale] = language["native"] if language else locale
+
+    return translations
 
 
 class LangFilesMixin:

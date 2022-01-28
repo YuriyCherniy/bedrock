@@ -1,0 +1,53 @@
+{#
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#}
+
+{% extends "base-protocol-mozilla.html" %}
+
+{% block page_title %}Mozilla Careers — Feel good about your work again{% endblock %}
+{% block page_title_suffix %}{% endblock %}
+
+{% block page_image %}{{ static('img/careers/moz-m.png') }}{% endblock %}
+
+{% block site_css %}
+  {{ css_bundle('careers') }}
+{% endblock %}
+
+{% block site_js %}
+  <!--[if !IE]><!-->
+    {{ js_bundle('lib') }}
+    <script src="{{ static('js/careers/libs/protocol-base.min.js') }}"></script>
+    <script src="{{ static('js/careers/libs/protocol-utils.min.js') }}"></script>
+    <script src="{{ static('js/careers/libs/protocol-supports.min.js') }}"></script>
+    {{ js_bundle('fxa') }}
+    {{ js_bundle('data') }}
+  <!--<![endif]-->
+{% endblock %}
+
+{% block extrahead %}
+  <link rel="alternate" type="application/rss+xml" href="{{ url('careers.feed') }}" title="Current Mozilla job openings" />
+{% endblock %}
+
+{% block site_header %}
+  {% include "careers/includes/header.html" %}
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="mzp-l-content mzp-t-mozilla">
+  <main role="main">
+    {% block careers_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}
+
+{% block site_footer %}
+  {% include "careers/includes/footer.html" %}
+{% endblock %}
+
+{% block js %}
+  <script src="{{ static('js/careers/libs/protocol-navigation.min.js') }}"></script>
+  <script src="{{ static('js/careers/libs/protocol-menu.min.js') }}"></script>
+  {{ js_bundle('careers-base') }}
+{% endblock %}

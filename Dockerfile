@@ -1,7 +1,7 @@
 ########
 # assets builder and dev server
 #
-FROM node:14-slim AS assets
+FROM node:16-slim AS assets
 
 ENV PATH=/app/node_modules/.bin:$PATH
 WORKDIR /app
@@ -13,7 +13,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # copy supporting files and media
-COPY .eslintrc.js .eslintignore .stylelintrc .stylelintignore .prettierignore .prettierrc.json webpack.config.js webpack.static.config.js ./
+COPY .eslintrc.js .eslintignore .stylelintrc .prettierrc.json .prettierignore webpack.config.js webpack.static.config.js ./
 COPY ./media ./media
 COPY ./tests/unit ./tests/unit
 
@@ -60,7 +60,7 @@ EXPOSE 8000
 CMD ["./bin/run.sh"]
 
 COPY docker/bin/apt-install /usr/local/bin/
-RUN apt-install gettext libxslt1.1 git
+RUN apt-install gettext libxslt1.1 git curl
 
 # copy in Python environment
 COPY --from=python-builder /venv /venv
@@ -88,7 +88,7 @@ FROM app-base AS devapp
 
 CMD ["./bin/run-tests.sh"]
 
-RUN apt-install make
+RUN apt-install make sqlite3
 COPY requirements/base.txt requirements/dev.txt requirements/migration.txt requirements/docs.txt ./requirements/
 RUN pip install --no-cache-dir -r requirements/dev.txt
 RUN pip install --no-cache-dir -r requirements/docs.txt
@@ -100,6 +100,12 @@ COPY ./tests ./tests
 RUN bin/run-sync-all.sh
 
 RUN chown webdev.webdev -R .
+
+# for bpython
+RUN mkdir /home/webdev/
+RUN touch /home/webdev/.pythonhist
+RUN chown -R webdev /home/webdev/
+
 USER webdev
 
 # build args

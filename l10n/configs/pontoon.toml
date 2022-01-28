@@ -193,6 +193,22 @@ locales = [
         "nl",
     ]
 [[paths]]
+    reference = "en/firefox/welcome/page11.ftl"
+    l10n = "{locale}/firefox/welcome/page11.ftl"
+    locales = [
+        "es-ES",
+        "it",
+        "nl",
+    ]
+[[paths]]
+    reference = "en/firefox/welcome/page13.ftl"
+    l10n = "{locale}/firefox/welcome/page13.ftl"
+    locales = [
+        "es-ES",
+        "it",
+        "nl",
+    ]
+[[paths]]
     reference = "en/firefox/whatsnew/whatsnew-account.ftl"
     l10n = "{locale}/firefox/whatsnew/whatsnew-account.ftl"
 [[paths]]
@@ -207,9 +223,6 @@ locales = [
 [[paths]]
     reference = "en/mozorg/home.ftl"
     l10n = "{locale}/mozorg/home.ftl"
-[[paths]]
-    reference = "en/mozorg/home-mr1-promo.ftl"
-    l10n = "{locale}/mozorg/home-mr1-promo.ftl"
 [[paths]]
     reference = "en/mozorg/home-mr2-promo.ftl"
     l10n = "{locale}/mozorg/home-mr2-promo.ftl"
@@ -295,3 +308,6 @@ locales = [
 [[paths]]
     reference = "en/products/vpn/platforms/*.ftl"
     l10n = "{locale}/products/vpn/platforms/*.ftl"
+[[paths]]
+    reference = "en/products/vpn/resource-center.ftl"
+    l10n = "{locale}/products/vpn/resource-center.ftl"

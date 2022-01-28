@@ -8,6 +8,22 @@
 Developing on Bedrock
 =====================
 
+Managing Dependencies
+---------------------
+
+For Python we use `hashin <https://pypi.org/project/hashin/>`_ to pin dependencies in
+`requirements files <https://github.com/mozilla/bedrock/tree/master/requirements>`_.
+To use hashin it must first be installed using pip:
+
+.. code-block:: python
+
+    pip install hashin
+
+See the hashin `documentation <https://pypi.org/project/hashin/#how-to-use-it>`_ for how to install new packages.
+
+For Node packages we use `NPM <https://docs.npmjs.com/cli/v8/commands/npm-install>`_, which should already be
+installed alongside `Node.js <https://nodejs.org/>`_.
+
 Asset Management and Bundling
 -----------------------------
 
@@ -108,13 +124,13 @@ Writing JavaScript
 Bedrock's Webpack configuration supports some different options for writing
 JavaScript:
 
-Default configuration
+Default Configuration
 ~~~~~~~~~~~~~~~~~~~~~
 
 Write ``example-script.js`` using ES5 syntax and features. Webpack will bundle
 the JS as-is, without any additional pre-processing.
 
-Babel configuration
+Babel Configuration
 ~~~~~~~~~~~~~~~~~~~
 
 Write ``example-script.es6.js`` using ES2015+ syntax. Webpack will transpile
@@ -169,7 +185,7 @@ template data as keyword arguments:
 
 The variable `latest_version` will be available in the template.
 
-Optimizing images
+Optimizing Images
 -----------------
 
 Images can take a long time to load and eat up a lot of bandwidth. Always take care
@@ -191,13 +207,14 @@ The script will:
 - check that SVGs have a viewbox (needed for IE support)
 - check that images that end in `-high-res` have low res versions as well
 
-Embedding images
+Embedding Images
 ----------------
 
 Images should be included on pages using helper functions.
 
 static()
-^^^^^^^^
+~~~~~~~~
+
 For a simple image, the `static()` function is used to generate the image URL. For example:
 
 .. code-block:: html
@@ -211,7 +228,8 @@ will output an image:
     <img src="/media/img/firefox/new/firefox-logo.png" alt="Firefox">
 
 high_res_img()
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
+
 For images that include a high-resolution alternative for displays with a high pixel density, use the `high_res_img()` function:
 
 .. code-block:: python
@@ -229,7 +247,8 @@ The `high_res_img()` function will automatically look for the image in the URL p
 When using localization, `high_res_img()` will look for images in the appropriate locale folder. In the above example, for the `de` locale, both standard and high-res versions of the image should be located at `media/img/l10n/de/firefox/new/`.
 
 l10n_img()
-^^^^^^^^^^
+~~~~~~~~~~
+
 Images that have translatable text can be handled with `l10n_img()`:
 
 .. code-block:: html
@@ -239,7 +258,8 @@ Images that have translatable text can be handled with `l10n_img()`:
 The images referenced by `l10n_img()` must exist in `media/img/l10n/`, so for above example, the images could include `media/img/l10n/en-US/firefox/os/have-it-all/messages.jpg` and `media/img/l10n/es-ES/firefox/os/have-it-all/messages.jpg`.
 
 platform_img()
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
+
 Finally, for outputting an image that differs depending on the platform being used, the `platform_img()` function will automatically display the image for the user's browser:
 
 .. code-block:: python
@@ -257,7 +277,8 @@ Finally, for outputting an image that differs depending on the platform being us
 When using localization, `platform_img()` will look for images in the appropriate locale folder. In the above example, for the `es-ES` locale, all platform versions of the image should be located at `media/img/l10n/es-ES/firefox/new/`.
 
 qrcode()
-^^^^^^^^
+~~~~~~~~
+
 This is a helper function that will output SVG data for a QR Code at the spot in the template
 where it is called. It caches the results to the ``data/qrcode_cache`` directory, so it only
 generates the SVG data one time per data and box_size combination.
@@ -271,6 +292,28 @@ is the "box size". It's a parameter that tells the generator how large to set th
 parameters on the XML SVG tag, the units of which are "mm". This can be overriden with CSS so you
 may not need to use it at all. The ``box_size`` parameter is optional.
 
+image()
+~~~~~~~
+
+We also have an image macro, which is mainly used to encapsulate the conditional logic needed for `Protocol macros <https://bedrock.readthedocs.io/en/latest/coding.html#working-with-protocol>`_ containing images. You can also import the macro directly into a template.
+
+.. code-block:: jinja
+
+    {% from 'macros.html' import image with context %}
+
+    {{ image(
+        url='example.jpg',
+        alt='example alt',
+        class='example class',
+        width='64',
+        height='64',
+        loading='lazy',
+        include_highres=True,
+        include_l10n=True
+    ) }}
+
+Only ``url`` is required. By default, alt text will be an empty string, loading will be determined by the browser, and highres/l10n images will not be included. For ``include_l10n=True`` to work, you must import the macro `with context`.
+
 Using Large Assets
 ------------------
 
@@ -283,11 +326,37 @@ This domain is simply an AWS S3 bucket with a CloudFront CDN in front of it. It 
 and fast. We've made adding files to this domain very simple using `git-lfs <https://git-lfs.github.com/>`_.
 You simply install git-lfs, clone our `assets.mozilla.net repo <https://github.com/mozmeao/assets.mozilla.net>`_,
 and then add and commit files under the ``assets`` directory there as usual. Open a PR, and once it's merged
-it will be automatically uploaded to the S3 buket and be available on the domain.
+it will be automatically uploaded to the S3 bucket and be available on the domain.
 
 For example, if you add a file to the repo under ``assets/pdf/the-dude-abides.pdf``, it will be available
 as https://assets.mozilla.net/pdf/the-dude-abides.pdf. Once that is done you can link to that URL from bedrock
 as you would any other URL.
+
+Writing Migrations
+------------------
+
+Bedrock uses Django's built-in Migrations framework for its database migrations, and has no custom
+database routing, etc. So, no big surprises here – write things as you regularly would.
+
+*However*, as with any complex system, care needs to be taken with schema changes that
+drop or rename database columns. Due to the way the rollout process works (ask for
+details directly from the team), an absent column can cause some of the rollout to
+enter a crashloop.
+
+To avoid this, split your changes across releases, such as below.
+
+For column renames:
+
+* Release 1: Add your new column
+* Release 2: Amend the codebase to use it instead of the old column
+* Release 3: Clean up - drop the old, deprecated column, which should not be referenced in code at this point.
+
+For column drops:
+
+* Release 1: Update all code that uses the relevant column, so that nothing interacts with it any more.
+* Release 2: Clean up - drop the old, deprecated column.
+
+With both paths, check for any custom schema or data migrations that might reference the deprecated column.
 
 Writing Views
 -------------
@@ -337,7 +406,7 @@ The `L10nTemplateView` functionality is mostly in a template mixin called `LangF
 you can use with other generic Django view classes if you need one other than `TemplateView`.
 
 Variation Views
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 We have a generic view that allows you to easily create and use a/b testing
 templates. If you'd like to have either separate templates or just a template
@@ -428,7 +497,7 @@ valid variation were given in the URL.
     `bedrock.utils.views.VariationMixin`.
 
 Geo Template View
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 Now that we have our CDN configured properly, we can also just swap out templates
 per request country. This is very similar to the above, but it will simply use
@@ -450,7 +519,7 @@ with a ``geo`` query param (e.g. ``/firefox/?geo=DE``) and that will take
 precedence over the country from the request header.
 
 Other Geo Stuff
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 There are a couple of other tools at your disposal if you need to change things
 depending on the location of the user. You can use the
@@ -520,7 +589,7 @@ a guide. This doesn't necessarily mean every single line needs a test, and 100% 
 doesn't mean 0% defects.
 
 
-Configuring your code editor
+Configuring your Code Editor
 ----------------------------
 
 Bedrock includes an `.editorconfig` file in the root directory that you can
@@ -531,17 +600,107 @@ editors and available plugins.
 Working with Protocol
 ---------------------
 
-Bedrock uses the `Protocol Design System <https://protocol.mozilla.org/>`_ to quickly produce consistent, stable components.
+Bedrock uses the `Protocol Design System <https://protocol.mozilla.org/>`_ to quickly produce consistent, stable components. This involves two steps:
 
-When we find we are frequently re-using code for a particular Protocol component (i.e.
-`Split <https://protocol.mozilla.org/patterns/organisms/split.html>`_), we convert it to a
-`macro template <https://github.com/mozilla/bedrock/blob/master/bedrock/base/templates
-/macros-protocol.html/>`_ with parameters for customization.
+1. Adding the `correct markup <#styles-and-components>`_ or importing the `appropriate macro <#macros>`_ to the page's HTML file.
+2. Importing the necessary Protocol styles to a page's SCSS file.
 
-You can find parameter definitions for the available Protocol macros below.
+Styles and Components
+~~~~~~~~~~~~~~~~~~~~~
+The base templates in Bedrock have global styles from Protocol that apply to every page. When we need to extend these styles on a page-specific basis, we set up Protocol in a page-specific SCSS file.
+
+For example, on a Firefox product page, we might want to use Firefox logos or wordmarks that do not exist on every page.
+
+To do this, we add Protocol ``mzp-`` classes to the HTML:
+
+.. code-block:: html
+
+    // bedrock/bedrock/firefox/templates/firefox/{specific-page}.html
+
+    <div class="mzp-c-wordmark mzp-t-wordmark-md mzp-t-product-firefox">
+        Firefox Browser
+    </div>
+
+Then we need to include those Protocol styles in the page's SCSS file:
+
+.. code-block:: css
+
+    /* bedrock/media/css/firefox/{specific-page}.scss */
+
+    /* if we need to use protocol images, we need to set the $image-path variable */
+    $image-path: '/media/protocol/img';
+    /* mozilla is the default theme, so if we want a different one, we need to set the $brand-theme variable */
+    $brand-theme: 'firefox';
+
+    /* the lib import is always essential: it provides access to tokens, functions, mixins, and theming */
+    @import '~@mozilla-protocol/core/protocol/css/includes/lib';
+    /* then you add whatever specific protocol styling you need */
+    @import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark';
+    @import '~@mozilla-protocol/core/protocol/css/components/logos/wordmark-product-firefox';
+
+.. note::
+    If you create a new SCSS file for a page, you will have to include it in that page's CSS bundle by updating
+    `static-bundles.json <#asset-bundling>`_ file.
+
+
+Macros
+~~~~~~
+
+The team has created several `Jinja macros <https://jinja2docs.readthedocs.io/en/stable/templates.html#macros>`_ out of Protocol components to simplify the usage of components housing larger blocks of code (i.e. Split). The code housing the custom macros can be found in our `protocol macros file <https://github.com/mozilla/bedrock/blob/master/bedrock/base/templates/macros-protocol.html>`_. These Jinja macros include parameters that are simple to define and customize based on how the component should look like on a given page.
+
+To use these macros in files, we simply import a macro to the page's HTML code and call it with the desired arguments, instead of manually adding Protocol markup. We can import multiple macros in a comma-separated fashion, ending the import with ``with context``:
+
+.. code-block:: html
+
+    // bedrock/bedrock/firefox/templates/firefox/{specific-page}.html
+
+    {% from "macros-protocol.html" import split, picto with context %}
+
+    {% call split(
+        image_url='img/firefox/browsers/hero.jpg',
+        include_highres_image=True,
+        block_class='mzp-l-split-center-on-sm-md',
+        media_class='mzp-l-split-media-overflow',
+        media_after=True
+    ) %}
+        <h1>This is Mozilla</h1>
+        <p>Get the privacy you deserve with Firefox</p>
+    {% endcall %}
+
+Because Split styles are not global, we still have to import the page-specific Protocol styles in SCSS:
+
+.. code-block:: css
+
+    /* bedrock/media/css/firefox/{specific-page}.scss */
+
+    $brand-theme: 'firefox';
+
+    @import '~@mozilla-protocol/core/protocol/css/includes/lib';
+    @import '~@mozilla-protocol/core/protocol/css/components/split';
+    @import '~@mozilla-protocol/core/protocol/css/components/picto';
+
+
+You can find parameter definitions for the available Protocol macros below, including their import paths.
+
+.. note::
+    You can use macros without Protocol and you can use Protocol without macros. They are not dependent on each other but they work well together. 10/10 would recommend!
 
 Picto
-~~~~~
+<<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import picto with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/picto';
+
+**Macro parameters**
 
 - title
     String indicating heading text (usually a translation id wrapped in ftl function)
@@ -607,17 +766,31 @@ Picto
     Example: ``l10n_image=True``
 
 
-- lazy_loading
-    Boolean to provide “lazy” value for “loading” attribute. This will be “eager” by default. Lazy loading defers fetching of images to a browser decision based on user scroll and connection.
+- loading
+    String to provide value for image loading attribute. This will use browser default ("eager") if not set. Lazy loading defers fetching of images to a browser decision based on user scroll and connection.
 
-    Default: False
+    Default: None
 
-    Example: ``lazy_loading=True``
+    Example: ``loading='lazy'``
 
 
 
 Call out
-~~~~~~~~
+<<<<<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import call_out with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/call-out';
+
+**Macro parameters**
 
 - title
     **Required**. String indicating heading text (usually a translation id wrapped in ftl function).
@@ -656,7 +829,21 @@ Call out
 
 
 Split
-~~~~~
+<<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import split with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/split';
+
+**Macro parameters**
 
 - block_id
     String providing id to the section tag (usually if it needs to be used as an in-page link).
@@ -742,9 +929,30 @@ Split
 
     Example: ``media_include='firefox/facebookcontainer/includes/video.html'``
 
+- loading
+    String to provide value for image loading attribute. This will use browser default ("eager") if not set. Lazy loading defers fetching of images to a browser decision based on user scroll and connection.
+
+    Default: None
+
+    Example: ``loading='lazy'``
+
 
 Billboard
-~~~~~~~~~
+<<<<<<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import billboard with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/billboard';
+
+**Macro parameters**
 
 - title
     **Required**. String indicating heading text (usually a translation id wrapped in ftl function).
@@ -809,9 +1017,30 @@ Billboard
 
     Example: ``heading_level=1``
 
+- loading
+    String to provide value for image loading attribute. This will use browser default ("eager") if not set. Lazy loading defers fetching of images to a browser decision based on user scroll and connection.
+
+    Default: None
+
+    Example: ``loading='lazy'``
+
 
 Feature Card
-~~~~~~~~~~~~
+<<<<<<<<<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import feature_card with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/feature-card';
+
+**Macro parameters**
 
 - title
     String indicating heading text (usually a translation id wrapped in ftl function).
@@ -890,9 +1119,31 @@ Feature Card
 
     Example: ``media_after=True``
 
+- loading
+    String to provide value for image loading attribute. This will use browser default ("eager") if not set. Lazy loading defers fetching of images to a browser decision based on user scroll and connection.
+
+    Default: None
+
+    Example: ``loading='lazy'``
+
 
 Card
-~~~~
+<<<<
+
+**HTML import**
+
+.. code-block:: html
+
+   {% from "macros-protocol.html" import card with context %}
+
+**CSS import**
+
+.. code-block:: css
+
+   @import '~@mozilla-protocol/core/protocol/css/components/card';
+   @import '~@mozilla-protocol/core/protocol/css/templates/card-layout';
+
+**Macro parameters**
 
 - youtube_id
     String indicating the Youtube ID found at the end of a Youtube video URL. Used when we are embedding a video to the card rather than an image.
@@ -963,3 +1214,10 @@ Card
     Default: 3
 
     Example: ``heading_level=2``
+
+- attributes
+    A generic parameter to add any extra attributes to the component, such as data or aria attributes. Note that the quotes will pass through unescaped.
+
+    Default: N/A
+
+    Example: ``attributes='aria-role="menuitem"'``

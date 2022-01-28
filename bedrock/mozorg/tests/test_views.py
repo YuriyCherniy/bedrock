@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 import os
+from unittest.mock import ANY, Mock, patch
 
+from django.http.response import HttpResponse
 from django.test.client import RequestFactory
 
-from mock import ANY, patch
+import pytest
 
 from bedrock.base.urlresolvers import reverse
 from bedrock.mozorg import views
@@ -62,7 +63,7 @@ class TestHomePage(TestCase):
         req = RequestFactory().get("/")
         req.locale = "en-US"
         views.home_view(req)
-        render_mock.assert_called_once_with(req, "mozorg/home/home-en.html", ANY)
+        render_mock.assert_called_once_with(req, "mozorg/home/home.html", ANY)
 
     def test_home_de_template(self, render_mock):
         req = RequestFactory().get("/")
@@ -81,3 +82,63 @@ class TestHomePage(TestCase):
         req.locale = "es"
         views.home_view(req)
         render_mock.assert_called_once_with(req, "mozorg/home/home.html", ANY)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "content_id, page_data, expected_template",
+    (
+        (
+            "abc",
+            {"page_type": "pageHome", "info": {"theme": "mozilla"}},
+            "mozorg/home/home-contentful.html",
+        ),
+        (
+            "def",
+            {"page_type": "pagePageResourceCenter", "info": {"theme": "mozilla"}},
+            "products/vpn/resource-center/article.html",
+        ),
+        (
+            "ghi",
+            {"page_type": "OTHER", "info": {"theme": "firefox"}},
+            "firefox/contentful-all.html",
+        ),
+        (
+            "jkl",
+            {"page_type": "OTHER", "info": {"theme": "mozilla"}},
+            "mozorg/contentful-all.html",
+        ),
+        (
+            "jkl",
+            {"page_type": "OTHER", "info": {"theme": "OTHER"}},
+            "mozorg/contentful-all.html",
+        ),
+    ),
+)
+@patch("bedrock.mozorg.views.l10n_utils.render")
+@patch("bedrock.mozorg.views.ContentfulPage")
+# Trying to hot-reload the URLconf with settings.DEV = True was not
+# viable when the tests were being run in CI or via Makefile, so
+# instead we're explicitly including the urlconf that is loaded
+# when settings.DEV is True
+@pytest.mark.urls("bedrock.mozorg.dev_urls")
+def test_contentful_preview_view(
+    contentfulpage_mock,
+    render_mock,
+    client,
+    content_id,
+    page_data,
+    expected_template,
+):
+
+    mock_page_data = Mock(name="mock_page_data")
+    mock_page_data.get_content.return_value = page_data
+    contentfulpage_mock.return_value = mock_page_data
+
+    render_mock.return_value = HttpResponse("dummy")
+
+    url = reverse("contentful.preview", kwargs={"content_id": content_id})
+
+    client.get(url, follow=True)
+    assert render_mock.call_count == 1
+    assert render_mock.call_args_list[0][0][1] == expected_template

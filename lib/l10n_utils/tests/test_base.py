@@ -3,13 +3,14 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import os
+from unittest.mock import ANY, call, patch
 
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.test.utils import override_settings
 
+import pytest
 from django_jinja.backend import Jinja2
-from mock import ANY, call, patch
 
 from lib import l10n_utils
 
@@ -64,16 +65,18 @@ class TestRender(TestCase):
         # Should fallback to one of the site's fallback languages
         self._test(path, template, "es-CL", "es-CL,es;q=0.7,en;q=0.3", 302, "/es-ES/firefox/new/", active_locales=locales)
 
-    @patch.object(l10n_utils, "translations_for_template")
-    def test_add_active_locales(self, tft_mock):
+        # Should use the user's base language (en-CA -> en) if no exact matches
+        self._test(path, template, "en-CA", "en-CA,fr", 302, "/en-US/firefox/new/", active_locales=locales)
+
+    def test_add_active_locales(self):
+        # expect same results as above, but with locales from `add_active_locales`
         path = "/firefox/new/"
         template = "firefox/new.html"
-        locales = ["en-US", "en-GB"]
-        tft_mock.return_value = ["fr", "es-ES"]
-        # expect same results as above, but with locales from different sources
+        locales = ["en-US", "en-GB", "fr", "es-ES"]
 
         # Nothing to do with a valid locale
         self._test(path, template, "en-US", "en-us,en;q=0.5", 200, add_active_locales=locales)
+
         # en-GB is activated on /firefox/new/
         self._test(path, template, "en-GB", "en-gb,en;q=0.5", 200, add_active_locales=locales)
 
@@ -96,9 +99,8 @@ class TestRender(TestCase):
         assert ftl_files == ["dude", "walter"]
 
     @patch.object(l10n_utils, "django_render")
-    @patch.object(l10n_utils, "translations_for_template")
     @patch.object(l10n_utils, "ftl_active_locales")
-    def test_activation_files(self, fal_mock, tft_mock, dr_mock):
+    def test_activation_files(self, fal_mock, dr_mock):
         ftl_files = ["dude", "walter"]
         path = "/firefox/new/"
         template = "firefox/new.html"
@@ -112,7 +114,6 @@ class TestRender(TestCase):
             ],
             any_order=True,
         )
-        tft_mock.assert_called_with(template)
 
 
 class TestGetAcceptLanguages(TestCase):
@@ -125,11 +126,13 @@ class TestGetAcceptLanguages(TestCase):
         """
         Should return a list of valid lang codes
         """
-        self._test("fr-FR", ["fr"])
-        self._test("en-us,en;q=0.5", ["en-US", "en"])
-        self._test("pt-pt,fr;q=0.8,it-it;q=0.5,de;q=0.3", ["pt-PT", "fr", "it", "de"])
-        self._test("ja-JP-mac,ja-JP;q=0.7,ja;q=0.3", ["ja"])
+        self._test("fr-FR", ["fr-fr"])
+        self._test("en-us,en;q=0.5", ["en-us", "en"])
+        self._test("pt-pt,fr;q=0.8,it-it;q=0.5,de;q=0.3", ["pt-pt", "fr", "it-it", "de"])
+        self._test("ja-JP-mac,ja-JP;q=0.7,ja;q=0.3", ["ja-jp-mac", "ja-jp", "ja"])
         self._test("foo,bar;q=0.5", ["foo", "bar"])
+        # Verify the return lang codes are ordered by rank.
+        self._test("de;q=0.5,en-us", ["en-us", "de"])
 
     def test_invalid_lang_codes(self):
         """
@@ -137,7 +140,7 @@ class TestGetAcceptLanguages(TestCase):
         """
         self._test("", [])
         self._test("en_us,en*;q=0.5", [])
-        self._test("Chinese,zh-cn;q=0.5", ["zh-CN"])
+        self._test("Chinese,zh-cn;q=0.5", ["chinese", "zh-cn"])
 
 
 @patch.object(l10n_utils, "render")
@@ -163,3 +166,25 @@ class TestL10nTemplateView(TestCase):
         view = l10n_utils.L10nTemplateView.as_view(template_name="dude.html", ftl_files="dude", activation_files=["dude", "donny"])
         view(self.req)
         render_mock.assert_called_with(self.req, ["dude.html"], ANY, ftl_files="dude", activation_files=["dude", "donny"])
+
+
+@pytest.mark.parametrize(
+    "translations, accept_languages, expected",
+    (
+        # Anything with a 'en-US' transtion and 'en' root accept languages, goes to 'en-US'.
+        (["en-US"], ["en-US"], "en-US"),
+        (["en-US"], ["en-CA"], "en-US"),
+        (["en-US"], ["en"], "en-US"),
+        (["en-US", "de"], ["en-GB"], "en-US"),
+        # Anything with a 'en-US' transtion and unsupported translations, goes to 'en-US' by default.
+        (["en-US"], ["zu"], "en-US"),
+        (["en-US"], ["fr"], "en-US"),
+        (["en-US", "de"], ["fr"], "en-US"),
+        # The user's prioritized accept language should be chosen first.
+        (["en-US", "de"], ["de", "en-US"], "de"),
+        (["en-US", "de", "fr"], ["fr", "de"], "fr"),
+        (["en-US", "de", "fr"], ["en-CA", "fr", "de"], "en-US"),
+    ),
+)
+def test_get_best_translation(translations, accept_languages, expected):
+    assert l10n_utils.get_best_translation(translations, accept_languages) == expected

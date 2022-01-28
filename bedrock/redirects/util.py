@@ -5,13 +5,12 @@
 import re
 from urllib.parse import parse_qs, urlencode
 
-from django.conf.urls import url
 from django.http import (
     HttpResponseGone,
     HttpResponsePermanentRedirect,
     HttpResponseRedirect,
 )
-from django.urls import NoReverseMatch, URLResolver, reverse
+from django.urls import NoReverseMatch, URLResolver, re_path, reverse
 from django.urls.resolvers import RegexPattern
 from django.utils.encoding import force_text
 from django.utils.html import strip_tags
@@ -41,10 +40,9 @@ def get_resolver(patterns=None):
 def header_redirector(header_name, regex, match_dest, nomatch_dest, case_sensitive=False):
     flags = 0 if case_sensitive else re.IGNORECASE
     regex_obj = re.compile(regex, flags)
-    header_name = "HTTP_" + header_name.upper().replace("-", "_")
 
     def decider(request, *args, **kwargs):
-        value = request.META.get(header_name, "")
+        value = request.headers.get(header_name, "")
         match = regex_obj.search(value)
         if match:
             return match_dest
@@ -63,7 +61,7 @@ def is_firefox_redirector(fx_dest, nonfx_dext):
     exclude_re = re.compile(r"\b(Camino|Iceweasel|SeaMonkey)\b", flags=re.I)
 
     def decider(request, *args, **kwargs):
-        value = request.META.get("HTTP_USER_AGENT", "")
+        value = request.headers.get("User-Agent", "")
         if include_re.search(value) and not exclude_re.search(value):
             return fx_dest
         else:
@@ -77,7 +75,7 @@ def platform_redirector(desktop_dest, android_dest, ios_dest):
     ios_re = re.compile(r"\b(iPhone|iPad|iPod)\b", flags=re.I)
 
     def decider(request, *args, **kwargs):
-        value = request.META.get("HTTP_USER_AGENT", "")
+        value = request.headers.get("User-Agent", "")
         if android_re.search(value):
             return android_dest
         elif ios_re.search(value):
@@ -104,12 +102,12 @@ def no_redirect(pattern, locale_prefix=True, re_flags=None):
         pattern = LOCALE_RE + pattern
 
     if re_flags:
-        pattern = "(?{})".format(re_flags) + pattern
+        pattern = f"(?{re_flags})" + pattern
 
     def _view(request, *args, **kwargs):
         return None
 
-    return url(pattern, _view)
+    return re_path(pattern, _view)
 
 
 def redirect(
@@ -177,7 +175,7 @@ def redirect(
         pattern = LOCALE_RE + pattern
 
     if re_flags:
-        pattern = "(?{})".format(re_flags) + pattern
+        pattern = f"(?{re_flags})" + pattern
 
     view_decorators = []
     if cache_timeout is not None:
@@ -254,7 +252,7 @@ def redirect(
     except TypeError:
         log.exception("decorators not iterable or does not contain callable items")
 
-    return url(pattern, _view, name=name)
+    return re_path(pattern, _view, name=name)
 
 
 def gone_view(request, *args, **kwargs):
@@ -263,4 +261,4 @@ def gone_view(request, *args, **kwargs):
 
 def gone(pattern):
     """Return a url matcher suitable for urlpatterns that returns a 410."""
-    return url(pattern, gone_view)
+    return re_path(pattern, gone_view)

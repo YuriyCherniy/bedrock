@@ -6,6 +6,7 @@
 
 import os.path
 from datetime import datetime
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test.client import RequestFactory
@@ -14,7 +15,6 @@ from django.test.utils import override_settings
 import pytest
 from django_jinja.backend import Jinja2
 from jinja2 import Markup
-from mock import patch
 from pyquery import PyQuery as pq
 
 from bedrock.base.templatetags.helpers import static
@@ -37,19 +37,7 @@ TEST_DONATE_PARAMS = {
     "es-MX": {"currency": "eur", "presets": "100,50,25,15", "default": "15"},
 }
 
-TEST_FIREFOX_TWITTER_ACCOUNTS = {
-    "en-US": "https://twitter.com/firefox",
-    "es-ES": "https://twitter.com/firefox_es",
-    "pt-BR": "https://twitter.com/firefoxbrasil",
-}
-
-TEST_FIREFOX_INSTAGRAM_ACCOUNTS = {
-    "de": "https://www.instagram.com/unfcktheinternet/",
-    "en-US": "https://www.instagram.com/firefox/",
-}
-
 TEST_FXA_ENDPOINT = "https://accounts.firefox.com/"
-TEST_FXA_MOZILLAONLINE_ENDPOINT = "https://accounts.firefox.com.cn/"
 
 jinja_env = Jinja2.get_default()
 
@@ -73,7 +61,7 @@ class TestImgL10n(TestCase):
     def _render(self, locale, url):
         req = self.rf.get("/")
         req.locale = locale
-        return render("{{{{ l10n_img('{0}') }}}}".format(url), {"request": req})
+        return render(f"{{{{ l10n_img('{url}') }}}}", {"request": req})
 
     def test_works_for_default_lang(self, media_exists_mock):
         """Should output correct path for default lang always."""
@@ -226,12 +214,12 @@ class TestPlatformImg(TestCase):
     def _render(self, url, optional_attributes=None):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ platform_img('{0}', {1}) }}}}".format(url, optional_attributes), {"request": req})
+        return render(f"{{{{ platform_img('{url}', {optional_attributes}) }}}}", {"request": req})
 
     def _render_l10n(self, url):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ l10n_img('{0}') }}}}".format(url), {"request": req})
+        return render(f"{{{{ l10n_img('{url}') }}}}", {"request": req})
 
     def test_platform_img_no_optional_attributes(self, find_static):
         """Should return expected markup without optional attributes"""
@@ -302,7 +290,7 @@ class TestPressBlogUrl(TestCase):
     def _render(self, locale):
         req = self.rf.get("/")
         req.locale = locale
-        return render("{{{{ press_blog_url() }}}}".format("/"), {"request": req})
+        return render("{{{{ press_blog_url() }}}}".format("/"), {"request": req})  # noqa: F523
 
     def test_press_blog_url_no_locale(self):
         """No locale, fallback to default press blog"""
@@ -346,7 +334,7 @@ class TestDonateUrl(TestCase):
     def _render(self, locale, source=""):
         req = self.rf.get("/")
         req.locale = locale
-        return render("{{{{ donate_url('{0}') }}}}".format(source), {"request": req})
+        return render(f"{{{{ donate_url('{source}') }}}}", {"request": req})
 
     def test_donate_url_no_locale(self):
         """No locale, fallback to generic link"""
@@ -379,7 +367,6 @@ class TestDonateUrl(TestCase):
         )
 
 
-@override_settings(FIREFOX_TWITTER_ACCOUNTS=TEST_FIREFOX_TWITTER_ACCOUNTS)
 class TestFirefoxTwitterUrl(TestCase):
     rf = RequestFactory()
 
@@ -412,30 +399,61 @@ class TestFirefoxTwitterUrl(TestCase):
         assert self._render("pt-PT") == "https://twitter.com/firefox"
 
 
-@override_settings(FIREFOX_INSTAGRAM_ACCOUNTS=TEST_FIREFOX_INSTAGRAM_ACCOUNTS)
-class TestFirefoxInstagramUrl(TestCase):
+class TestMozillaTwitterUrl(TestCase):
     rf = RequestFactory()
 
     def _render(self, locale):
         req = self.rf.get("/")
         req.locale = locale
-        return render("{{ firefox_instagram_url() }}", {"request": req})
+        return render("{{ mozilla_twitter_url() }}", {"request": req})
 
-    def test_firefox_twitter_url_no_locale(self):
+    def test_mozilla_twitter_url_no_locale(self):
         """No locale, fallback to default account"""
-        assert self._render("") == "https://www.instagram.com/firefox/"
+        assert self._render("") == "https://twitter.com/mozilla"
 
-    def test_firefox_twitter_url_english(self):
+    def test_mozilla_twitter_url_english(self):
         """en-US locale, default account"""
-        assert self._render("en-US") == "https://www.instagram.com/firefox/"
+        assert self._render("en-US") == "https://twitter.com/mozilla"
 
-    def test_firefox_twitter_url_spanish(self):
+    def test_mozilla_twitter_url_french(self):
+        """fr locale, a local account"""
+        assert self._render("fr") == "https://twitter.com/mozilla_france"
+
+    def test_mozilla_twitter_url_german(self):
+        """de locale, a local account"""
+        assert self._render("de") == "https://twitter.com/mozilla_germany"
+
+    def test_mozilla_twitter_url_other_locale(self):
+        """No account for locale, fallback to default account"""
+        assert self._render("es-AR") == "https://twitter.com/mozilla"
+        assert self._render("es-CL") == "https://twitter.com/mozilla"
+        assert self._render("es-MX") == "https://twitter.com/mozilla"
+        assert self._render("pt-PT") == "https://twitter.com/mozilla"
+
+
+class TestMozillaInstagramUrl(TestCase):
+    rf = RequestFactory()
+
+    def _render(self, locale):
+        req = self.rf.get("/")
+        req.locale = locale
+        return render("{{ mozilla_instagram_url() }}", {"request": req})
+
+    def test_mozilla_instagram_url_no_locale(self):
+        """No locale, fallback to default account"""
+        assert self._render("") == "https://www.instagram.com/mozilla/"
+
+    def test_mozilla_instagram_url_english(self):
+        """en-US locale, default account"""
+        assert self._render("en-US") == "https://www.instagram.com/mozilla/"
+
+    def test_mozilla_instagram_url_german(self):
         """de locale, a local account"""
         assert self._render("de") == "https://www.instagram.com/unfcktheinternet/"
 
-    def test_firefox_twitter_url_other_locale(self):
+    def test_mozilla_instagram_url_other_locale(self):
         """No account for locale, fallback to default account"""
-        assert self._render("es-AR") == "https://www.instagram.com/firefox/"
+        assert self._render("es-AR") == "https://www.instagram.com/mozilla/"
 
 
 @override_settings(STATIC_URL="/media/")
@@ -445,12 +463,12 @@ class TestHighResImg(TestCase):
     def _render(self, url, optional_attributes=None):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ high_res_img('{0}', {1}) }}}}".format(url, optional_attributes), {"request": req})
+        return render(f"{{{{ high_res_img('{url}', {optional_attributes}) }}}}", {"request": req})
 
     def _render_l10n(self, url):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ l10n_img('{0}') }}}}".format(url), {"request": req})
+        return render(f"{{{{ l10n_img('{url}') }}}}", {"request": req})
 
     def test_high_res_img_no_optional_attributes(self):
         """Should return expected markup without optional attributes"""
@@ -485,69 +503,6 @@ class TestHighResImg(TestCase):
         markup = self._render("test.png", {"l10n": True, "data-test-attr": "test"})
         expected = '<img class="" src="' + l10n_url + '" ' 'srcset="' + l10n_hr_url + ' 1.5x" data-test-attr="test">'
         self.assertEqual(markup, expected)
-
-
-@override_settings(STATIC_URL="/media/")
-class TestLazyImg(TestCase):
-    rf = RequestFactory()
-
-    def _render(self, image_url, placeholder_url, include_highres_image=False, optional_attributes=None):
-        req = self.rf.get("/")
-        req.locale = "en-US"
-        return render(
-            "{{{{ lazy_img('{0}', '{1}', {2}, {3}) }}}}".format(image_url, placeholder_url, include_highres_image, optional_attributes),
-            {"request": req},
-        )
-
-    def test_lazy_img(self):
-        """Should return expected markup"""
-        markup = self._render(
-            image_url="img/test.png",
-            placeholder_url="img/placeholder.png",
-            include_highres_image=True,
-            optional_attributes={"class": "the-dude", "alt": "abides", "width": "300"},
-        )
-        expected = (
-            '<div class="lazy-image-container">'
-            '<img class="the-dude" src="/media/img/placeholder.png" data-src="/media/img/test.png" '
-            'data-srcset="/media/img/test-high-res.png 2x" alt="abides" width="300">'
-            '<noscript><img class="the-dude" src="/media/img/test.png" '
-            'data-srcset="/media/img/test-high-res.png 2x" alt="abides" width="300"></noscript>'
-            "</div>"
-        )
-        self.assertEqual(markup, expected)
-
-    def test_lazy_img_no_highres_image(self):
-        """Should return no highres image"""
-        markup = self._render(image_url="img/test.png", placeholder_url="img/placeholder.png")
-        self.assertIn('src="/media/img/placeholder.png"', markup)
-        self.assertIn('data-src="/media/img/test.png"', markup)
-        self.assertNotIn('data-srcset="/media/img/test-high-res.png 2x"', markup)
-
-    def test_lazy_img_no_optional_attributes(self):
-        """Should return default class and alt values if no optional attributes are provided"""
-        markup = self._render(image_url="img/test.png", placeholder_url="img/placeholder.png")
-        self.assertIn('class="lazy-image"', markup)
-        self.assertIn('alt=""', markup)
-
-    def test_lazy_img_optional_attributes(self):
-        """Should return expected optional attributes"""
-        markup = self._render(
-            image_url="img/test.png",
-            placeholder_url="img/placeholder.png",
-            optional_attributes={"class": "the-dude", "alt": "abides", "width": "300"},
-        )
-        self.assertNotIn('class="lazy-image"', markup)
-        self.assertIn('class="the-dude"', markup)
-        self.assertIn('alt="abides"', markup)
-        self.assertIn('width="300"', markup)
-
-    def test_lazy_img_external(self):
-        """Should allow an external image and ignore include_highres_image"""
-        markup = self._render(image_url="https://www.test.com/test.png", placeholder_url="img/placeholder.png", include_highres_image=True)
-        self.assertIn('src="/media/img/placeholder.png"', markup)
-        self.assertIn('data-src="https://www.test.com/test.png"', markup)
-        self.assertNotIn('data-srcset="', markup)
 
 
 class TestAbsoluteURLFilter(TestCase):
@@ -739,7 +694,7 @@ class TestStructuredDataID(TestCase):
         sd_id = "firefoxbrowser"
 
         if domain:
-            return render("{{{{ structured_data_id('{0}', '{1}') }}}}".format(sd_id, domain), {"request": req})
+            return render(f"{{{{ structured_data_id('{sd_id}', '{domain}') }}}}", {"request": req})
 
         return render("{{ structured_data_id('%s') }}" % sd_id, {"request": req})
 
@@ -781,9 +736,9 @@ class TestFirefoxAdjustUrl(TestCase):
         req.locale = locale
 
         if creative:
-            return render("{{{{ firefox_adjust_url('{0}', '{1}', '{2}') }}}}".format(redirect, adgroup, creative), {"request": req})
+            return render(f"{{{{ firefox_adjust_url('{redirect}', '{adgroup}', '{creative}') }}}}", {"request": req})
 
-        return render("{{{{ firefox_adjust_url('{0}', '{1}') }}}}".format(redirect, adgroup), {"request": req})
+        return render(f"{{{{ firefox_adjust_url('{redirect}', '{adgroup}') }}}}", {"request": req})
 
     def test_firefox_ios_adjust_url(self):
         """Firefox for mobile with an App Store URL redirect"""
@@ -822,9 +777,9 @@ class TestFocusAdjustUrl(TestCase):
         req.locale = locale
 
         if creative:
-            return render("{{{{ focus_adjust_url('{0}', '{1}', '{2}') }}}}".format(redirect, adgroup, creative), {"request": req})
+            return render(f"{{{{ focus_adjust_url('{redirect}', '{adgroup}', '{creative}') }}}}", {"request": req})
 
-        return render("{{{{ focus_adjust_url('{0}', '{1}') }}}}".format(redirect, adgroup), {"request": req})
+        return render(f"{{{{ focus_adjust_url('{redirect}', '{adgroup}') }}}}", {"request": req})
 
     def test_focus_ios_adjust_url(self):
         """Firefox Focus with an App Store URL redirect"""
@@ -879,9 +834,9 @@ class TestLockwiseAdjustUrl(TestCase):
         req.locale = locale
 
         if creative:
-            return render("{{{{ lockwise_adjust_url('{0}', '{1}', '{2}') }}}}".format(redirect, adgroup, creative), {"request": req})
+            return render(f"{{{{ lockwise_adjust_url('{redirect}', '{adgroup}', '{creative}') }}}}", {"request": req})
 
-        return render("{{{{ lockwise_adjust_url('{0}', '{1}') }}}}".format(redirect, adgroup), {"request": req})
+        return render(f"{{{{ lockwise_adjust_url('{redirect}', '{adgroup}') }}}}", {"request": req})
 
     def test_lockwise_ios_adjust_url(self):
         """Firefox Lockwise for mobile with an App Store URL redirect"""
@@ -920,9 +875,9 @@ class TestPocketAdjustUrl(TestCase):
         req.locale = locale
 
         if creative:
-            return render("{{{{ pocket_adjust_url('{0}', '{1}', '{2}') }}}}".format(redirect, adgroup, creative), {"request": req})
+            return render(f"{{{{ pocket_adjust_url('{redirect}', '{adgroup}', '{creative}') }}}}", {"request": req})
 
-        return render("{{{{ pocket_adjust_url('{0}', '{1}') }}}}".format(redirect, adgroup), {"request": req})
+        return render(f"{{{{ pocket_adjust_url('{redirect}', '{adgroup}') }}}}", {"request": req})
 
     def test_pocket_ios_adjust_url(self):
         """Pocket for mobile with an App Store URL redirect"""
@@ -1034,7 +989,49 @@ class TestMonitorFxAButton(TestCase):
 
 
 @override_settings(FXA_ENDPOINT=TEST_FXA_ENDPOINT)
-@override_settings(FXA_ENDPOINT_MOZILLAONLINE=TEST_FXA_MOZILLAONLINE_ENDPOINT)
+class TestRelayFxAButton(TestCase):
+    rf = RequestFactory()
+
+    def _render(
+        self,
+        entrypoint,
+        button_text,
+        class_name=None,
+        is_button_class=True,
+        include_metrics=True,
+        optional_parameters=None,
+        optional_attributes=None,
+    ):
+        req = self.rf.get("/")
+        req.locale = "en-US"
+        return render(
+            "{{{{ relay_fxa_button('{0}', '{1}', '{2}', {3}, {4}, {5}, {6}) }}}}".format(
+                entrypoint, button_text, class_name, is_button_class, include_metrics, optional_parameters, optional_attributes
+            ),
+            {"request": req},
+        )
+
+    def test_relay_fxa_button(self):
+        """Should return expected markup"""
+        markup = self._render(
+            entrypoint="mozilla.org-whatsnew",
+            button_text="Sign In to Relay",
+            class_name="relay-main-cta-button",
+            is_button_class=True,
+            include_metrics=True,
+            optional_parameters={"utm_campaign": "whatsnew96"},
+            optional_attributes={"data-cta-text": "Sign In to Relay", "data-cta-type": "fxa-relay", "data-cta-position": "primary"},
+        )
+        expected = (
+            '<a href="https://relay.firefox.com/accounts/fxa/login/?process=login&entrypoint=mozilla.org-whatsnew&form_type=button'
+            '&utm_source=mozilla.org-whatsnew&utm_medium=referral&utm_campaign=whatsnew96" data-action="https://accounts.firefox.com/" '
+            'class="js-fxa-cta-link js-fxa-product-button mzp-c-button mzp-t-product relay-main-cta-button" '
+            'data-cta-text="Sign In to Relay" data-cta-type="fxa-relay" data-cta-position="primary">Sign In to Relay</a>'
+        )
+        self.assertEqual(markup, expected)
+
+
+@override_settings(FXA_ENDPOINT=TEST_FXA_ENDPOINT)
 class TestFxAButton(TestCase):
     rf = RequestFactory()
 
@@ -1074,10 +1071,7 @@ class TestFxAButton(TestCase):
             '<a href="https://accounts.firefox.com/signup?entrypoint=mozilla.org-firefox-whatsnew73&form_type=button'
             '&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
             'data-action="https://accounts.firefox.com/" class="js-fxa-cta-link js-fxa-product-button mzp-c-button mzp-t-product '
-            'fxa-main-cta-button" data-cta-text="Sign Up" data-cta-type="fxa-sync" data-cta-position="primary" '
-            'data-mozillaonline-link="https://accounts.firefox.com.cn/signup?entrypoint=mozilla.org-firefox-whatsnew73'
-            '&form_type=button&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
-            'data-mozillaonline-action="https://accounts.firefox.com.cn/">Sign Up</a>'
+            'fxa-main-cta-button" data-cta-text="Sign Up" data-cta-type="fxa-sync" data-cta-position="primary">Sign Up</a>'
         )
         self.assertEqual(markup, expected)
 
@@ -1097,10 +1091,7 @@ class TestFxAButton(TestCase):
             '<a href="https://accounts.firefox.com/signin?entrypoint=mozilla.org-firefox-whatsnew73&form_type=button'
             '&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
             'data-action="https://accounts.firefox.com/" class="js-fxa-cta-link js-fxa-product-button mzp-c-button mzp-t-product '
-            'fxa-main-cta-button" data-cta-text="Sign In" data-cta-type="fxa-sync" data-cta-position="primary" '
-            'data-mozillaonline-link="https://accounts.firefox.com.cn/signin?entrypoint=mozilla.org-firefox-whatsnew73'
-            '&form_type=button&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
-            'data-mozillaonline-action="https://accounts.firefox.com.cn/">Sign In</a>'
+            'fxa-main-cta-button" data-cta-text="Sign In" data-cta-type="fxa-sync" data-cta-position="primary">Sign In</a>'
         )
         self.assertEqual(markup, expected)
 
@@ -1120,32 +1111,25 @@ class TestFxAButton(TestCase):
             '<a href="https://accounts.firefox.com/?action=email&entrypoint=mozilla.org-firefox-whatsnew73&form_type=button'
             '&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
             'data-action="https://accounts.firefox.com/" class="js-fxa-cta-link js-fxa-product-button mzp-c-button mzp-t-product '
-            'fxa-main-cta-button" data-cta-text="Sign Up" data-cta-type="fxa-sync" data-cta-position="primary" '
-            'data-mozillaonline-link="https://accounts.firefox.com.cn/?action=email&entrypoint=mozilla.org-firefox-whatsnew73'
-            '&form_type=button&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
-            'data-mozillaonline-action="https://accounts.firefox.com.cn/">Sign Up</a>'
+            'fxa-main-cta-button" data-cta-text="Sign Up" data-cta-type="fxa-sync" data-cta-position="primary">Sign Up</a>'
         )
         self.assertEqual(markup, expected)
 
 
 @override_settings(FXA_ENDPOINT=TEST_FXA_ENDPOINT)
-@override_settings(FXA_ENDPOINT_MOZILLAONLINE=TEST_FXA_MOZILLAONLINE_ENDPOINT)
 class TestFxALinkFragment(TestCase):
     rf = RequestFactory()
 
     def _render(self, entrypoint, action="signup", optional_parameters=None):
         req = self.rf.get("/")
         req.locale = "en-US"
-        return render("{{{{ fxa_link_fragment('{0}', '{1}', {2}) }}}}".format(entrypoint, action, optional_parameters), {"request": req})
+        return render(f"{{{{ fxa_link_fragment('{entrypoint}', '{action}', {optional_parameters}) }}}}", {"request": req})
 
     def test_fxa_button_signup(self):
         """Should return expected markup"""
         markup = self._render(entrypoint="mozilla.org-firefox-whatsnew73", action="signup", optional_parameters={"utm_campaign": "whatsnew73"})
         expected = (
             'href="https://accounts.firefox.com/signup?entrypoint=mozilla.org-firefox-whatsnew73&form_type=button'
-            '&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
-            'data-mozillaonline-link="https://accounts.firefox.com.cn/signup?entrypoint=mozilla.org-firefox-whatsnew73'
-            '&form_type=button&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73" '
-            'data-mozillaonline-action="https://accounts.firefox.com.cn/"'
+            '&utm_source=mozilla.org-firefox-whatsnew73&utm_medium=referral&utm_campaign=whatsnew73"'
         )
         self.assertEqual(markup, expected)

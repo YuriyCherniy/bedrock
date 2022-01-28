@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -513,8 +511,8 @@ URLS = flatten(
             "/projects/fennec/is/a/pretty/fox.html",
             "http://website-archive.mozilla.org/www.mozilla.org/fennec_releasenotes/projects/fennec/is/a/pretty/fox.html",
         ),
-        # bug 924687
-        url_test("/opportunities{,/,/index.html}", "https://careers.mozilla.org/"),
+        # bug 924687, issue 10736
+        url_test("/opportunities{,/,/index.html}", "/careers/"),
         # bug 884933
         url_test("/{m,{firefox/,}mobile}/platforms/", "https://support.mozilla.org/kb/will-firefox-work-my-mobile-device"),
         url_test("/m/", "/firefox/new/"),
@@ -697,8 +695,8 @@ URLS = flatten(
         url_test("/about/history.html", "/about/history/"),
         url_test("/about/bookmarks.html", "https://wiki.mozilla.org/Historical_Documents"),
         url_test("/about/timeline.html", "https://wiki.mozilla.org/Timeline"),
-        # bug 1016400
-        url_test("/about/careers.html", "https://careers.mozilla.org/"),
+        # bug 1016400, issue 10736
+        url_test("/about/careers.html", "/careers/"),
         # bug 861243 and bug 869489
         url_test("/about/manifesto.html", "/about/manifesto/"),
         url_test("/about/manifesto.{de,pt-BR}.html", "/{de,pt-BR}/about/manifesto/"),
@@ -887,7 +885,8 @@ URLS = flatten(
         url_test("/firefox/{,46.0/,46.0.1/,47.0/,47.0.1/}secondrun", "/firefox/browsers/mobile/"),
         # bug 1288647, 1722760
         url_test("/hacking", "https://firefox-source-docs.mozilla.org/"),
-        url_test("/{careers,jobs}", "https://careers.mozilla.org/"),
+        # issue 10736
+        url_test("/jobs", "/careers/"),
         url_test("/join", "https://donate.mozilla.org/"),
         # Bug 1293539
         url_test("/firefox/{48.0,48.0.1,49.0a1,49.0a2}/tour", "https://support.mozilla.org/kb/get-started-firefox-overview-main-features"),
@@ -1170,5 +1169,11 @@ URLS = flatten(
         url_test("/firefox/93.0a1/whatsnew/china/", "/firefox/93.0a1/whatsnew/"),
         # Issue 10335
         url_test("/vpn/", "/products/vpn/"),
+        # issue 10703
+        url_test("/firefox/lockwise/", "https://support.mozilla.org/kb/end-of-support-firefox-lockwise"),
+        # issue 10879
+        url_test("/exp/", "/"),
+        # issue 11092
+        url_test("/about/legal/terms/vpn/", "/about/legal/terms/mozilla-vpn/"),
     )
 )

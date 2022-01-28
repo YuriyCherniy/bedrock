@@ -25,17 +25,18 @@ def _vpn_get_available_plans(country_code, lang):
 
 def _vpn_product_link(product_url, entrypoint, link_text, class_name=None, optional_parameters=None, optional_attributes=None):
     separator = "&" if "?" in product_url else "?"
-    href = f"{product_url}{separator}entrypoint={entrypoint}&form_type=button&utm_source={entrypoint}&utm_medium=referral"
+    client_id = settings.VPN_CLIENT_ID
+    href = f"{product_url}{separator}entrypoint={entrypoint}&form_type=button&service={client_id}&utm_source={entrypoint}&utm_medium=referral"
 
     if optional_parameters:
-        params = "&".join("%s=%s" % (param, val) for param, val in optional_parameters.items())
+        params = "&".join(f"{param}={val}" for param, val in optional_parameters.items())
         href += f"&{params}"
 
     css_class = "js-vpn-cta-link js-fxa-product-button"
     attrs = ""
 
     if optional_attributes:
-        attrs += " ".join('%s="%s"' % (attr, val) for attr, val in optional_attributes.items())
+        attrs += " ".join(f'{attr}="{val}"' for attr, val in optional_attributes.items())
 
         # If there's a `data-cta-position` attribute for GA, also pass that as a query param to vpn.m.o.
         position = optional_attributes.get("data-cta-position", None)
@@ -155,7 +156,7 @@ def vpn_total_price(ctx, plan="12-month", country_code=None, lang=None):
 
 @library.global_function
 @jinja2.contextfunction
-def vpn_saving(ctx, plan="12-month", country_code=None, lang=None):
+def vpn_saving(ctx, plan="12-month", country_code=None, lang=None, ftl_string="vpn-shared-pricing-save-percent"):
     """
     Render a localized string displaying saving (as a percentage) of a given VPN subscription plan.
 
@@ -173,7 +174,7 @@ def vpn_saving(ctx, plan="12-month", country_code=None, lang=None):
     available_plans = _vpn_get_available_plans(country_code, lang)
     selected_plan = available_plans.get(plan)
     percent = selected_plan.get("saving")
-    saving = ftl("vpn-shared-pricing-save-percent", percent=percent, ftl_files=FTL_FILES)
+    saving = ftl(ftl_string, percent=percent, ftl_files=FTL_FILES)
 
     markup = saving
 
@@ -196,11 +197,11 @@ def vpn_product_referral_link(ctx, referral_id="", page_anchor="", link_text=Non
     """
 
     href = reverse("products.vpn.landing")
-    css_class = "mzp-c-button mzp-t-product js-fxa-product-referral-link"
+    css_class = "mzp-c-button js-fxa-product-referral-link"
     attrs = f'data-referral-id="{referral_id}" '
 
     if optional_attributes:
-        attrs += " ".join('%s="%s"' % (attr, val) for attr, val in optional_attributes.items())
+        attrs += " ".join(f'{attr}="{val}"' for attr, val in optional_attributes.items())
 
     if class_name:
         css_class += f" {class_name}"

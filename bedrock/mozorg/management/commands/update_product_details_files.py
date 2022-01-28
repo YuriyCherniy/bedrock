@@ -11,6 +11,7 @@ from django.db import transaction
 from product_details.storage import PDDatabaseStorage, PDFileStorage
 
 from bedrock.utils.git import GitRepo
+from bedrock.utils.management.decorators import alert_sentry_on_exception
 
 FIREFOX_VERSION_KEYS = (
     "FIREFOX_NIGHTLY",
@@ -23,6 +24,7 @@ FIREFOX_VERSION_KEYS = (
 )
 
 
+@alert_sentry_on_exception
 class Command(BaseCommand):
     def __init__(self, stdout=None, stderr=None, no_color=False):
         self.file_storage = PDFileStorage(json_dir=settings.PROD_DETAILS_TEST_DIR)
@@ -33,7 +35,7 @@ class Command(BaseCommand):
         # fake last-modified string since the releng repo doesn't store those files
         # and we rely on git commits for updates
         self.last_modified = datetime.now().isoformat()
-        super(Command, self).__init__(stdout, stderr, no_color)
+        super().__init__(stdout, stderr, no_color)
 
     def add_arguments(self, parser):
         parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False, help="If no error occurs, swallow all output."),
@@ -90,7 +92,7 @@ class Command(BaseCommand):
                 return
         builds = len([locale for locale, build in self.file_storage.data("firefox_primary_builds.json").items() if version in build])
         if builds < min_builds:
-            raise ValueError("Too few builds for {}".format(version_key))
+            raise ValueError(f"Too few builds for {version_key}")
 
     def validate_data(self):
         self.file_storage.clear_cache()

@@ -1,5 +1,3 @@
-# coding=utf-8
-
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -9,23 +7,9 @@ import re
 from django.conf import settings
 
 from fluent.runtime import FluentResourceLoader
-from fluent.syntax.ast import Message
 
 FTL_LOADER = FluentResourceLoader(f"{settings.FLUENT_LOCAL_PATH}/{{locale}}/")
 COMMENT_RE = re.compile(r"LANG_ID_HASH: (\w{32})")
-
-
-def get_ftl_file_data(filename):
-    data = {}
-    for resources in FTL_LOADER.resources("en", [filename]):
-        for resource in resources:
-            for item in resource.body:
-                if isinstance(item, Message):
-                    match = COMMENT_RE.search(item.comment.content)
-                    if match:
-                        data[match.group(1)] = item.id.name
-
-    return data
 
 
 class ContainsEverything:
